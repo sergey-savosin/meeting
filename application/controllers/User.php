@@ -19,7 +19,6 @@ class User extends MY_Controller {
 		$isRequestValid = true;
 		$validationErrorText = "";
 
-		//var_dump($data);
 		$projectName = isset($data->ProjectName) ? $data->ProjectName : false;
 		$loginCode = isset($data->LoginCode) ? $data->LoginCode : false;
 		$userType = isset($data->UserType) ? $data->UserType : false;
