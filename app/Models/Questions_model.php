@@ -89,23 +89,25 @@ class Questions_model extends Model {
 	************/
 	function new_additional_question($project_id, $title, $user_id) {
 		// ToDo: add transation here
-		$question_data = array ('qs_project_id' => $project_id,
+		$question_data = ['qs_project_id' => $project_id,
 				'qs_user_id' => $user_id,
 				'qs_title' => $title,
-				'qs_category_id' => 2); /* additional question */
-		if ($this->db->insert('question', $question_data)) {
-			$base_id = $this->db->insert_id();
+				'qs_category_id' => 2
+		]; /* additional question */
+		$db = \Config\Database::connect();
+		if ($db->table('question')->insert($question_data)) {
+			$base_id = $db->insertID();
 		} else {
 			return false;
 		}
 
-		$secondary_data = array ('qs_project_id' => $project_id,
+		$secondary_data = ['qs_project_id' => $project_id,
 				'qs_user_id' => $user_id,
 				'qs_title' => $title,
 				'qs_category_id' => 3, /* accept additional question */
 				'qs_base_question_id' => $base_id
-			);
-		if ($this->db->insert('question', $secondary_data)) {
+			];
+		if ($db->table('question')->insert($secondary_data)) {
 			return $base_id;
 		} else {
 			return false;

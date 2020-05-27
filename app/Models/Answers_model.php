@@ -92,8 +92,9 @@ class Answers_model extends Model {
 				'ans_string' => $ans_string,
 				'ans_answer_type_id' => $answer_type_id);
 
-		if ($this->db->insert('answer', $data)) {
-			return $this->db->insert_id();
+		$db = \Config\Database::connect();
+		if ($db->table('answer')->insert($data)) {
+			return $db->insertID();
 		} else {
 			return false;
 		}
@@ -108,10 +109,12 @@ class Answers_model extends Model {
 		if (!$result) {
 			return false;
 		}
-		if ($result->num_rows() === 0) {
+
+		$row = $result->getRow();
+		if (!isset($row)) {
 			return false;
 		}
-		return $result->result()[0];
+		return $row;
 	}
 
 	/********************
@@ -186,11 +189,16 @@ class Answers_model extends Model {
 	 Returns boolean
 	 ***********************/
 	function update_general_answer($ans_id, $ans_number, $ans_string, $answer_type_id) {
-		$this->db->where('ans_id', $ans_id);
-		if ($this->db->update('answer', array(
-								'ans_number' => $ans_number,
-								'ans_string' => $ans_string,
-								'ans_answer_type_id' => $answer_type_id))){
+		$data = [
+			'ans_number' => $ans_number,
+			'ans_string' => $ans_string,
+			'ans_answer_type_id' => $answer_type_id
+		];
+
+		$db = \Config\Database::connect();
+		$builder = $db->table('answer');
+		$builder->where('ans_id', $ans_id);
+		if ($builder->update($data)){
 			return true;
 		} else {
 			return false;

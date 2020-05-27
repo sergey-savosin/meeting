@@ -102,8 +102,9 @@ class User extends BaseController {
 		// $this->set_webrequest_id($wrid);
 
 		$top_nav_data['uri'] = $this->request->uri;
+		$val_rules['usr_code'] = 'required|min_length[1]|max_length[255]';
 
-		if ($this->request->getMethod() === 'get' || !$this->validate(['usr_code' => 'required|min_length[1]|max_length[255]']))
+		if ($this->request->getMethod() === 'get' || !$this->validate($val_rules))
 		{
 			if ($this->request->getMethod() === 'get') {
 				$validation = null;
@@ -142,7 +143,7 @@ class User extends BaseController {
 
 			// 	$this->log_debug("User login", "Succefull loginned: $usr_code");
 
-			return redirect()->to(base_url('Documents'));
+			return redirect()->to(base_url('/'));
 		}
 	}
 
