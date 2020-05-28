@@ -46,26 +46,34 @@ class Votes extends BaseController {
 		$page_data['current_date'] = $current_date;
 
 		// setup form validation
-		// foreach ($page_data['questions_query']->result() as $qs) {
-		// 	$qs_id = $qs->qs_id;
-		// 	$this->form_validation->set_rules("optradio[$qs_id]",
-		// 		'Вопрос "'.$qs->qs_title.'"',
-		// 		'required');
-		// }
+		foreach ($page_data['questions_query']->getResult() as $qs) {
+			$qs_id = $qs->qs_id;
+			$val_rules["optradio.$qs_id"] = [
+				'label' => "$qs->qs_title",
+				'rules' => 'required',
+				'errors' => [
+					'required' => 'Выберите ответ на вопрос "{field}".'
+				]
+			];
+		}
 
-		// foreach ($page_data['accept_additional_question_query']->result() as $qs) {
-		// 	$qs_id = $qs->qs_id;
-		// 	$this->form_validation->set_rules("optradio[$qs_id]",
-		// 		'Вопрос "'.$qs->qs_title.'"',
-		// 		'required');
-		// }
+		foreach ($page_data['accept_additional_question_query']->getResult() as $qs) {
+			$qs_id = $qs->qs_id;
+			$val_rules["optradio.$qs_id"] = [
+				'label' => "$qs->qs_title",
+				'rules' => 'required',
+				'errors' => [
+					'required' => 'Выберите ответ на принятие доп вопроса "{field}".'
+				]
+			];
+		}
 
 		helper(['form', 'url']);
 
 		$top_nav_data['uri'] = $this->request->uri;
 
 		// show view
-		if ($this->request->getMethod() === 'get' || !$this->validate([]) ) {
+		if ($this->request->getMethod() === 'get' || !$this->validate($val_rules) ) {
 
 			if ($this->request->getMethod() === 'get') {
 				$validation = null;
@@ -82,7 +90,7 @@ class Votes extends BaseController {
 		} else {
 			// save data to DB
 
-			foreach ($postdata['optradio'] as $key => $value) {
+			foreach ($this->request->getPost('optradio') as $key => $value) {
 				$qs_id = $key;
 				$ans_num = $value;
 				$ans_string = $value;
@@ -102,7 +110,7 @@ class Votes extends BaseController {
 			}
 			// go to default page
 			if ($res) {
-				redirect()->to(base_url('/'));
+				return redirect()->to(base_url('/'));
 			}
 		}
 	}

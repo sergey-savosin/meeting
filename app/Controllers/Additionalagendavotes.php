@@ -50,7 +50,13 @@ class Additionalagendavotes extends BaseController {
 		// }
 		foreach ($page_data['questions_query']->getResult() as $qs) {
 			$qs_id = $qs->qs_id;
-			$val_rules["optradio.$qs_id"] = 'required';
+			$val_rules["optradio.$qs_id"] = [
+				'label' => "$qs->qs_title",
+				'rules' => 'required',
+				'errors' => [
+					'required' => 'Выберите ответ на вопрос "{field}".'
+				]
+			];
 		}
 		
 		helper(['form', 'url']);

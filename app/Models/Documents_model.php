@@ -566,6 +566,7 @@ header('Content-Type: image/png');
 		return false;
 	}
 
+	// return object for a row
 	function get_document($doc_id) {
 		$query = "SELECT d.doc_body, d.doc_filename,
 			d.doc_project_id, d.doc_is_for_creditor, 
@@ -574,11 +575,15 @@ header('Content-Type: image/png');
 		WHERE d.doc_id = ?
 		";
 		$result = $this->db->query($query, array($doc_id));
-
-		if ($result) {
-			return $result;
-		} else {
+		if (!$result) {
 			return false;
+		}
+
+		$row = $result->getRow();
+		if (!isset($row)) {
+			return false;
+		} else {
+			return $row;
 		}
 	}
 }
