@@ -43,4 +43,31 @@ class BaseController extends Controller
 		// $this->session = \Config\Services::session();
 	}
 
+	// Get update parameters
+	function getPostData() {
+		if ($this->request->getMethod() != "post"){
+			return false;
+		}
+
+		$body = $this->request->getBody();
+		$content_type = $this->request->getHeaderLine('Content-Type');
+		// var_dump($content_type);
+
+		switch(strtolower($content_type))
+		{
+			case "application/json":
+				$data = json_decode($body);
+				break;
+			case "text/xml":
+				return false;
+				break;
+			default:
+				return false;
+				break;
+		}
+
+		return $data;
+	}
+
+
 }

@@ -27,21 +27,28 @@ class Projects_model extends Model {
 				'project_main_agenda_start_date' => $mainAgendaStartDate,
 				'project_additional_agenda_start_date' => $additionalAgendaStartDate,
 				'project_meeting_finish_date' => $meetingFinishDate);
-		if ($this->db->insert('project', $project_data)) {
-			return $this->db->insert_id();
+		$db = \Config\Database::connect();
+		if ($db->table('project')->insert($project_data)) {
+			return $db->insertID();
 		} else {
 			return false;
 		}
 	}
 
+	// returns one row
 	function get_project_by_name($project_name) {
 		$query = "SELECT * FROM project p WHERE p.project_name = ?";
 		$result = $this->db->query($query, array($project_name));
 		
-		if ($result) {
-			return $result;
-		} else {
+		if (!$result) {
 			return false;
+		}
+
+		$row = $result->getRow();
+		if (!$row) {
+			return false;
+		} else {
+			return $row;
 		}
 	}
 
@@ -49,17 +56,22 @@ class Projects_model extends Model {
 		$query = "SELECT * FROM project p WHERE p.project_code = ?";
 		$result = $this->db->query($query, array($project_code));
 		
-		if ($result) {
-			return $result;
-		} else {
+		if (!$result) {
 			return false;
+		}
+
+		$row = $result->getRow();
+		if (!$row) {
+			return false;
+		} else {
+			return $row;
 		}
 	}
 
 
 	function check_project_name_exists($project_name) {
 		$result = $this->get_project_by_name($project_name);
-		if ($result->num_rows() > 0) {
+		if ($result) {
 			return true;
 		} else {
 			return false;
@@ -68,7 +80,7 @@ class Projects_model extends Model {
 
 	function check_project_code_exists($project_code) {
 		$result = $this->get_project_by_code($project_code);
-		if ($result->num_rows() > 0) {
+		if ($result) {
 			return true;
 		} else {
 			return false;
