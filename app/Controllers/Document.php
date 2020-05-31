@@ -44,7 +44,7 @@ class Document extends BaseController {
 		if (!$isRequestValid)
 		{
 			$msg = "Invalid Document POST request: $validationErrorText";
-			$this->log_debug('document insert', $msg);
+			// $this->log_debug('document insert', $msg);
 
 			printf($msg);
 			http_response_code(400);
@@ -53,21 +53,22 @@ class Document extends BaseController {
 
 		// 4. get projectId
 
+		$projects_model = model('Projects_model');
 		// 4a. Try to find projectId
-		$project = $this->Projects_model->get_first_project_by_name($projectname);
+		$project = $projects_model->get_project_by_name($projectname);
 		$projectId = false;
 
 		if (!$project) {
 			// 4b. Try to insert new project when project not found
-			$projectId = $this->Projects_model->new_project($projectname, $projectname, null, null, null, null);
+			$projectId = $projects_model->new_project($projectname, $projectname, null, null, null, null);
 		} else {
 			$projectId = $project->project_id;
 		}
 
 		if (!$projectId)
 		{
-			$msg = "Can't add projectId by projectName: $projectname";
-			$this->log_debug('document insert', $msg);
+			$msg = "Can't add projectId with projectName: $projectname";
+			// $this->log_debug('document insert', $msg);
 
 			printf($msg);
 			http_response_code(400);
@@ -77,16 +78,18 @@ class Document extends BaseController {
 
 		// 5. Insert data to document table
 		// 3. Correct Url
-		$correctedUrl = $this->Documents_model->correctFileDownloadUrl($fileurl);
+		$documents_model = model('Documents_model');
+
+		$correctedUrl = $documents_model->correctFileDownloadUrl($fileurl);
 
 		// 3a. Download file by Url
-		$doc_id = $this->Documents_model->new_document_with_body($correctedUrl, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager);
+		$doc_id = $documents_model->new_document_with_body($correctedUrl, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager);
 		// ToDo: Try-Catch
 
 		if (!$doc_id)
 		{
 			$msg = "Can't load file or save document to db: $filename from URL: $correctedUrl";
-			$this->log_debug('document insert', $msg);
+			// $this->log_debug('document insert', $msg);
 
 			printf($msg);
 			http_response_code(400);
@@ -98,7 +101,7 @@ class Document extends BaseController {
 		$json = json_encode(array('id' => $doc_id));
 
 		$msg = "Return value: ".$json;
-		$this->log_debug('document insert', $msg);
+		// $this->log_debug('document insert', $msg);
 
 		http_response_code(201); // 201: resourse created
 		$site = 'https://vprofy.ru';

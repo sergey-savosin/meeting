@@ -36,6 +36,9 @@ class Documents_model extends Model {
 		}
 	}
 
+	/************
+	 v4
+	 ************/
 	function new_document_with_body($url, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager) {
 		$ua = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13';
 		$ck = 'NID=197=fOSKSSxLFKeCpm7hlXff0qJ_HBd-wLDFgGH7mj37pPvivWyYVG7HqhZrKWIN_9g3jxy1fLr-dcQaqlrBeMxoOd3CugsR0bl00cU6coMstYaukQvCCqDwkSIUVfZNserollFirVBkMrqpmEvoEbrvXOqUbqDuLE5yqpLV69kmvtc; expires=Sun, 02-Aug-2020 15:48:51 GMT; path=/; domain=.google.com; HttpOnly';
@@ -96,7 +99,7 @@ class Documents_model extends Model {
 			$outFileName = $filename;
 			$msg = 'using provided filename: '.$outFileName;
 		}
-		$this->log_debug('new_document_with_body', $msg);
+		// $this->log_debug('new_document_with_body', $msg);
 
 		$url_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -104,17 +107,17 @@ class Documents_model extends Model {
 		if (empty($url_status))
 		{
 			$msg = "No HTTP code was returned. URL: ".$url;
-			$this->log_debug('new_document_with_body', $msg);
+			// $this->log_debug('new_document_with_body', $msg);
 
-			throw new Exception($msg."\r\n");
+			throw new \Exception($msg."\r\n");
 		}
 
 		if ($url_status<>200)
 		{
 			$msg = "Can not download file from URL. Response code: ".$url_status.". URL: ".$url;
-			$this->log_debug('new_document_with_body', $msg."\r\n");
+			// $this->log_debug('new_document_with_body', $msg."\r\n");
 
-			throw new Exception($msg);
+			throw new \Exception($msg);
 		}
 
 		// Save file to database
@@ -124,8 +127,9 @@ class Documents_model extends Model {
 					'doc_is_for_creditor' => $isforcreditor,
 					'doc_is_for_debtor' => $isfordebtor,
 					'doc_is_for_manager' => $isformanager);
-		if ($this->db->insert('document', $data)) {
-			$doc_id = $this->db->insert_id();
+		$db = \Config\Database::connect();
+		if ($db->table('document')->insert($data)) {
+			$doc_id = $db->insertID();
 		} else {
 			$doc_id = false;
 		}
@@ -147,7 +151,7 @@ class Documents_model extends Model {
 	{
 		$url = str_replace('\\', "", $url);
 		$msg = 'Source Url: '. $url;
-		$this->log_debug('correctFileDownloadUrl', $msg);
+		// $this->log_debug('correctFileDownloadUrl', $msg);
 
 		$domain = parse_url($url, PHP_URL_HOST);
 		$query = parse_url($url, PHP_URL_QUERY);
@@ -161,12 +165,12 @@ class Documents_model extends Model {
 
 		if (strtolower($domain)==="drive.google.com")
 		{
-			$this->log_correctFileDownloadUrl('found drive.goodle.com');
+			// $this->log_correctFileDownloadUrl('found drive.goodle.com');
 
 			// try to detect https://drive.google.com/open?id=[FILE_ID]
 			if (!empty($parsedQuery['id']))
 			{
-				$this->log_debug('correctFileDownloadUrl', "found document id: ".$parsedQuery['id']);
+				// $this->log_debug('correctFileDownloadUrl', "found document id: ".$parsedQuery['id']);
 				$newlink = 'https://docs.google.com/uc?id='.$parsedQuery['id'].'&export=download';
 			}
 			else
@@ -198,7 +202,7 @@ class Documents_model extends Model {
 					if ($found)
 					{
 						//$msg = "Exploded path. Found id: ".$exploded[$i];
-						$this->log_debug('correctFileDownloadUrl', "Exploded path. Found id: $exploded[$i]");
+						// $this->log_debug('correctFileDownloadUrl', "Exploded path. Found id: $exploded[$i]");
 						$newlink = 'https://docs.google.com/uc?id='.$exploded[$i].'&export=download';
 					}
 					break;
@@ -208,7 +212,7 @@ class Documents_model extends Model {
 
 		if (strtolower($domain)==="docs.google.com")
 		{
-			$this->log_debug('correctFileDownloadUrl', 'found docs.goodle.com');
+			// $this->log_debug('correctFileDownloadUrl', 'found docs.goodle.com');
 			// try to detect https://docs.google.com/document/d/[FILE_ID]
 
 			$exploded = explode('/',$path2);
@@ -237,7 +241,7 @@ class Documents_model extends Model {
 				if ($found)
 				{
 					//$msg = "Exploded path. Found id: ".$exploded[$i];
-					$this->log_debug('correctFileDownloadUrl', "Exploded path. Found id: $exploded[$i]");
+					// $this->log_debug('correctFileDownloadUrl', "Exploded path. Found id: $exploded[$i]");
 					//$newlink = 'https://docs.google.com/uc?id='.$exploded[$i].'&export=download';
 					$newlink = 'https://docs.google.com/document/d/'.$exploded[$i].'/export?format=docx';
 					//ToDo: определять формат по имени файла
@@ -251,12 +255,12 @@ class Documents_model extends Model {
 		// Default
 		if (!isset($newlink))
 		{
-			$this->log_debug('correctFileDownloadUrl', 'Nothing detected. Use source Url');
+			// $this->log_debug('correctFileDownloadUrl', 'Nothing detected. Use source Url');
 			$newlink = $url;
 		}
 
 		//$msg = "Result URL for download: ".$newlink;
-		$this->log_debug('correctFileDownloadUrl', "Result URL for download: $newlink");
+		// $this->log_debug('correctFileDownloadUrl', "Result URL for download: $newlink");
 
 		return $newlink;
 	}
@@ -522,7 +526,8 @@ header('Content-Type: image/png');
 	}
 
 	/**********************************
-	* Извление имени файла из заголовка content-disposition
+	* v4
+	* Извлечение имени файла из заголовка content-disposition
 	* @header - заголовок content-disposition
 	* @requestId - для журнала отладки
 
@@ -542,7 +547,7 @@ header('Content-Type: image/png');
 		if (!empty($output[0]))
 		{
 			$msg = "Extracted UTF filename: ".$output[0];
-			$this->log_debug('extractFileName', $msg);
+			// $this->log_debug('extractFileName', $msg);
 
 			return $output[0];
 		}
@@ -555,13 +560,13 @@ header('Content-Type: image/png');
 		if (!empty($output[0]))
 		{
 			$msg = "Extracted plain filename: ".$output[0];
-			$this->log_debug('extractFileName', $msg);
+			// $this->log_debug('extractFileName', $msg);
 
 			return $output[0];
 		}
 
 		$msg = "No filename extracted from header!";
-		$this->log_debug('extractFileName', $msg);
+		// $this->log_debug('extractFileName', $msg);
 
 		return false;
 	}

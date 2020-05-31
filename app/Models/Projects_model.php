@@ -87,17 +87,6 @@ class Projects_model extends Model {
 		}
 	}
 
-	function get_first_project_by_name($projectName) {
-		$project = $this->get_project_by_name($projectName);
-		
-		if ( (!$project) || ($project->num_rows() == 0) ) {
-			return false;
-		}
-
-		return $project->result()[0];
-	}
-
-
 	/***************
 	 returns object(start_date, end_date)
 	 ***************/
