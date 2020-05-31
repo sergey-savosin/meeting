@@ -7,6 +7,11 @@ class Questions_model extends Model {
 		parent::__construct();
 	}
 
+	/*****************
+	 v4
+
+	 returns resultset
+	 *****************/
 	function fetch_general_questions($project_id) {
 		$query = "SELECT *
 		FROM question q
@@ -23,6 +28,11 @@ class Questions_model extends Model {
 		}
 	}
 
+	/******************
+	 v4
+
+	 returns resultset
+	 ******************/
 	function fetch_additional_questions_for_user($user_id) {
 		$query = "SELECT *
 		FROM question q
@@ -39,6 +49,11 @@ class Questions_model extends Model {
 		}
 	}
 
+	/******************
+	 v4
+
+	 returns resultset
+	 ******************/
 	function fetch_additional_questions_for_project($project_id) {
 		$query = "SELECT *
 		FROM question q
@@ -57,6 +72,7 @@ class Questions_model extends Model {
 
 
 	/******
+	v4
 	Добавление нового общего вопроса.
 	
 	Параметры:
@@ -70,14 +86,17 @@ class Questions_model extends Model {
 		$question_data = array ('qs_project_id' => $project_id,
 				'qs_title' => $title,
 				'qs_category_id' => 1); /* general question */
-		if ($this->db->insert('question', $question_data)) {
-			return $this->db->insert_id();
+		
+		$db = \Config\Database::connect();
+		if ($db->table('question')->insert($question_data)) {
+			return $db->insertID();
 		} else {
 			return false;
 		}
 	}
 
 	/***********
+	v4
 	Добавление дополнительного вопроса и вспомогательного вопроса
 
 	Параметры:
@@ -92,12 +111,16 @@ class Questions_model extends Model {
 		$question_data = ['qs_project_id' => $project_id,
 				'qs_user_id' => $user_id,
 				'qs_title' => $title,
-				'qs_category_id' => 2
-		]; /* additional question */
-		$db = \Config\Database::connect();
+				'qs_category_id' => 2 /* additional question */
+		];
+
+		$db = $this->db;
+
+		$db->transStart();
 		if ($db->table('question')->insert($question_data)) {
 			$base_id = $db->insertID();
 		} else {
+			$db->transRollback();
 			return false;
 		}
 
@@ -107,11 +130,21 @@ class Questions_model extends Model {
 				'qs_category_id' => 3, /* accept additional question */
 				'qs_base_question_id' => $base_id
 			];
+
 		if ($db->table('question')->insert($secondary_data)) {
-			return $base_id;
+			$child_id = $db->insertID();
 		} else {
+			$db->transRollback();
 			return false;
 		}
+
+		if ($db->transStatus() === FALSE) {
+			$db->transRollback();
+		} else {
+			$db->transCommit();
+		}
+
+		return $base_id;
 	}
 
 }

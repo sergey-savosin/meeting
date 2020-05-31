@@ -35,6 +35,7 @@ $routes->post('project', 'Project::insert');
 $routes->post('document', 'Document::insert');
 //$routes->get('document/download/(:any)', 'Document::download');
 $routes->post('user', 'User::insert');
+$routes->post('question', 'Question::insert');
 
 /**
  * --------------------------------------------------------------------
