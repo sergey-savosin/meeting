@@ -8,6 +8,7 @@ class Users_model extends Model {
 	}
 
 	/******
+	v4
 	Добавление нового пользователя.
 	
 	Параметры:
@@ -15,54 +16,63 @@ class Users_model extends Model {
 	 userCode
 	 userTypeId
 	 canVote
+
+	 returns ID
 	*/
 	function new_user($projectId, $loginCode, $userTypeId, $canVote) {
 		$user_data = array('user_project_id' => $projectId,
 						'user_login_code' => $loginCode,
 						'user_usertype_id' => $userTypeId,
 						'user_can_vote' => $canVote);
-		if ($this->db->insert('user', $user_data)) {
-			return $this->db->insert_id();
+		$db = \Config\Database::Connect();
+		if ($db->table('user')->insert($user_data)) {
+			return $db->insertID();
 		} else {
 			return false;
 		}
 	}
 
+	/*************
+	 v4
+
+	 returns object
+	 *************/
 	function get_usertype_by_usertypename($usertype_name) {
 		$query = "SELECT * FROM usertype ut WHERE ut.usertype_name = ?";
-		$result = $this->db->query($query, array($usertype_name));
+		$db = \Config\Database::connect();
+		$result = $db->query($query, array($usertype_name));
 		
-		if ($result) {
-			return $result;
-		} else {
+		if (!$result) {
 			return false;
+		}
+
+		$row = $result->getRow();
+		if (!isset($row)) {
+			return false;
+		} else {
+			return $row;
 		}
 	}
 
-	function get_first_user_by_logincode($loginCode) {
+	/***************
+	 v4
+
+	 returns object
+	 ***************/
+	function get_user_by_logincode($loginCode) {
 		$query = "SELECT * FROM user u WHERE u.user_login_code = ?";
-		$result = $this->db->query($query, array($loginCode));
+		$db = \Config\Database::connect();
+		$result = $db->query($query, array($loginCode));
 
 		if (!$result) {
 			return false;
 		}
 
-		$user = $result->getRow();
-		if (!isset($user)) {
+		$row = $result->getRow();
+		if (!isset($row)) {
 			return false;
 		} else {
-			return $user;
+			return $row;
 		}
 	}
-
-	function get_usertypeid_by_usertypename($usertype_name) {
-		$usertype = $this->get_usertype_by_usertypename($usertype_name);
-
-		if ( (!$usertype) || ($usertype->num_rows() == 0) ) {
-			return false;
-		}
-
-		return $usertype->result()[0]->usertype_id;
-	}
-
 }

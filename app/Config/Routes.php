@@ -33,6 +33,8 @@ $routes->setAutoRoute(true);
 $routes->get('/', 'Documents::index');
 $routes->post('project', 'Project::insert');
 $routes->post('document', 'Document::insert');
+//$routes->get('document/download/(:any)', 'Document::download');
+$routes->post('user', 'User::insert');
 
 /**
  * --------------------------------------------------------------------

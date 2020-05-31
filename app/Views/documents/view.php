@@ -10,7 +10,7 @@
 			<td>
 				<?php echo $result->doc_filename; ?>
 
-				<?php echo anchor('document/download/' . $result->doc_id,
+				<?php echo anchor(base_url('document/download/' . $result->doc_id),
 				lang('app.document_download')) ;?>
 			</td>
 		</tr>
