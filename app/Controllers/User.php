@@ -23,6 +23,8 @@ class User extends BaseController {
 		$loginCode = isset($data->LoginCode) ? $data->LoginCode : false;
 		$userType = isset($data->UserType) ? $data->UserType : false;
 		$canVote = isset($data->CanVote) ? $data->CanVote : false;
+		$votesNumber = isset($data->VotesNumber) ? $data->VotesNumber : false;
+		$memberName = isset($data->MemberName) && !empty(trim($data->MemberName)) ? trim($data->MemberName) : null;
 
 		// validate required parameters
 		if (!$projectName) {
@@ -44,6 +46,11 @@ class User extends BaseController {
 			$canVoteBit = 1;
 		} else {
 			$canVoteBit = 0;
+		}
+
+		if ($votesNumber && !is_numeric($votesNumber)) {
+			$validationErrorText .= "VotesNumber parameter has incorrect format: $votesNumber";
+			$isRequestValid = false;
 		}
 
 		$projects_model = model('Projects_model');
@@ -86,7 +93,7 @@ class User extends BaseController {
 		}
 
 		// User Insert
-		$new_id = $users_model->new_user($projectId, $loginCode, $userTypeId, $canVoteBit);
+		$new_id = $users_model->new_user($projectId, $loginCode, $userTypeId, $canVoteBit, $votesNumber, $memberName);
 
 		helper('url');
 

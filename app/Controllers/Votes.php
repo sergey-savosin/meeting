@@ -115,6 +115,18 @@ class Votes extends BaseController {
 		}
 	}
 
+	public function result() {
+		helper('url');
 
+		$uri = $this->request->uri;
+		$resource = $uri->getSegment(3);
 
+		// Return result from service
+		$json = json_encode($this->request->getGet('Project'));
+
+		http_response_code(200); // 201: resource created
+
+		header("Content-Type: application/json");
+		echo $json;
+	}
 }

@@ -16,14 +16,19 @@ class Users_model extends Model {
 	 userCode
 	 userTypeId
 	 canVote
+	 votesNumber
+	 memberName
 
 	 returns ID
 	*/
-	function new_user($projectId, $loginCode, $userTypeId, $canVote) {
+	function new_user($projectId, $loginCode, $userTypeId, $canVote, $votesNumber, $memberName) {
 		$user_data = array('user_project_id' => $projectId,
 						'user_login_code' => $loginCode,
 						'user_usertype_id' => $userTypeId,
-						'user_can_vote' => $canVote);
+						'user_can_vote' => $canVote,
+						'user_votes_number' => $votesNumber,
+						'user_member_name' => $memberName
+					);
 		$db = \Config\Database::Connect();
 		if ($db->table('user')->insert($user_data)) {
 			return $db->insertID();
