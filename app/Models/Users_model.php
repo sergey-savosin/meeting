@@ -80,4 +80,21 @@ class Users_model extends Model {
 			return $row;
 		}
 	}
+
+	/************
+	 v4
+
+	 return resultset
+	 ************/
+	 function get_users_by_projectid($projectId) {
+	 	$query = "SELECT * FROM user u WHERE u.user_project_id = ?";
+	 	$db = $this->db;
+	 	$result = $db->query($query, array($projectId));
+
+	 	if (!$result) {
+	 		return false;
+	 	} else {
+	 		return $result;
+	 	}
+	 }
 }

@@ -116,13 +116,52 @@ class Votes extends BaseController {
 	}
 
 	public function result() {
-		helper('url');
+		// helper('url');
+		// $uri = $this->request->uri;
+		// $resource = $uri->getSegment(3);
+		$isRequestValid = true;
+		$validationErrorText = "";
 
-		$uri = $this->request->uri;
-		$resource = $uri->getSegment(3);
+		// 1. Get request param
+		$project_code = $this->request->getGet('ProjectCode');
+		if (!isset($project_code)) {
+			$validationErrorText.="ProjectCode Get param is empty. ";
+			$isRequestValid = false;
+		}
+
+		$users_model = model('Users_model');
+		$projects_model = model('Projects_model');
+
+		// 2. find project by GET param
+		$project = $projects_model->get_project_by_code($project_code);
+		if (isset($project_code) && !$project) {
+			$validationErrorText.="Project is not found by ProjectCode: $project_code. ";
+			$isRequestValid = false;
+		}
+
+		if ($project) {
+			$project_id = $project->project_id;
+
+			// 3. find all users in this project
+			$users = $users_model->get_users_by_projectid($project_id);
+			if (!$users) {
+				$validationErrorText.="Users are not found by ProjectCode: $project_code. ";
+				$isRequestValid = false;
+			}
+		}
+
+		if (!$isRequestValid)
+		{
+			$msg = "Invalid Document GET request: $validationErrorText";
+			// $this->log_debug('document insert', $msg);
+
+			printf($msg);
+			http_response_code(400);
+			exit();
+		}
 
 		// Return result from service
-		$json = json_encode($this->request->getGet('Project'));
+		$json = json_encode($users->getResult());
 
 		http_response_code(200); // 201: resource created
 
