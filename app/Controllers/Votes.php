@@ -36,7 +36,7 @@ class Votes extends BaseController {
 
 		// data for view
 		$page_data['questions_query'] = 
-			$answers_model->fetch_general_answers($project_id, $user_id);
+			$answers_model->fetch_general_answers($user_id);
 		$page_data['accept_additional_question_query'] =
 			$answers_model->fetch_accept_additional_answers($user_id);
 		$page_data['opened_questions_count'] =
@@ -115,6 +115,11 @@ class Votes extends BaseController {
 		}
 	}
 
+	/************************
+	 v4
+
+	 WebAPI: generates json vote result
+	 ************************/
 	public function result() {
 		// helper('url');
 		// $uri = $this->request->uri;
@@ -160,8 +165,16 @@ class Votes extends BaseController {
 			exit();
 		}
 
+		// 3. обработка списка пользователей
+		$res = array();
+
+		foreach ($users->getResult() as $u) {
+			$ans = 
+			$res[$u->user_login_code] = 1;
+		}
+
 		// Return result from service
-		$json = json_encode($users->getResult());
+		$json = json_encode($res);
 
 		http_response_code(200); // 201: resource created
 

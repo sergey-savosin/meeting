@@ -25,6 +25,10 @@
 	<li <?php if($uri->getSegment(1) == 'additionalagendavotes') {echo 'class="active"';}; ?>>
 		<?php echo anchor(base_url('additionalagendavotes'), lang('app.top_nav_view_additionalagendavotes')); ?>
 	</li>
+	<li <?php if($uri->getSegment(1) == 'voteresult') {echo 'class="active"';}; ?>>
+		<?php echo anchor(base_url('voteresult'), lang('app.top_nav_view_voteresult')); ?>
+	</li>
+	
 	</ul>
 	<ul class="nav navbar-nav navbar-right">
 		<li><?php if (session('user_login_code') == FALSE) {

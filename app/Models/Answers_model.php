@@ -8,20 +8,23 @@ class Answers_model extends Model {
 	}
 
 	/**********
-	Список ответов на вопросы основной повестки.
+	Список ответов на вопросы основной повестки	для указанного пользователя.
+	
 	Returns resultset.
 	***********/
-	function fetch_general_answers($project_id, $user_id) {
+	function fetch_general_answers($user_id) {
 		$query = "SELECT *
-		FROM question q
+		FROM user u
+		INNER JOIN question q
+			ON q.qs_project_id = u.user_project_id
 		LEFT JOIN answer a
-			 ON q.qs_id = a.ans_question_id
-			 AND a.ans_user_id = ?
+			ON q.qs_id = a.ans_question_id
+			AND a.ans_user_id = u.user_id
 		WHERE q.qs_category_id = 1
-		and q.qs_project_id = ?
+		AND u.user_id = ?
 		ORDER BY q.qs_id ASC
 		";
-		$result = $this->db->query($query, array($user_id, $project_id));
+		$result = $this->db->query($query, array($user_id));
 
 		if ($result) {
 			return $result;
@@ -177,7 +180,9 @@ class Answers_model extends Model {
 			AND q.qs_category_id = 3
 		GROUP BY bq.qs_id, bq.qs_title
 		ORDER BY bq.qs_id";
+
 		$result = $this->db->query($query, array ($user_id, $project_id));
+		
 		if (!$result) {
 			return false;
 		} else {

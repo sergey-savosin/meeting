@@ -68,6 +68,27 @@ class Projects_model extends Model {
 		}
 	}
 
+	/********************
+	 v4
+
+	 return row object
+	 ********************/
+	function get_project_by_id($project_id) {
+		$query = "SELECT * FROM project p WHERE p.project_id = ?";
+		$result = $this->db->query($query, array($project_id));
+
+		if (!$result) {
+			return false;
+		}
+
+		$row = $result->getRow();
+		if (!$row) {
+			return false;
+		} else {
+			return $row;
+		}
+	}
+
 
 	function check_project_name_exists($project_name) {
 		$result = $this->get_project_by_name($project_name);

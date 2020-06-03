@@ -20,6 +20,7 @@ return [
 	'top_nav_view_documents' => "Документы",
 	'top_nav_view_votes' => "Голосование по ОП",
 	'top_nav_view_additionalagendavotes' => 'Голосование по доп повестке',
+	'top_nav_view_voteresult' => 'Результаты голосования',
 
 	// Meeting
 	'documents_title' => "Документы для ознакомления",
