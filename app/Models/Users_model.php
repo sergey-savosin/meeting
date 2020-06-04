@@ -97,4 +97,28 @@ class Users_model extends Model {
 	 		return $result;
 	 	}
 	 }
+
+	 /*******************
+	  v4
+	  Общее кол-во голосов по всем участникам
+
+	  returns scalar
+	  *******************/
+	 function get_users_total_voices_by_projectid($project_id) {
+	 	$query = "SELECT SUM(1) total_count
+	 	FROM user u
+	 	WHERE u.user_project_id = ?";
+	 	$result = $this->db->query($query, array($project_id));
+
+	 	if (!$result) {
+	 		return false;
+	 	}
+
+	 	$row = $result->getRow();
+	 	if (!$row) {
+	 		return false;
+	 	} else {
+	 		return $row->total_count;
+	 	}
+	 }
 }

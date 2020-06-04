@@ -35,7 +35,7 @@ class Additionalagendavotes extends BaseController {
 
 		// data for view
 		$page_data['questions_query'] = 
-			$answers_model->fetch_additional_answers_with_votes($project_id, $user_id);
+			$answers_model->fetch_additional_answers_with_votes($user_id);
 		$page_data['opened_questions_count'] =
 			$answers_model->get_opened_user_questions_count($user_id, 2)->cnt; // additional questions
 		$page_data['additional_agenda_stage_state'] = $stage_state;

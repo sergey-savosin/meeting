@@ -39,28 +39,39 @@ class VoteResult extends BaseController {
 			throw new \Exception("Users are not found by ProjectId: $project_id");
 		}
 
+		$total_voices_count = $users_model->get_users_total_voices_by_projectid($project_id);
+		if (!$total_voices_count) {
+			throw new \Exception("Can't calculate total voices count for ProjectId: $project_id");
+		}
+
 		$general_answers = array();
+		$accept_additional_answers = array();
+		$additional_answers = array();
+		$half_voices_count = $total_voices_count /2;
+
 		// 4. get question and answer details for every users in current project
 		foreach ($users->getResult() as $user) {
 			// 4.1 general question answers
 			$answers = $answers_model->fetch_general_answers($user->user_id);
-			$qa = array();
-			foreach ($answers->getResult() as $answer) {
-				$ans_value = $this->convert_answer_to_string($answer->ans_number);
-				$qa[$answer->qs_title] = $ans_value;
-			}
-			$general_answers[$user->user_member_name] = $qa;
+			$general_answers[$user->user_member_name] = $this->make_answers_array($answers->getResult());
 
 			// 4.2 accept additional questions answers
-			// ToDo
+			$answers = $answers_model->fetch_accept_additional_answers($user->user_id);
+			$accept_additional_answers[$user->user_member_name] = $this->make_answers_array($answers->getResult());
 			
 			// 4.3 additional questions answers
-			// ToDo
+			$answers = $answers_model->fetch_additional_answers_with_votes($user->user_id);
+			$additional_answers[$user->user_member_name] = 
+				$this->make_additional_answers_array($answers->getResult(), $half_voices_count);
 		}
 
 		// 5. Prepare data for a view
 		$page_data['project'] = $project;
-		$page_data['users_list'] = $total_answers;
+		$page_data['total_voices'] = $total_voices_count;
+		$page_data['half_voices'] = $half_voices_count;
+		$page_data['general_answers'] = $general_answers;
+		$page_data['accept_additional_answers'] = $accept_additional_answers;
+		$page_data['additional_answers'] = $additional_answers;
 
 		helper(['url']);
 		$top_nav_data['uri'] = $this->request->uri;
@@ -73,8 +84,43 @@ class VoteResult extends BaseController {
 
 	}
 
+	/*************
+	 Составление массива вопросов и ответов по одному участнику
+	 ************/
+	function make_answers_array($answers) {
+		$qa = array();
+		foreach ($answers as $answer) {
+			$ans_value = $this->convert_answer_to_string($answer->ans_number);
+			$qa[$answer->qs_title] = $ans_value;
+		}
+		return $qa;
+	}
+
+	/************
+	 Составление массива вопросов и ответов по одному участнику
+	 Фильтр доп вопросов:
+	 Используются только принятые доп вопросы
+	 ************/
+	function make_additional_answers_array($answers, $half_voices_count) {
+		$qa = array();
+		foreach ($answers as $answer) {
+			if ($answer->ans_yes >= $half_voices_count) {
+				$ans_value = $this->convert_answer_to_string($answer->ans_number);
+				$qa[$answer->qs_title] = array('ans_value' => $ans_value,
+											'yes_count' => $answer->ans_yes,
+											'no_count' => $answer->ans_no,
+											'doubt_count' => $answer->and_doubt
+										);
+			}
+		}
+		return $qa;
+	}
+
 	function convert_answer_to_string($ans_number) {
 		switch ($ans_number) {
+			case null:
+				return '--';
+				break;
 			case 0:
 				return 'Да';
 				break;

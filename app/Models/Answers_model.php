@@ -160,28 +160,31 @@ class Answers_model extends Model {
 
 	 returns resultset
 	 ************************/
-	function fetch_additional_answers_with_votes($project_id, $user_id) {
+	function fetch_additional_answers_with_votes($user_id) {
 		$query = "SELECT
-			SUM(CASE WHEN a.ans_number = 0 THEN 1 ELSE 0 END) ans_yes, 
-			SUM(CASE WHEN a.ans_number = 1 THEN 1 ELSE 0 END) ans_no,
+			SUM(CASE WHEN a_acc.ans_number = 0 THEN 1 ELSE 0 END) ans_yes, 
+			SUM(CASE WHEN a_acc.ans_number = 1 THEN 1 ELSE 0 END) ans_no,
+			SUM(CASE WHEN a_acc.ans_number = 2 THEN 1 ELSE 0 END) and_doubt,
 			COUNT(1) ans_total,
-			bq.qs_id,
-			bq.qs_title,
-			ba.ans_number
-		FROM question q 
-		JOIN answer a 
-			ON a.ans_question_id = q.qs_id 
-		JOIN question bq
-			ON bq.qs_id = q.qs_base_question_id
-		LEFT JOIN answer ba
-			ON bq.qs_id = ba.ans_question_id
-			AND ba.ans_user_id = ?
-		WHERE q.qs_project_id=?
-			AND q.qs_category_id = 3
-		GROUP BY bq.qs_id, bq.qs_title
-		ORDER BY bq.qs_id";
+			q_base.qs_id,
+			q_base.qs_title,
+			a_base.ans_number
+		FROM user u
+		INNER JOIN question q_acc
+			ON q_acc.qs_project_id = u.user_project_id
+		INNER JOIN answer a_acc
+			ON a_acc.ans_question_id = q_acc.qs_id 
+		INNER JOIN question q_base
+			ON q_base.qs_id = q_acc.qs_base_question_id
+		LEFT JOIN answer a_base
+			ON a_base.ans_question_id = q_base.qs_id
+			AND a_base.ans_user_id = u.user_id
+		WHERE u.user_id = ?
+			AND q_acc.qs_category_id = 3 /* accept additional */
+		GROUP BY q_base.qs_id, q_base.qs_title
+		ORDER BY q_base.qs_id";
 
-		$result = $this->db->query($query, array ($user_id, $project_id));
+		$result = $this->db->query($query, array ($user_id));
 		
 		if (!$result) {
 			return false;
