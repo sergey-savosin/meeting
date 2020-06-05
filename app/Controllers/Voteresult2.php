@@ -116,6 +116,9 @@ class VoteResult extends BaseController {
 		return $qa;
 	}
 
+	/*************
+	 Преобразование номера ответа в строку
+	 *************/
 	function convert_answer_to_string($ans_number) {
 		switch ($ans_number) {
 			case null:
