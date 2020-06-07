@@ -213,4 +213,74 @@ class Answers_model extends Model {
 		}
 	}
 
+	/************************
+	 v4
+	 Returns questions with answer information
+	 $project_id
+	 $qs_category_id: 1 - general, 2 - additional, 3 - accept_additional
+
+	 Returns resultset
+	 ************************/
+	function fetch_answers_for_projectid($project_id, $qs_category_id) {
+		$query = "SELECT q.qs_id, q.qs_title,
+			SUM(u.user_votes_number) AS AnsweredVotesNumber,
+			SUM(CASE WHEN a.ans_number = 0 THEN u.user_votes_number ELSE 0 END) AS YesVotesNumber,
+			SUM(CASE WHEN a.ans_number = 1 THEN u.user_votes_number ELSE 0 END) AS NoVotesNumber,
+			SUM(CASE WHEN a.ans_number = 2 THEN u.user_votes_number ELSE 0 END) AS AbstainVotesNumber,
+			SUM(CASE WHEN a.ans_question_id IS NULL THEN u.user_votes_number ELSE 0 END) AS MissedVotesNumber
+
+			FROM question q
+			INNER JOIN user u ON u.user_project_id = q.qs_project_id
+			LEFT JOIN answer a
+				ON a.ans_question_id = q.qs_id
+				AND a.ans_user_id = u.user_id
+
+			WHERE q.qs_project_id = ?
+			AND q.qs_category_id = ?
+			GROUP BY q.qs_id
+		";
+
+		$result = $this->db->query($query, array ($project_id, $qs_category_id));
+
+		if (!$result) {
+			return false;
+		} else {
+			return $result;
+		}
+	}
+
+	/************************
+	 v4
+	 Расчёт итого голосования по вопросам
+
+	 return array
+	*************************/
+	function calc_answers_for_projectid($project_id, $qs_category_id, $total_voices_sum) {
+		if (!$total_voices_sum || $total_voices_sum === 0) {
+			throw new \Exception('total_voices_sum param should be positive.');
+			return false;
+		}
+
+		$answers = $this->fetch_answers_for_projectid($project_id, $qs_category_id);
+		$result = [];
+		$iter = 1;
+		foreach ($answers->getResult() as $a) {
+			$result[$iter] = array('qs_id' => $a->qs_id,
+							'qs_title' => $a->qs_title,
+							'AnsweredVotesNumber' => $a->AnsweredVotesNumber,
+							'YesVotesNumber' => $a->YesVotesNumber,
+							'NoVotesNumber' => $a->NoVotesNumber,
+							'AbstainVotesNumber' => $a->AbstainVotesNumber,
+							'MissedVotesNumber' => $a->MissedVotesNumber,
+							'YesVotesPercent' => 100.0 * $a->YesVotesNumber / $total_voices_sum,
+							'NoVotesPercent' => 100.0 * $a->NoVotesNumber / $total_voices_sum,
+							'AbstainVotesPercent' => 100.0 * $a->AbstainVotesNumber / $total_voices_sum,
+							'QuestionVotingResult' => ($a->YesVotesNumber / $total_voices_sum >0.5 ? 'Принят' : 'Отклонён')
+						);
+			$iter++;
+		}
+
+		return $result;
+	}
+
 }

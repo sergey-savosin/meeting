@@ -82,43 +82,43 @@ class Users_model extends Model {
 	}
 
 	/************
-	 v4
+	v4
 
-	 return resultset
-	 ************/
-	 function get_users_by_projectid($projectId) {
-	 	$query = "SELECT * FROM user u WHERE u.user_project_id = ?";
-	 	$db = $this->db;
-	 	$result = $db->query($query, array($projectId));
+	returns resultset
+	************/
+	function get_users_by_projectid($projectId) {
+		$query = "SELECT * FROM user u WHERE u.user_project_id = ?";
+		$db = $this->db;
+		$result = $db->query($query, array($projectId));
 
-	 	if (!$result) {
-	 		return false;
-	 	} else {
-	 		return $result;
-	 	}
-	 }
+		if (!$result) {
+			return false;
+		} else {
+			return $result;
+		}
+	}
 
-	 /*******************
-	  v4
-	  Общее кол-во голосов по всем участникам
+	/*******************
+	v4
+	Общее кол-во голосов по всем участникам
 
-	  returns scalar
-	  *******************/
-	 function get_users_total_voices_by_projectid($project_id) {
-	 	$query = "SELECT SUM(1) total_count
-	 	FROM user u
-	 	WHERE u.user_project_id = ?";
-	 	$result = $this->db->query($query, array($project_id));
+	returns scalar
+	*******************/
+	function get_users_total_voices_sum_by_projectid($project_id) {
+		$query = "SELECT SUM(IFNULL(u.user_votes_number, 1)) total_sum
+		FROM user u
+		WHERE u.user_project_id = ?";
+		$result = $this->db->query($query, array($project_id));
 
-	 	if (!$result) {
-	 		return false;
-	 	}
+		if (!$result) {
+			return false;
+		}
 
-	 	$row = $result->getRow();
-	 	if (!$row) {
-	 		return false;
-	 	} else {
-	 		return $row->total_count;
-	 	}
-	 }
+		$row = $result->getRow();
+		if (!$row) {
+			return false;
+		} else {
+			return $row->total_sum;
+		}
+	}
 }
