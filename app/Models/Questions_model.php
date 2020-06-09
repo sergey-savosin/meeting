@@ -70,6 +70,27 @@ class Questions_model extends Model {
 		}
 	}
 
+	/******************
+	v4
+
+	returns resultset
+	******************/
+	function fetch_questions_by_project_and_category($project_id, $category_id) {
+		$query = "SELECT *
+		FROM question q
+		WHERE q.qs_project_id = ?
+		AND q.qs_category_id = ?
+		ORDER BY q.qs_id ASC
+		";
+		$result = $this->db->query($query, array($project_id, $category_id));
+
+		if ($result) {
+			return $result;
+		} else {
+			return false;
+		}
+	}
+
 
 	/******
 	v4

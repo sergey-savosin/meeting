@@ -26,6 +26,7 @@ class VoteResult extends BaseController {
 		$projects_model = model('Projects_model');
 		$users_model = model('Users_model');
 		$answers_model = model('Answers_model');
+		$questions_model = model('Questions_model');
 
 		// 2. find project data
 		$project = $projects_model->get_project_by_id($project_id);
@@ -33,11 +34,10 @@ class VoteResult extends BaseController {
 			throw new \Exception("Invalid project_id: $project_id");
 		}
 
-		// 3. get users list for current project
-		$users = $users_model->get_users_by_projectid($project_id);
-		if (!$users) {
-			throw new \Exception("Users are not found by ProjectId: $project_id");
-		}
+		// 3. get questions list for current project
+		$general_questions = $questions_model->fetch_questions_by_project_and_category($project_id, 1);
+		$accept_additional_questions = $questions_model->fetch_questions_by_project_and_category($project_id, 3);
+		$additional_questions = $questions_model->fetch_questions_by_project_and_category($project_id, 2);
 
 		$total_voices_sum = $users_model->get_users_total_voices_sum_by_projectid($project_id);
 		if (!$total_voices_sum) {
@@ -60,19 +60,23 @@ class VoteResult extends BaseController {
 
 
 		// 4. get question and answer details for every users in current project
-		foreach ($users->getResult() as $user) {
-			// 4.1 general question answers
-			$answers = $answers_model->fetch_general_answers($user->user_id);
-			$general_answers[$user->user_member_name] = $this->make_answers_array($answers->getResult());
+		// 4.1 general question answers
+		foreach ($general_questions->getResult() as $question) {
+			$answers = $answers_model->fetch_answers_and_users_for_questionid($question->qs_id);
+			$general_answers[$question->qs_title] = $this->make_answers_array($answers->getResult());
+		}
 
-			// 4.2 accept additional questions answers
-			$answers = $answers_model->fetch_accept_additional_answers($user->user_id);
-			$accept_additional_answers[$user->user_member_name] = $this->make_answers_array($answers->getResult());
-			
-			// 4.3 additional questions answers
-			$answers = $answers_model->fetch_additional_answers_with_votes($user->user_id);
-			$additional_answers[$user->user_member_name] = 
-				$this->make_additional_answers_array($answers->getResult(), $half_voices_sum);
+		// 4.2 accept additional questions answers
+		foreach ($accept_additional_questions->getResult() as $question) {
+			$answers = $answers_model->fetch_answers_and_users_for_questionid($question->qs_id);
+			$accept_additional_answers[$question->qs_title] = $this->make_answers_array($answers->getResult());
+		}
+
+		// 4.3 additional questions answers
+		foreach ($additional_questions->getResult() as $question) {
+			$answers = $answers_model->fetch_answers_and_users_for_questionid($question->qs_id);
+			$additional_answers[$question->qs_title] = 
+				$this->make_answers_array($answers->getResult());
 		}
 
 		// 5. Prepare data for a view
@@ -82,9 +86,9 @@ class VoteResult extends BaseController {
 		$page_data['project_general_answers'] = $project_general_answers;
 		$page_data['project_accept_additional_answers'] = $project_accept_additional_answers;
 		$page_data['project_additional_answers'] = $project_additional_answers;
-		$page_data['user_general_answers'] = $general_answers;
-		$page_data['user_accept_additional_answers'] = $accept_additional_answers;
-		$page_data['user_additional_answers'] = $additional_answers;
+		$page_data['question_general_answers'] = $general_answers;
+		$page_data['question_accept_additional_answers'] = $accept_additional_answers;
+		$page_data['question_additional_answers'] = $additional_answers;
 
 		helper(['url']);
 		$top_nav_data['uri'] = $this->request->uri;
@@ -98,19 +102,19 @@ class VoteResult extends BaseController {
 	}
 
 	/*************
-	 Составление массива вопросов и ответов по одному участнику
+	 Составление массива участников и ответов по одному вопросу
 	 ************/
 	function make_answers_array($answers) {
 		$qa = array();
 		foreach ($answers as $answer) {
 			$ans_value = $this->convert_answer_to_string($answer->ans_number);
-			$qa[$answer->qs_title] = $ans_value;
+			$qa[$answer->user_member_name] = $ans_value;
 		}
 		return $qa;
 	}
 
 	/************
-	 Составление массива вопросов и ответов по одному участнику
+	 Составление массива участников и ответов по одному вопросу
 	 Фильтр доп вопросов:
 	 Используются только принятые доп вопросы
 	 ************/

@@ -238,6 +238,7 @@ class Answers_model extends Model {
 			WHERE q.qs_project_id = ?
 			AND q.qs_category_id = ?
 			GROUP BY q.qs_id
+			ORDER BY q.qs_id
 		";
 
 		$result = $this->db->query($query, array ($project_id, $qs_category_id));
@@ -272,15 +273,48 @@ class Answers_model extends Model {
 							'NoVotesNumber' => $a->NoVotesNumber,
 							'AbstainVotesNumber' => $a->AbstainVotesNumber,
 							'MissedVotesNumber' => $a->MissedVotesNumber,
-							'YesVotesPercent' => 100.0 * $a->YesVotesNumber / $total_voices_sum,
-							'NoVotesPercent' => 100.0 * $a->NoVotesNumber / $total_voices_sum,
-							'AbstainVotesPercent' => 100.0 * $a->AbstainVotesNumber / $total_voices_sum,
+							'YesVotesPercent' => round(100.0 * $a->YesVotesNumber / $total_voices_sum, 2),
+							'NoVotesPercent' => round(100.0 * $a->NoVotesNumber / $total_voices_sum, 2),
+							'AbstainVotesPercent' => round(100.0 * $a->AbstainVotesNumber / $total_voices_sum, 2),
 							'QuestionVotingResult' => ($a->YesVotesNumber / $total_voices_sum >0.5 ? 'Принят' : 'Отклонён')
 						);
 			$iter++;
 		}
 
 		return $result;
+	}
+
+	/************************
+	v4
+	Returns questions with answer and user detailed information
+	$project_id
+	$qs_category_id: 1 - general, 2 - additional, 3 - accept_additional
+
+	Returns resultset
+	************************/
+	function fetch_answers_and_users_for_questionid($question_id) {
+		$query = "SELECT q.qs_title,
+			u.user_member_name,
+			u.user_votes_number,
+			a.ans_number
+
+			FROM question q
+			INNER JOIN user u ON u.user_project_id = q.qs_project_id
+			LEFT JOIN answer a
+				ON a.ans_question_id = q.qs_id
+				AND a.ans_user_id = u.user_id
+
+			WHERE q.qs_id = ?
+			ORDER BY u.user_id
+		";
+
+		$result = $this->db->query($query, array ($question_id));
+
+		if (!$result) {
+			return false;
+		} else {
+			return $result;
+		}
 	}
 
 }

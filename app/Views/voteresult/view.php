@@ -109,15 +109,15 @@
 	</table>
 
 	<div class="h3">Кто как проголосовал. Вопросы основной повестки</div>
-	<?php foreach ($user_general_answers as $user_id => $answers) : ?>
+	<?php foreach ($question_general_answers as $qs_title => $answers) : ?>
 		<div class="panel panel-default panel-primary">
 			<div class="panel-heading">
-				<label>Пользователь:</label> <?php echo $user_id; ?>
+				<label>Вопрос:</label> <?php echo $qs_title; ?>
 			</div>
 			<div class="panel-body">
-				<?php foreach ($answers as $qs_title => $ans_value): ?>
+				<?php foreach ($answers as $user_member_name => $ans_value): ?>
 				<ul>
-					<li class="list-group-item list-group-item-info">Вопрос: <?php echo $qs_title ?></li>
+					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
 					<li class="list-group-item">Ответ: <?php echo $ans_value ?></li>
 				</ul>
 				<?php endforeach; ?>
@@ -126,15 +126,15 @@
 	<?php endforeach ; ?>
 
 	<div class="h3">Кто как проголосовал. Принятие вопросов дополнительной повестки</div>
-	<?php foreach ($user_accept_additional_answers as $user_id => $answers) : ?>
+	<?php foreach ($question_accept_additional_answers as $qs_title => $answers) : ?>
 		<div class="panel panel-default panel-success">
 			<div class="panel-heading">
-				<label>Пользователь:</label> <?php echo $user_id; ?>
+				<label>Вопрос:</label> <?php echo $qs_title; ?>
 			</div>
 			<div class="panel-body">
-				<?php foreach ($answers as $qs_title => $ans_value): ?>
+				<?php foreach ($answers as $user_member_name => $ans_value): ?>
 				<ul>
-					<li class="list-group-item list-group-item-info">Вопрос: <?php echo $qs_title ?></li>
+					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
 					<li class="list-group-item">Ответ: <?php echo $ans_value ?></li>
 				</ul>
 				<?php endforeach; ?>
@@ -144,16 +144,16 @@
 
 	<div class="h3">Кто как проголосовал. Вопросы дополнительной повестки</div>
 	<!--p><?php echo "Total voices: $total_voices, half voices: $half_voices";?> </p-->
-	<?php foreach ($user_additional_answers as $user_id => $answers) : ?>
+	<?php foreach ($question_additional_answers as $qs_title => $answers) : ?>
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<label>Пользователь:</label> <?php echo $user_id; ?>
+				<label>Вопрос:</label> <?php echo $qs_title; ?>
 			</div>
 			<div class="panel-body">
-				<?php foreach ($answers as $qs_title => $ans): ?>
+				<?php foreach ($answers as $user_member_name => $ans_value): ?>
 				<ul>
-					<li class="list-group-item list-group-item-info">Вопрос: <?php echo $qs_title ?></li>
-					<li class="list-group-item">Ответ: <?php echo $ans['ans_value']
+					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
+					<li class="list-group-item">Ответ: <?php echo $ans_value
 						/*.'(y '.$ans['yes_count']
 						.' n '.$ans['no_count']
 						.' dbt '.$ans['doubt_count']
