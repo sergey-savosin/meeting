@@ -108,7 +108,8 @@ class VoteResult extends BaseController {
 		$qa = array();
 		foreach ($answers as $answer) {
 			$ans_value = $this->convert_answer_to_string($answer->ans_number);
-			$qa[$answer->user_member_name] = $ans_value;
+			$qa[$answer->user_member_name] = array('ans_value' => $ans_value,
+												'user_voices' => $answer->user_votes_number);
 		}
 		return $qa;
 	}

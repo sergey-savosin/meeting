@@ -115,10 +115,11 @@
 				<label>Вопрос:</label> <?php echo $qs_title; ?>
 			</div>
 			<div class="panel-body">
-				<?php foreach ($answers as $user_member_name => $ans_value): ?>
+				<?php foreach ($answers as $user_member_name => $ans): ?>
 				<ul>
 					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
-					<li class="list-group-item">Ответ: <?php echo $ans_value ?></li>
+					<li class="list-group-item">Кол-во госолов: <?php echo $ans['user_voices'] ?></li>
+					<li class="list-group-item">Ответ: <?php echo $ans['ans_value'] ?></li>
 				</ul>
 				<?php endforeach; ?>
 			</div>
@@ -135,7 +136,8 @@
 				<?php foreach ($answers as $user_member_name => $ans_value): ?>
 				<ul>
 					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
-					<li class="list-group-item">Ответ: <?php echo $ans_value ?></li>
+					<li class="list-group-item">Кол-во госолов: <?php echo $ans['user_voices'] ?></li>
+					<li class="list-group-item">Ответ: <?php echo $ans['ans_value'] ?></li>
 				</ul>
 				<?php endforeach; ?>
 			</div>
@@ -153,11 +155,8 @@
 				<?php foreach ($answers as $user_member_name => $ans_value): ?>
 				<ul>
 					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
-					<li class="list-group-item">Ответ: <?php echo $ans_value
-						/*.'(y '.$ans['yes_count']
-						.' n '.$ans['no_count']
-						.' dbt '.$ans['doubt_count']
-						.')'*/ ?></li>
+					<li class="list-group-item">Кол-во госолов: <?php echo $ans['user_voices'] ?></li>
+					<li class="list-group-item">Ответ: <?php echo $ans['ans_value'] ?></li>
 				</ul>
 				<?php endforeach; ?>
 			</div>
