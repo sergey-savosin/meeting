@@ -146,13 +146,6 @@ class Votes extends BaseController {
 
 		if ($project) {
 			$project_id = $project->project_id;
-
-			// 3. find all users in this project
-			$users = $users_model->get_users_by_projectid($project_id);
-			if (!$users) {
-				$validationErrorText.="Users are not found by ProjectCode: $project_code. ";
-				$isRequestValid = false;
-			}
 		}
 
 		if (!$isRequestValid)
@@ -165,20 +158,112 @@ class Votes extends BaseController {
 			exit();
 		}
 
-		// 3. обработка списка пользователей
-		$res = array();
+		// 3. обработка данных
+		$projects_model = model('Projects_model');
+		$users_model = model('Users_model');
+		$answers_model = model('Answers_model');
+		$questions_model = model('Questions_model');
 
-		foreach ($users->getResult() as $u) {
-			$ans = 
-			$res[$u->user_login_code] = 1;
+		// 3. get questions list for current project
+		$general_questions = $questions_model->fetch_questions_by_project_and_category($project_id, 1);
+		$accept_additional_questions = $questions_model->fetch_questions_by_project_and_category($project_id, 3);
+		$additional_questions = $questions_model->fetch_questions_by_project_and_category($project_id, 2);
+
+		$total_voices_sum = $users_model->get_users_total_voices_sum_by_projectid($project_id);
+		if (!$total_voices_sum) {
+			throw new \Exception("Can't calculate total voices count for ProjectId: $project_id");
 		}
 
+		$general_answers = array();
+		$accept_additional_answers = array();
+		$additional_answers = array();
+		// Половина голосов - нужно для принятия вопроса
+		$half_voices_sum = $total_voices_sum /2;
+
+		// 4a. prepare voting results for general questions
+		$project_general_answers = 
+			$answers_model->calc_answers_for_projectid($project_id, 1, $total_voices_sum); // 1 = general question type
+		$project_accept_additional_answers = 
+			$answers_model->calc_answers_for_projectid($project_id, 3, $total_voices_sum); // 3 = accept additional question type
+		$project_additional_answers = 
+			$answers_model->calc_answers_for_projectid($project_id, 2, $total_voices_sum); // 2 = additional question type
+
+		// 4. get question and answer details for every users in current project
+		// 4.1 general question answers
+		$num_line = 1;
+		foreach ($general_questions->getResult() as $question) {
+			$answers = $answers_model->fetch_answers_and_users_for_questionid($question->qs_id);
+			$general_answers[$question->qs_title] = $this->make_answers_array($answers->getResult());
+			$num_line += 1;
+		}
+
+		// 4.2 accept additional questions answers
+		foreach ($accept_additional_questions->getResult() as $question) {
+			$answers = $answers_model->fetch_answers_and_users_for_questionid($question->qs_id);
+			$accept_additional_answers[$question->qs_title] = $this->make_answers_array($answers->getResult());
+		}
+
+		// 4.3 additional questions answers
+		foreach ($additional_questions->getResult() as $question) {
+			$answers = $answers_model->fetch_answers_and_users_for_questionid($question->qs_id);
+			$additional_answers[$question->qs_title] = 
+				$this->make_answers_array($answers->getResult());
+		}
+
+		// 5. Prepare data for a view
+		$page_data['project'] = $project;
+		$page_data['project_general_answers'] = $project_general_answers;
+		$page_data['project_accept_additional_answers'] = $project_accept_additional_answers;
+		$page_data['project_additional_answers'] = $project_additional_answers;
+		$page_data['question_general_answers'] = $general_answers;
+		$page_data['question_accept_additional_answers'] = $accept_additional_answers;
+		$page_data['question_additional_answers'] = $additional_answers;
+
 		// Return result from service
-		$json = json_encode($res);
+		$json = json_encode($page_data);
 
 		http_response_code(200); // 201: resource created
 
 		header("Content-Type: application/json");
 		echo $json;
+	}
+
+	/*************
+	 Составление массива участников и ответов по одному вопросу
+	************/
+	function make_answers_array($answers) {
+		$qa = array();
+		foreach ($answers as $answer) {
+			$ans_value = $this->convert_answer_to_string($answer->ans_number);
+			$qa[$answer->user_member_name] = array('ans_value' => $ans_value,
+												'user_voices' => $answer->user_votes_number);
+		}
+		return $qa;
+	}
+
+	/*************
+	 Преобразование номера ответа в строку
+	*************/
+	function convert_answer_to_string($ans_number) {
+		switch ($ans_number) {
+			case null:
+				return '--';
+				break;
+			case 0:
+				return 'Да';
+				break;
+			
+			case 1:
+				return 'Нет';
+				break;
+
+			case 2:
+				return 'Воздержался';
+				break;
+
+			default:
+				return 'Ошибка интерпретации ответа';
+				break;
+		}
 	}
 }
