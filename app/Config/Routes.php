@@ -36,6 +36,7 @@ $routes->post('document', 'Document::insert');
 //$routes->get('document/download/(:any)', 'Document::download');
 $routes->post('user', 'User::insert');
 $routes->post('question', 'Question::insert');
+$routes->post('testajax', 'Testajax::register');
 //$routes->get('votes/result/(:any)', 'Votes::Result');
 
 /**
