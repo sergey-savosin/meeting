@@ -575,7 +575,7 @@ header('Content-Type: image/png');
 	function get_document($doc_id) {
 		$query = "SELECT d.doc_body, d.doc_filename,
 			d.doc_project_id, d.doc_is_for_creditor, 
-			d.doc_is_for_debtor, d.doc_is_for_manager
+			d.doc_is_for_debtor, d.doc_is_for_manager, LENGTH(d.doc_body) doc_length
 		FROM document d
 		WHERE d.doc_id = ?
 		";

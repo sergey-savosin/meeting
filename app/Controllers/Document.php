@@ -231,17 +231,23 @@ class Document extends BaseController {
 		$filename = trim($doc_query->doc_filename);
 
 		// заставляем браузер показать окно сохранения файла
-		header('Content-Description: File Transfer');
-		header('Content-Type: application/octet-stream');
-		header('Content-Disposition: attachment; filename="'.basename($filename).'"'
-				."; filename*=UTF-8''".rawurlencode($filename));
-		header('Content-Transfer-Encoding: binary');
-		header('Expires: 0');
-		header('Cache-Control: must-revalidate');
-		header('Pragma: public');
-		header('Content-Length: ' . strlen($doc_query->doc_body));
-		// читаем файл и отправляем его пользователю
-		print($doc_query->doc_body);
+		$content_type = $this->mime_detect($doc_query->doc_body);
+		$length = $doc_query->doc_length;
+		$calc_length = strlen($doc_query->doc_body);
+		log_message('info', "download filename: $filename, content-type: $content_type, length: $length / $calc_length.");
+
+		// $this->response->setHeader('Content-Description', 'File Transfer')
+		// ->setHeader('Content-Type', 'application/octet-stream')
+		// ->setHeader('Content-Disposition', 'attachment; filename="'.basename($filename).'"'
+		// 		."; filename*=UTF-8''".rawurlencode($filename))
+		// ->setHeader('Content-Transfer-Encoding', 'binary')
+		// ->setHeader('Expires', '0')
+		// ->setHeader('Cache-Control', 'must-revalidate')
+		// ->setHeader('Pragma', 'public')
+		// ->setHeader('Content-Length', $length);
+		// // читаем файл и отправляем его пользователю
+		// echo $doc_query->doc_body;
+		return $this->response->download($filename, $doc_query->doc_body);
 	}
 
 	/**
@@ -251,7 +257,7 @@ class Document extends BaseController {
      *
      * @return string
      */
-    public static function mime_detect(&$test)
+    public function mime_detect(&$test)
     {
         $len = mb_strlen($test);
         if ($len >= 2 && $test[0] == chr(0xff) && $test[1] == chr(0xd8)) {
