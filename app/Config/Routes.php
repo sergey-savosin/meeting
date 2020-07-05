@@ -38,6 +38,7 @@ $routes->post('user', 'User::insert');
 $routes->post('question', 'Question::insert');
 $routes->post('testajax', 'Testajax::register');
 //$routes->get('votes/result/(:any)', 'Votes::Result');
+//$routes->get('project/edit/(:num)', 'Project::edit/$1');
 
 /**
  * --------------------------------------------------------------------

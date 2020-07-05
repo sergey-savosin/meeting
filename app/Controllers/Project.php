@@ -137,10 +137,96 @@ class Project extends BaseController {
 		echo $json;
 	}
 
-	public function get() {
-		echo 'get test';
+	/********************************
+	 V4
+	 Просмотр списка проектов
+	*********************************/
+	public function index() {
+		// get session data
+		$session = session();
+		$user = $session->get('user_login_code');
+		if ($user == FALSE) {
+			return redirect()->to(base_url('User/login'));
+		}
+
+		$projects_model = model('Projects_model');
+
+		// data for view
+		$page_data['projects_query'] = 
+			$projects_model->getProjectList();
+
+		helper(['form', 'url']);
+
+		$top_nav_data['uri'] = $this->request->uri;
+
+		// show view
+		if ($this->request->getMethod() === 'get' ) {
+
+			echo view('common/header');
+			echo view('nav/top_nav', $top_nav_data);
+			echo view('projects/list_view', $page_data);
+			echo view('common/footer');
+
+		}
 	}
 
+	/********************************
+	 V4
+	 Настройка одного проекта
+	*********************************/
+	public function edit() {
+		// get session data
+		$session = session();
+		$user = $session->get('user_login_code');
+		if ($user == FALSE) {
+			return redirect()->to(base_url('User/login'));
+		}
+
+		helper(['url', 'form']);
+		$projects_model = model('Projects_model');
+		$documents_model = model('Documents_model');
+
+		$uri = $this->request->uri;
+
+		$project_code = $uri->getSegment(3);
+		if (!$project_code) {
+			throw new \Exception('Empty project_code segment');
+		}
+
+		$project = $projects_model->get_project_by_code($project_code);
+		if (!$project) {
+			throw new \Exception('Empty project row for project_code: $project_code');
+		}
+
+		$project_id = $project->project_id;
+
+		// data for view
+		$page_data['project_query'] = $project;
+		$page_data['documents_query'] =
+			$documents_model->fetch_documents($project_id);
+
+		$top_nav_data['uri'] = $this->request->uri;
+
+		// show view
+		if ($this->request->getMethod() === 'get' ) {
+
+			echo view('common/header');
+			echo view('nav/top_nav', $top_nav_data);
+			echo view('projects/edit_view', $page_data);
+			echo view('common/footer');
+
+		}
+	}
+
+
+	/******************
+	v4
+	edit/add document
+	*******************/
+	public function edit_document() {
+
+	}
+	
 	// Converting to DateTime
 	// форматы дд.мм.гг (гггг) и чч:мм
 	function makeDateTime($date, $time) {

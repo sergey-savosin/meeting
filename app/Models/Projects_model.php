@@ -175,4 +175,20 @@ class Projects_model extends Model {
 		return $stage_state;
 	}
 
+	/***********************
+	v4
+	Список проектов
+
+	returns resultset
+	************************/
+	function getProjectList() {
+		$query = "SELECT * FROM project p ORDER BY p.project_id DESC";
+		$result = $this->db->query($query);
+		
+		if (!$result) {
+			return false;
+		} else {
+			return $result;
+		}
+	}
 }
