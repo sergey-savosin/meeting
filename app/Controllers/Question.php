@@ -21,6 +21,7 @@ class Question extends BaseController {
 		// 1. Get request params
 		$title = isset($data->Title) ? $data->Title : false;
 		$projectname = isset($data->ProjectName) ? $data->ProjectName : false;
+		$hasCsvContent = isset($data->HasCsvContent) && ($data->HasCsvContent === "true") ? true : false;
 
 		// 2. Validate request attributes
 		if (!$title || empty($title))
@@ -65,17 +66,14 @@ class Question extends BaseController {
 
 
 		// 5. Insert data to question table
-		$new_id = $questions_model->new_general_question($projectId, $title);
-
-		if (!$new_id)
-		{
-			$msg = "Can't save question to db: $title";
-			// $this->log_debug('question insert', $msg);
-
-			printf($msg);
-			http_response_code(400);
-
-			exit();
+		if ($hasCsvContent) {
+			$new_id = $this->save_one_question($questions_model, $projectId, $title);
+		} else {
+			$parts = explode(';', $title);
+			foreach ($parts as $part) {
+				$this->save_one_question($questions_model, $projectId, $part);
+			}
+			$new_id = false;
 		}
 
 		// 6. Return result from service
@@ -85,11 +83,30 @@ class Question extends BaseController {
 		// $this->log_debug('document insert', $msg);
 
 		http_response_code(201); // 201: resourse created
-		$resource = $this->request->uri->getSegment(1);
-		$newUri = base_url("$resource/$new_id");
-		header("Location: $newUri");
-		header("Content-Type: application/json");
-		echo $json;
+
+		// Если вызов в режиме одной вставки, то возвращаем ссылку на новый ресурс
+		if ($new_id) {
+			$resource = $this->request->uri->getSegment(1);
+			$newUri = base_url("$resource/$new_id");
+			header("Location: $newUri");
+			header("Content-Type: application/json");
+			echo $json;
+		}
 		
+	}
+
+	function save_one_question($questions_model, $projectId, $title) {
+		$new_id = $questions_model->new_general_question($projectId, $title);
+		
+		if (!$new_id)
+		{
+			$msg = "Can't save question to db: $title";
+			printf($msg);
+			http_response_code(400);
+
+			exit();
+		}
+
+		return $new_id;
 	}
 }
