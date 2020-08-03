@@ -32,6 +32,6 @@ class Filters extends BaseConfig
 	// List filter aliases and any before/after uri patterns
 	// that they should run on, like:
 	//    'isLoggedIn' => ['before' => ['account/*', 'profiles/*']],
-	public $filters = ['toolbar' => ['after' => [ 'User/login', '/', 'votes', 'additionalagendavotes', 
-						'additionalquestions', 'voteresult']]];
+	public $filters = ['toolbar' => ['after' => [ 'User/login2', '/2', 'votes2', 'additionalagendavotes2', 
+						'additionalquestions2', 'voteresult2']]];
 }

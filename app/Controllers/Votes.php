@@ -134,6 +134,8 @@ class Votes extends BaseController {
 			$isRequestValid = false;
 		}
 
+		$project_code = urldecode($project_code);
+
 		$users_model = model('Users_model');
 		$projects_model = model('Projects_model');
 
@@ -153,7 +155,7 @@ class Votes extends BaseController {
 			$msg = "Invalid Document GET request: $validationErrorText";
 			// $this->log_debug('document insert', $msg);
 
-			printf($msg);
+			print($msg);
 			http_response_code(400);
 			exit();
 		}

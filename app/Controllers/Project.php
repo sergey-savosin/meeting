@@ -126,7 +126,7 @@ class Project extends BaseController {
 		$mf_dt = $meetingFinishDate ? $meetingFinishDateTime->format($mysql_format) : null;
 		$new_id = $projectsModel->new_project($projectName, $projectCode, $ac_dt, $ma_dt, $aa_dt, $mf_dt);
 
-		// Result		
+		// Result
 		$json = json_encode(array("id" => $new_id));
 
 		http_response_code(201); // 201: resource created
@@ -192,10 +192,11 @@ class Project extends BaseController {
 		if (!$project_code) {
 			throw new \Exception('Empty project_code segment');
 		}
+		$project_code = urldecode($project_code);
 
 		$project = $projects_model->get_project_by_code($project_code);
 		if (!$project) {
-			throw new \Exception('Empty project row for project_code: $project_code');
+			throw new \Exception("Empty project row for project_code: $project_code");
 		}
 
 		$project_id = $project->project_id;

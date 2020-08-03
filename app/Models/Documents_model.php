@@ -86,20 +86,21 @@ class Documents_model extends Model {
 
 		$curlres = curl_exec($ch);
 
-		$contentDisposition = $headers["content-disposition"][0];
-		$newFileName = $this->extractFileName($headers["content-disposition"][0]);
-		//var_dump($headers["content-disposition"][0]);
+		if (array_key_exists("content-disposition", $headers)) {
+			$newFileName = $this->extractFileName($headers["content-disposition"][0]);
+		}
 		//var_dump($newFileName);
 
-		if (($newFileName) && !empty($newFileName) && 1==1)
+		if (isset($newFileName) && ($newFileName) && !empty($newFileName))
 		{
 			$outFileName = $newFileName;
 			$msg = 'using external filename: '.$outFileName;
+
 		} else {
 			$outFileName = $filename;
 			$msg = 'using provided filename: '.$outFileName;
 		}
-		// $this->log_debug('new_document_with_body', $msg);
+		log_message('info', 'new_document_with_body. '.$msg);
 
 		$url_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
@@ -120,6 +121,8 @@ class Documents_model extends Model {
 			throw new \Exception($msg);
 		}
 
+		log_message('info', '[*] file downloaded.');
+
 		// Save file to database
 		$data = array ('doc_project_id' => $projectId,
 					'doc_filename' => $outFileName,
@@ -127,15 +130,23 @@ class Documents_model extends Model {
 					'doc_is_for_creditor' => $isforcreditor,
 					'doc_is_for_debtor' => $isfordebtor,
 					'doc_is_for_manager' => $isformanager);
-		$db = \Config\Database::connect();
+		//$db = \Config\Database::connect();
+		$db = $this->db;
+		
+		log_message('info', '[*] db connected.');
 		if ($db->table('document')->insert($data)) {
+			log_message('info', '[*] rec inserted.');
 			$doc_id = $db->insertID();
 		} else {
+			log_message('info', '[*] error occured.');
 			$doc_id = false;
 		}
 
+		log_message('info', '[*] ok.');
+
 		// Close curl
 		curl_close($ch);
+		log_message('info', '[*] curl closed.');
 
 		return $doc_id;
 	}

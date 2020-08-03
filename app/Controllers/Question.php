@@ -66,7 +66,7 @@ class Question extends BaseController {
 
 
 		// 5. Insert data to question table
-		if ($hasCsvContent) {
+		if (!$hasCsvContent) {
 			$new_id = $this->save_one_question($questions_model, $projectId, $title);
 		} else {
 			$parts = explode(';', $title);

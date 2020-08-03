@@ -55,6 +55,7 @@ class Document extends BaseController {
 
 		$projects_model = model('Projects_model');
 		// 4a. Try to find projectId
+		$projectname = urldecode($projectname);
 		$project = $projects_model->get_project_by_name($projectname);
 		$projectId = false;
 
@@ -81,6 +82,7 @@ class Document extends BaseController {
 		$documents_model = model('Documents_model');
 
 		$correctedUrl = $documents_model->correctFileDownloadUrl($fileurl);
+		log_message('info', 'Document - corrected URL for download: '.$correctedUrl);
 
 		// 3a. Download file by Url
 		$doc_id = $documents_model->new_document_with_body($correctedUrl, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager);
@@ -154,6 +156,9 @@ class Document extends BaseController {
 			exit();
 		}
 
+		// ToDo: проверить, что файл передан.
+		// Возможно, лучше использовать getFiles()
+		// https://codeigniter.com/user_guide/incoming/incomingrequest.html?highlight=getfile
 		$file = $this->request->getFile('fileToUpload');
 		//if ($file->getName)
 		if (! $file->isValid())
@@ -185,7 +190,7 @@ class Document extends BaseController {
 
 		$project = $projects_model->get_project_by_code($project_code);
 		if (!$project) {
-			throw new \Exception('Empty project row for project_code: $project_code');
+			throw new \Exception("Empty project row for project_code: $project_code");
 		}
 
 		// continue to edit project

@@ -41,6 +41,26 @@ class BaseController extends Controller
 		//--------------------------------------------------------------------
 		// E.g.:
 		// $this->session = \Config\Services::session();
+		helper('text');
+		$incomingRequest = $this->request;
+		$ip = $incomingRequest->getIPAddress();
+		$method = $incomingRequest->getMethod(TRUE);
+		$uri = $incomingRequest->uri;
+		$host = $uri->getHost();
+		$query_string = $uri->getQuery(); // ToDo: use parse_str() to decode query string
+		$path = urldecode($uri->getPath());
+		$auth = $uri->getAuthority();
+		$user = $uri->getUserInfo();
+		$requestId = random_string();
+		$server_uri = $incomingRequest->getServer('REQUEST_URI');
+		log_message('info', "[Request $requestId]"
+			." IP: $ip, method: $method, query string: $query_string"
+			.", path: $path, host: $host, server_uri: $server_uri");
+		//log_message('info', "[Request $requestId] User: $user, Auth: $auth");
+		$body = $this->request->getBody();
+		log_message('info', "[Request $requestId] body: $body");
+		$decoded_body = $this->bodyJsonToStr($body);
+		log_message('info', "[Request $requestId] body decoded: $decoded_body");
 	}
 
 	// Get update parameters
@@ -69,5 +89,14 @@ class BaseController extends Controller
 		return $data;
 	}
 
+	function bodyJsonToStr($body) {
+		$ar = json_decode($body, true); // to array
+		$output = '';
+		if (isset($ar) && !empty($ar))
+		foreach($ar as $key=>$value) {
+			$output.="$key=>$value,";
+		}
+		return $output;
+	}
 
 }
