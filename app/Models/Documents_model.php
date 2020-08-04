@@ -89,7 +89,7 @@ class Documents_model extends Model {
 		if (array_key_exists("content-disposition", $headers)) {
 			$newFileName = $this->extractFileName($headers["content-disposition"][0]);
 		}
-		//var_dump($newFileName);
+		log_message('info', 'curlres len: '.strlen($curlres));
 
 		if (isset($newFileName) && ($newFileName) && !empty($newFileName))
 		{
@@ -126,20 +126,27 @@ class Documents_model extends Model {
 		// Save file to database
 		$data = array ('doc_project_id' => $projectId,
 					'doc_filename' => $outFileName,
-					'doc_body' => $curlres,
+					//'doc_body' => $curlres,
 					'doc_is_for_creditor' => $isforcreditor,
 					'doc_is_for_debtor' => $isfordebtor,
 					'doc_is_for_manager' => $isformanager);
 		//$db = \Config\Database::connect();
 		$db = $this->db;
 		
-		log_message('info', '[*] db connected.');
 		if ($db->table('document')->insert($data)) {
-			log_message('info', '[*] rec inserted.');
+			log_message('info', '[*] doc rec inserted.');
 			$doc_id = $db->insertID();
 		} else {
-			log_message('info', '[*] error occured.');
 			$doc_id = false;
+		}
+
+		$data = array ('docfile_doc_id' => $doc_id,
+						'docfile_body' => $curlres);
+
+		if ($db->table('docfile')->insert($data)) {
+			log_message('info', '[*] docfile rec inserted.');
+		} else {
+			log_message('info', '[*] error');
 		}
 
 		log_message('info', '[*] ok.');
@@ -584,10 +591,12 @@ header('Content-Type: image/png');
 
 	// return object for a row
 	function get_document($doc_id) {
-		$query = "SELECT d.doc_body, d.doc_filename,
+		$query = "SELECT IFNULL(df.docfile_body, d.doc_body) AS doc_body, d.doc_filename,
 			d.doc_project_id, d.doc_is_for_creditor, 
-			d.doc_is_for_debtor, d.doc_is_for_manager, LENGTH(d.doc_body) doc_length
+			d.doc_is_for_debtor, d.doc_is_for_manager, 
+			LENGTH(IFNULL(df.docfile_body, d.doc_body)) doc_length
 		FROM document d
+		LEFT JOIN docfile df ON df.docfile_doc_id = d.doc_id
 		WHERE d.doc_id = ?
 		";
 		$result = $this->db->query($query, array($doc_id));

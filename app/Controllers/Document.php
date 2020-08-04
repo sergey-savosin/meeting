@@ -252,6 +252,12 @@ class Document extends BaseController {
 		// ->setHeader('Content-Length', $length);
 		// // читаем файл и отправляем его пользователю
 		// echo $doc_query->doc_body;
+
+		// return $this->response;
+		log_message('info', '[*] memory: '.ini_get('memory_limit'));
+		ini_set('memory_limit', '255M');
+		log_message('info', '[*] memory: '.ini_get('memory_limit'));
+
 		return $this->response->download($filename, $doc_query->doc_body);
 	}
 
