@@ -3,6 +3,10 @@ use CodeIgniter\I18n\Time;
 
 class Project extends BaseController {
 
+	/*****************************
+	 V4
+	 Добавление проекта - Rest
+	******************************/
 	public function insert() {
 		// $wrid = $this->log_webrequest();
 		// $this->set_webrequest_id($wrid);
@@ -139,13 +143,15 @@ class Project extends BaseController {
 
 	/********************************
 	 V4
-	 Просмотр списка проектов
+	 Просмотр списка проектов - Web-UI
 	*********************************/
 	public function index() {
 		// get session data
 		$session = session();
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
+			// store uri to return here after login
+			$session->set('redirect_from', $this->request->uri->getSegment(1));
 			return redirect()->to(base_url('User/login'));
 		}
 
@@ -172,7 +178,7 @@ class Project extends BaseController {
 
 	/********************************
 	 V4
-	 Настройка одного проекта
+	 Настройка одного проекта - Web-UI
 	*********************************/
 	public function edit() {
 		// get session data
@@ -220,14 +226,14 @@ class Project extends BaseController {
 	}
 
 
-	/******************
-	v4
-	edit/add document
-	*******************/
-	public function edit_document() {
+	/***********************
+	 V4
+	 Удаление одного проекта - Rest
+	************************/
+	public function delete() {
 
 	}
-	
+
 	// Converting to DateTime
 	// форматы дд.мм.гг (гггг) и чч:мм
 	function makeDateTime($date, $time) {

@@ -35,6 +35,19 @@ class Projects_model extends Model {
 		}
 	}
 
+	/*********************
+	 Удаление проекта
+	 V4
+
+	 Параметра:
+	  projectCode
+	**********************/
+	function delete_project($projectCode) {
+		$db = \Config\Database::connect();
+		$db->where('project_code', $projectCode);
+		//$db->
+	}
+
 	// returns one row
 	function get_project_by_name($project_name) {
 		$query = "SELECT * FROM project p WHERE p.project_name = ?";

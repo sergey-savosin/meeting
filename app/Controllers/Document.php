@@ -169,7 +169,7 @@ class Document extends BaseController {
 		$filename = $file->getName();
 		$filebody = file_get_contents($file->getTempName());
 
-				// Save file to database
+		// Save file to database
 		$data = array ('doc_project_id' => $project_id,
 					'doc_filename' => $filename,
 					'doc_body' => $filebody,
@@ -188,10 +188,10 @@ class Document extends BaseController {
 		$projects_model = model('Projects_model');
 		$documents_model = model('Documents_model');
 
-		$project = $projects_model->get_project_by_code($project_code);
-		if (!$project) {
-			throw new \Exception("Empty project row for project_code: $project_code");
-		}
+		// $project = $projects_model->get_project_by_code($project_code);
+		// if (!$project) {
+		// 	throw new \Exception("Empty project row for project_code: $project_code");
+		// }
 
 		// continue to edit project
 		// $page_data['project_query'] = $project;

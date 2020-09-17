@@ -128,21 +128,21 @@ class Votes extends BaseController {
 		$validationErrorText = "";
 
 		// 1. Get request param
-		$project_code = $this->request->getGet('ProjectCode');
-		if (!isset($project_code)) {
-			$validationErrorText.="ProjectCode Get param is empty. ";
+		$project_name = $this->request->getGet('ProjectName');
+		if (!isset($project_name)) {
+			$validationErrorText.="ProjectName Get param is empty. ";
 			$isRequestValid = false;
 		}
 
-		$project_code = urldecode($project_code);
+		$project_name = urldecode($project_name);
 
 		$users_model = model('Users_model');
 		$projects_model = model('Projects_model');
 
 		// 2. find project by GET param
-		$project = $projects_model->get_project_by_code($project_code);
-		if (isset($project_code) && !$project) {
-			$validationErrorText.="Project is not found by ProjectCode: $project_code. ";
+		$project = $projects_model->get_project_by_name($project_name);
+		if (isset($project_name) && !$project) {
+			$validationErrorText.="Project is not found by ProjectName: $project_name. ";
 			$isRequestValid = false;
 		}
 

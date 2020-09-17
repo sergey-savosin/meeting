@@ -157,8 +157,16 @@ class User extends BaseController {
 			$session->set($data);
 
 			// 	$this->log_debug("User login", "Succefull loginned: $usr_code");
+			if ($session->has('redirect_from')) {
+				$redirect_from = $session->get('redirect_from');
+				$session->remove('redirect_from');
 
-			return redirect()->to(base_url('/'));
+				return redirect()->to(base_url($redirect_from));
+			} else {
+				return redirect()->to(base_url('/'));
+			}
+
+
 		}
 	}
 
