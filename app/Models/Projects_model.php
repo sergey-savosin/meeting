@@ -44,8 +44,84 @@ class Projects_model extends Model {
 	**********************/
 	function delete_project($projectCode) {
 		$db = \Config\Database::connect();
-		$db->where('project_code', $projectCode);
-		//$db->
+
+		$db->transStart(); // test mode with rollback
+
+		// 1. delete document
+		$this->delete_project_child_entity($db, $projectCode, 'document', 'doc_project_id');
+		// 2. delete answer
+		$this->delete_project_question_child_entity($db, $projectCode, 'answer', 'ans_question_id');
+		// 3. delete question->base_question
+		$this->delete_base_question_for_project($db, $projectCode);
+		// 4. delete question
+		$this->delete_project_child_entity($db, $projectCode, 'question', 'qs_project_id');
+		// 5. delete user
+		$this->delete_project_child_entity($db, $projectCode, 'user', 'user_project_id');
+
+		// 6. delete project
+		$builder = $db->table('project')
+			->where('project_code', $projectCode);
+		$builder->delete();
+
+		$db->transComplete();
+
+		return true;
+	}
+
+	/***********************
+	  Удаление из сущностей, связанных с проектом
+	***********************/
+	function delete_project_child_entity($db, $projectCode, $tableName, $tablePKField) {
+		$builder = $db
+			->table('project')
+			->join($tableName, $tableName.'.'.$tablePKField.' = project.project_id')
+			->where('project_code', $projectCode)
+			;
+
+		$sql = $builder->getCompiledSelect();
+		$len = strlen("SELECT *");
+		$sql = substr_replace($sql, 'DELETE '.$tableName, 0, $len);
+
+		log_message('info', "[delete_project] sql: $sql");
+
+		$db->query($sql);
+	}
+
+	/****************
+	 Удаление сущностей answer для project->question
+	*****************/
+	function delete_project_question_child_entity($db, $projectCode, $tableName, $tablePKField) {
+		$builder = $db
+			->table('project')
+			->join('question', 'question.qs_project_id = project.project_id')
+			->join($tableName, $tableName.'.'.$tablePKField.' = question.qs_id')
+			->where('project_code', $projectCode)
+			;
+		$sql = $builder->getCompiledSelect();
+		$len = strlen("SELECT *");
+		$sql = substr_replace($sql, 'DELETE '.$tableName, 0, $len);
+
+		log_message('info', "[delete_project] sql: $sql");
+
+		$db->query($sql);
+	}
+
+	/***********************
+	 delete base_question for project->question
+	************************/
+	function delete_base_question_for_project($db, $projectCode) {
+		$builder = $db
+			->table('project')
+			->join('question q1', 'q1.qs_project_id = project.project_id')
+			->join('question q2', 'q2.qs_base_question_id = q1.qs_id')
+			->where('project_code', $projectCode)
+			;
+		$sql = $builder->getCompiledSelect();
+		$len = strlen("SELECT *");
+		$sql = substr_replace($sql, 'DELETE q2', 0, $len);
+
+		log_message('info', "[delete_project] sql: $sql");
+		$db->query($sql);
 	}
 
 	// returns one row

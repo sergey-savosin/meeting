@@ -231,7 +231,39 @@ class Project extends BaseController {
 	 Удаление одного проекта - Rest
 	************************/
 	public function delete() {
+		$data = $this->getPostData();
 
+		$isRequestValid = true;
+		$validationErrorText = "";
+
+		$projectCode = isset($data->ProjectCode) ? $data->ProjectCode : false;
+		log_message('info', "[project-delete] projectCode: $projectCode");
+		
+		if (!$projectCode) {
+			$validationErrorText .= "Empty ProjectCode value in request. ";
+			$isRequestValid = false;
+		}
+
+		$projectsModel = model('Projects_model');
+
+		// business logic validation
+		if ($projectCode && !$projectsModel->check_project_code_exists($projectCode)) {
+			$validationErrorText .= "Project code does not exists: $projectCode. ";
+			$isRequestValid = false;
+		}
+
+		if (!$isRequestValid) {
+			// $this->log_debug("project insert", $validationErrorText);
+
+			echo "Invalid Project POST request: $validationErrorText";
+			http_response_code(400);
+			exit();
+		}
+
+		$res = $projectsModel->delete_project($projectCode);
+
+		// Result
+		http_response_code(204); // 204: no content
 	}
 
 	// Converting to DateTime

@@ -65,7 +65,8 @@ class BaseController extends Controller
 
 	// Get update parameters
 	function getPostData() {
-		if ($this->request->getMethod() != "post"){
+		$method = $this->request->getMethod();
+		if ($method != "post" && $method != "delete"){
 			return false;
 		}
 

@@ -32,6 +32,7 @@ $routes->setAutoRoute(true);
 // route since we don't have to scan directories.
 $routes->get('/', 'Documents::index');
 $routes->post('project', 'Project::insert');
+$routes->delete('project', 'Project::delete');
 $routes->post('document', 'Document::insert');
 //$routes->get('document/download/(:any)', 'Document::download');
 $routes->post('user', 'User::insert');
