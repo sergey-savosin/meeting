@@ -49,13 +49,20 @@ class Projects_model extends Model {
 
 		// 1. delete document
 		$this->delete_project_child_entity($db, $projectCode, 'document', 'doc_project_id');
+		
 		// 2. delete answer
 		$this->delete_project_question_child_entity($db, $projectCode, 'answer', 'ans_question_id');
+		$this->delete_answer_for_base_question_project($db, $projectCode);
+		$this->delete_answer_for_user_project($db, $projectCode);
+
 		// 3. delete question->base_question
 		$this->delete_base_question_for_project($db, $projectCode);
+		
 		// 4. delete question
 		$this->delete_project_child_entity($db, $projectCode, 'question', 'qs_project_id');
+		
 		// 5. delete user
+		//$this->get_answers_for_user_project($db, $projectCode);
 		$this->delete_project_child_entity($db, $projectCode, 'user', 'user_project_id');
 
 		// 6. delete project
@@ -122,6 +129,65 @@ class Projects_model extends Model {
 
 		log_message('info', "[delete_project] sql: $sql");
 		$db->query($sql);
+	}
+
+	/***************************
+	 delete answer for project->question->base_question
+	****************************/
+	function delete_answer_for_base_question_project($db, $projectCode) {
+		$builder = $db
+			->table('project p')
+			->join('question q1', 'q1.qs_project_id = p.project_id')
+			->join('question q2', 'q2.qs_base_question_id = q1.qs_id')
+			->join('answer a', 'a.ans_question_id = q2.qs_id')
+			->where('project_code', $projectCode)
+			;
+		$sql = $builder->getCompiledSelect();
+		$len = strlen("SELECT *");
+		$sql = substr_replace($sql, 'DELETE a', 0, $len);
+
+		log_message('info', "[delete_project] sql: $sql");
+		$db->query($sql);
+	}
+
+
+	/**************************
+	 delete answers for user for project
+	***************************/
+	function delete_answer_for_user_project($db, $projectCode) {
+		$builder = $db
+			->table('project p')
+			->join('user u', 'u.user_project_id = p.project_id')
+			->join('answer a', 'ans_user_id = u.user_id')
+			->where('project_code', $projectCode)
+			;
+		$sql = $builder->getCompiledSelect();
+		$len = strlen("SELECT *");
+		$sql = substr_replace($sql, 'DELETE a', 0, $len);
+
+		log_message('info', '[delete_project] sql: $sql');
+		$db->query($sql);
+	}
+
+	/****************
+	temp, can be deleted
+	*****************/
+	function get_answers_for_user_project($db, $projectCode) {
+		$builder = $db
+			->table('project p')
+			->join('user u', 'u.user_project_id = p.project_id')
+			->join('answer a', 'ans_user_id = u.user_id')
+			->where('project_code', $projectCode)
+			;
+		$sql = $builder->getCompiledSelect();
+		log_message('info', '[delete_project] sql: $sql');
+		$query = $db->query($sql);
+		$str = "";
+		foreach ($query->getResult() as $row) {
+			$str = $str ."\r\n".json_encode($row);
+		}
+
+		log_message('info', "[delete_project] result: $str");
 	}
 
 	// returns one row
