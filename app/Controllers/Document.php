@@ -2,6 +2,9 @@
 
 class Document extends BaseController {
 
+	/*******************
+	 V4
+	********************/
 	public function insert() {
 		// $wrid = $this->log_webrequest();
 		// $this->set_webrequest_id($wrid);
@@ -170,7 +173,7 @@ class Document extends BaseController {
 		$filebody = file_get_contents($file->getTempName());
 
 		// Save file to database
-		$data = array ('doc_project_id' => $project_id,
+		$data = array ('doc_project_id' => $project_id, //ToDo: use new table
 					'doc_filename' => $filename,
 					'doc_body' => $filebody,
 					'doc_is_for_creditor' => $isforcreditor,
@@ -208,6 +211,9 @@ class Document extends BaseController {
 		return redirect()->to(base_url("Project/edit/$project_code"));
 	}
 
+	/*************
+	 V4
+	**************/
 	public function download() {
 
 		helper('url');

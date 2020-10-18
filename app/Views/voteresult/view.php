@@ -133,7 +133,8 @@
 				<label>Вопрос:</label> <?php echo $qs_title; ?>
 			</div>
 			<div class="panel-body">
-				<?php foreach ($answers as $user_member_name => $ans_value): ?>
+				<?php foreach ($answers as $user_member_name => $ans
+				): ?>
 				<ul>
 					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
 					<li class="list-group-item">Кол-во госолов: <?php echo $ans['user_voices'] ?></li>
@@ -152,7 +153,7 @@
 				<label>Вопрос:</label> <?php echo $qs_title; ?>
 			</div>
 			<div class="panel-body">
-				<?php foreach ($answers as $user_member_name => $ans_value): ?>
+				<?php foreach ($answers as $user_member_name => $ans): ?>
 				<ul>
 					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
 					<li class="list-group-item">Кол-во госолов: <?php echo $ans['user_voices'] ?></li>

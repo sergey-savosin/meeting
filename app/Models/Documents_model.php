@@ -8,9 +8,10 @@ class Documents_model extends Model {
 	}
 
 	function fetch_documents($project_id) {
-		$query = "SELECT *
-		FROM document d
-		WHERE d.doc_project_id = ?
+		$query = "SELECT d.*, pd.pd_project_id as project_id
+		FROM project_document pd
+		INNER JOIN document d ON d.doc_id = pd.pd_doc_id
+		WHERE pd.pd_project_id = ?
 		ORDER BY d.doc_id ASC
 		";
 		$result = $this->db->query($query, array($project_id));
@@ -22,9 +23,9 @@ class Documents_model extends Model {
 		}
 	}
 
+	/* obsolete */
 	function new_document($filename, $projectId, $isforcreditor, $isfordebtor, $isformanager) {
-		$data = array ('doc_project_id' => $projectId,
-					'doc_filename' => $filename,
+		$data = array ('doc_filename' => $filename,
 					'doc_body' => 'empty',
 					'doc_is_for_creditor' => $isforcreditor,
 					'doc_is_for_debtor' => $isfordebtor,
@@ -124,9 +125,9 @@ class Documents_model extends Model {
 		log_message('info', '[*] file downloaded.');
 
 		// Save file to database
-		$data = array ('doc_project_id' => $projectId,
-					'doc_filename' => $outFileName,
-					//'doc_body' => $curlres,
+		//ToDo: add transaction
+
+		$data = array ('doc_filename' => $outFileName,
 					'doc_is_for_creditor' => $isforcreditor,
 					'doc_is_for_debtor' => $isfordebtor,
 					'doc_is_for_manager' => $isformanager);
@@ -139,6 +140,18 @@ class Documents_model extends Model {
 		} else {
 			$doc_id = false;
 		}
+
+		//ToDo: if $doc_id = false => Exception + log_message
+
+		$data = array ('pd_project_id' => $projectId,
+						'pd_doc_id' => $doc_id);
+		if ($db->table('project_document')->insert($data)) {
+			$pd_id = $db->insertID();
+		} else {
+			$pd_id = false;
+		}
+
+		//ToDo: if $pd_id = false => Exception + log_message
 
 		$data = array ('docfile_doc_id' => $doc_id,
 						'docfile_body' => $curlres);
@@ -592,7 +605,7 @@ header('Content-Type: image/png');
 	// return object for a row
 	function get_document($doc_id) {
 		$query = "SELECT IFNULL(df.docfile_body, d.doc_body) AS doc_body, d.doc_filename,
-			d.doc_project_id, d.doc_is_for_creditor, 
+			d.doc_is_for_creditor, 
 			d.doc_is_for_debtor, d.doc_is_for_manager, 
 			LENGTH(IFNULL(df.docfile_body, d.doc_body)) doc_length
 		FROM document d

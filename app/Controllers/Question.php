@@ -22,6 +22,9 @@ class Question extends BaseController {
 		$title = isset($data->Title) ? $data->Title : false;
 		$projectname = isset($data->ProjectName) ? $data->ProjectName : false;
 		$hasCsvContent = isset($data->HasCsvContent) && ($data->HasCsvContent === "true") ? true : false;
+		$comment = isset($data->Comment) ? $data->Comment : false;
+		$fileUrl = isset($data->FileUrl) ? $data->FileUrl : false;
+		$defaultFileName = isset($data->DefaultFileName) ? $data->DefaultFileName : false;
 
 		// 2. Validate request attributes
 		if (!$title || empty($title))
@@ -67,11 +70,15 @@ class Question extends BaseController {
 
 		// 5. Insert data to question table
 		if (!$hasCsvContent) {
-			$new_id = $this->save_one_question($questions_model, $projectId, $title);
+			$new_id = $this->save_one_question($questions_model, $projectId, $title, $comment, $fileUrl,
+				$defaultFileName);
 		} else {
-			$parts = explode(';', $title);
-			foreach ($parts as $part) {
-				$this->save_one_question($questions_model, $projectId, $part);
+			$titles = explode(';', $title);
+			$comments = explode(';', $comment);
+			$fileUrls = explode(';', $fileUrl);
+			foreach ($titles as $titlePart) {
+				// todo: get comment, title from array
+				$this->save_one_question($questions_model, $projectId, $titlePart, '', '');
 			}
 			$new_id = false;
 		}
@@ -95,7 +102,7 @@ class Question extends BaseController {
 		
 	}
 
-	function save_one_question($questions_model, $projectId, $title) {
+	function save_one_question($questions_model, $projectId, $title, $comment, $fileUrl, $defaultFileName) {
 		$new_id = $questions_model->new_general_question($projectId, $title);
 		
 		if (!$new_id)

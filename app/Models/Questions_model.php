@@ -102,11 +102,14 @@ class Questions_model extends Model {
 	Возвращает:
 		Скаляр
 	*/
-	function new_general_question($project_id, $title) {
+	function new_general_question($project_id, $title, $comment, $fileUrl,
+			$defaultFileName) {
 
 		$question_data = array ('qs_project_id' => $project_id,
 				'qs_title' => $title,
-				'qs_category_id' => 1); /* general question */
+				'qs_category_id' => 1, /* general question */
+				'qs_comment' => $comment
+			);
 		
 		$db = \Config\Database::connect();
 		if ($db->table('question')->insert($question_data)) {
