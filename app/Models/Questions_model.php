@@ -101,6 +101,8 @@ class Questions_model extends Model {
 		title
 	Возвращает:
 		Скаляр
+
+	UnitTest
 	*/
 	function new_general_question($project_id, $title, $comment, $fileUrl,
 			$defaultFileName) {

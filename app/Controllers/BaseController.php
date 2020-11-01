@@ -57,7 +57,9 @@ class BaseController extends Controller
 			." IP: $ip, method: $method, query string: $query_string"
 			.", path: $path, host: $host, server_uri: $server_uri");
 		//log_message('info', "[Request $requestId] User: $user, Auth: $auth");
+		//var_dump($this->request->fetchGlobal($method));
 		$body = $this->request->getBody();
+		//var_dump($body);
 		log_message('info', "[Request $requestId] body: $body");
 		$decoded_body = $this->bodyJsonToStr($body);
 		log_message('info', "[Request $requestId] body decoded: $decoded_body");

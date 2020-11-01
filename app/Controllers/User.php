@@ -125,6 +125,7 @@ class User extends BaseController {
 				$validation = null;
 			} else {
 				$validation = $this->validator;
+				log_message('info', "[user/login] validation: ".$validation->getError('usr_code'));
 			}
 			echo view('common/login_header');
 			echo view('nav/top_nav', $top_nav_data);
@@ -132,6 +133,7 @@ class User extends BaseController {
 			echo view('common/footer');
 		} else {
 			$usr_code = $this->request->getVar('usr_code');
+			log_message('info', "[user/login] usr_code: $usr_code");
 			$users_model = model('Users_model');
 			$user = $users_model->get_user_by_logincode($usr_code);
 			if (!$user) {

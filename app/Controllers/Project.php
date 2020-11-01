@@ -8,12 +8,8 @@ class Project extends BaseController {
 	 Добавление проекта - Rest
 	******************************/
 	public function insert() {
-		// $wrid = $this->log_webrequest();
-		// $this->set_webrequest_id($wrid);
-
 		$data = $this->getPostData();
-		// $data = $this->request->getJSON();
-		// $this->log_debug("project insert", json_encode($data));
+		log_message('info', "[project insert] ".json_encode($data));
 		$isRequestValid = true;
 		$validationErrorText = "";
 
@@ -131,14 +127,15 @@ class Project extends BaseController {
 		$new_id = $projectsModel->new_project($projectName, $projectCode, $ac_dt, $ma_dt, $aa_dt, $mf_dt);
 
 		// Result
-		$json = json_encode(array("id" => $new_id));
-
-		http_response_code(201); // 201: resource created
 		$resource = $this->request->uri->getSegment(1);
 		$newuri = base_url("$resource/$new_id");
-		header("Location: $newuri");
-		header("Content-Type: application/json");
-		echo $json;
+		$body = array("id"=>$new_id);
+
+		return $this->response
+			->setStatusCode(201)
+			->setHeader("Location", $newuri)
+			->setContentType("application/json")
+			->setJSON($body);
 	}
 
 	/********************************
@@ -167,7 +164,6 @@ class Project extends BaseController {
 
 		// show view
 		if ($this->request->getMethod() === 'get' ) {
-
 			echo view('common/header');
 			echo view('nav/top_nav', $top_nav_data);
 			echo view('projects/list_view', $page_data);
@@ -266,9 +262,17 @@ class Project extends BaseController {
 		http_response_code(204); // 204: no content
 	}
 
-	// Converting to DateTime
-	// форматы дд.мм.гг (гггг) и чч:мм
-	function makeDateTime($date, $time) {
+	/**
+	 * Converting string to DateTime.
+	 * форматы дд.мм.гг (гггг) и чч:мм
+	 *
+	 * @param string $date
+	 * @param string $time
+	 *
+	 * @return \CodeIgniter\I18n\Time
+	 * @throws \Exception
+	 */
+	protected function makeDateTime($date, $time) {
 		if (!$date) {
 			return false;
 		}

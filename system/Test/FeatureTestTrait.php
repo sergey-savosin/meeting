@@ -144,6 +144,7 @@ trait FeatureTestTrait
 
 		$request = $this->setupRequest($method, $path);
 		$request = $this->populateGlobals($method, $request, $params);
+		$request = $this->populateBody($method, $request, $params);
 
 		// Make sure the RouteCollection knows what method we're using...
 		$routes = $this->routes ?: Services::routes();
@@ -332,6 +333,26 @@ trait FeatureTestTrait
 		$request->setGlobal('request', $params);
 
 		$_SESSION = $this->session ?? [];
+
+		return $request;
+	}
+
+	/**
+	 * Populates the body of our Request with "global" data
+	 * relevant to the request, like $_POST data.
+	 *
+	 * @param string                    $method
+	 * @param \CodeIgniter\HTTP\Request $request
+	 * @param array|null                $params
+	 *
+	 * @return \CodeIgniter\HTTP\Request
+	 */
+	protected function populateBody(string $method, Request $request, array $params = null)
+	{
+		if ($method !== 'get' && !empty($params))
+		{
+			$request->setBody(json_encode($params));
+		}
 
 		return $request;
 	}
