@@ -84,6 +84,43 @@ class MeetingScript extends Migration
 		$this->forge->createTable('user');
 
 		// document
+		$this->forge->addField([
+			'doc_id'	=> [
+				'type'		=> 'INT',
+				'auto_increment' => true,
+			],
+			'doc_filename'	=> [
+				'type'		=> 'VARCHAR',
+				'constraint'	=> '200',
+			],
+			'doc_created_at'	=> [
+				'type' 		=> 'DATETIME',
+				'default'	=> 'current_timestamp()',
+			],
+			'doc_is_for_creditor'	=> [
+				'type'		=> 'BIT'
+			],
+			'doc_is_for_debtor'		=> [
+				'type'		=> 'BIT'
+			],
+			'doc_is_for_manager'	=> [
+				'type'		=> 'BIT'
+			]
+		]);
+		$this->forge->addKey('doc_id', true);
+		$this->forge->createTable('document');
+
+		// doc_file
+		$this->forge->addField([
+			'docfile_doc_id' => [
+				'type'		=> 'INT'
+			],
+			'docfile_body' => [
+				'type'		=> 'LONGBLOB'
+			],
+		]);
+		$this->forge->createTable('docfile');
+
 		// question
 		$this->forge->addField([
 			'qs_id'     => [
@@ -124,6 +161,8 @@ class MeetingScript extends Migration
 
 	public function down()
 	{
+		$this->forge->dropTable('docfile');
+		$this->forge->dropTable('document');
 		$this->forge->dropTable('project');
 		$this->forge->dropTable('user');
 		$this->forge->dropTable('question');

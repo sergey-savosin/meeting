@@ -31,32 +31,32 @@ class Project extends BaseController {
 
 		// validate required parameters
 		if (!$projectName) {
-			$validationErrorText .= "Empty ProjectName value in request. ";
+			$validationErrorText .= " Empty ProjectName value in request.";
 			$isRequestValid = false;
 		}
 
 		if (!$projectCode) {
-			$validationErrorText .= "Empty ProjectCode value in request. ";
+			$validationErrorText .= " Empty ProjectCode value in request.";
 			$isRequestValid = false;
 		}
 
 		// if (!$acquaintanceStartDate) {
-		// 	$validationErrorText .= "Empty AcquaintanceStartDate value in request. ";
+		// 	$validationErrorText .= " Empty AcquaintanceStartDate value in request.";
 		// 	$isRequestValid = false;
 		// }
 
 		// if (!$mainAgendaStartDate) {
-		// 	$validationErrorText .= "Empty MainAgendaStartDate value in request. ";
+		// 	$validationErrorText .= " Empty MainAgendaStartDate value in request.";
 		// 	$isRequestValid = false;
 		// }
 
 		// if (!$additionalAgendaStartDate) {
-		// 	$validationErrorText .= "Empty AdditionalAgendaStartDate value in request. ";
+		// 	$validationErrorText .= " Empty AdditionalAgendaStartDate value in request.";
 		// 	$isRequestValid = false;
 		// }
 
 		// if (!$meetingFinishDate) {
-		// 	$validationErrorText .= "Empty MeetingFinishDate value in request. ";
+		// 	$validationErrorText .= " Empty MeetingFinishDate value in request.";
 		// 	$isRequestValid = false;
 		// }
 
@@ -66,7 +66,7 @@ class Project extends BaseController {
 			$acquaintanceStartDateTime = $this->makeDateTime($acquaintanceStartDate, $acquaintanceStartTime);
 			if (!$acquaintanceStartDateTime) {
 				$dt_str = $acquaintanceStartDate.' '.$acquaintanceStartTime;
-				$validationErrorText .= "AcquaintanceStartDate has incorrect format: $dt_str. ";
+				$validationErrorText .= " AcquaintanceStartDate has incorrect format: $dt_str.";
 				$isRequestValid = false;
 			}
 		}
@@ -75,7 +75,7 @@ class Project extends BaseController {
 			$mainAgendaStartDateTime = $this->makeDateTime($mainAgendaStartDate, $mainAgendaStartTime);
 			if (!$mainAgendaStartDateTime) {
 				$dt_str = $acquaintanceStartDate.' '.$acquaintanceStartTime;
-				$validationErrorText .= 'MainAgendaStartDate has incorrect format: $dt_str. ';
+				$validationErrorText .= ' MainAgendaStartDate has incorrect format: $dt_str.';
 				$isRequestValid = false;
 			}
 		}
@@ -84,7 +84,7 @@ class Project extends BaseController {
 			$additionalAgendaStartDateTime = $this->makeDateTime($additionalAgendaStartDate, $additionalAgendaStartTime);
 			if (!$additionalAgendaStartDateTime) {
 				$dt_str = $additionalAgendaStartDate.' '.$additionalAgendaStartTime;
-				$validationErrorText .= 'AdditionalAgendaStartDate has incorrect format: $dt_str. ';
+				$validationErrorText .= ' AdditionalAgendaStartDate has incorrect format: $dt_str.';
 				$isRequestValid = false;
 			}
 		}
@@ -93,7 +93,7 @@ class Project extends BaseController {
 			$meetingFinishDateTime = $this->makeDateTime($meetingFinishDate, $meetingFinishTime);
 			if (!$meetingFinishDateTime) {
 				$dt_str = $meetingFinishDate.' '.$meetingFinishTime;
-				$validationErrorText .= 'MeetingFinishDate has incorrect format: $dt_str. ';
+				$validationErrorText .= ' MeetingFinishDate has incorrect format: $dt_str.';
 				$isRequestValid = false;
 			}
 		}
@@ -101,21 +101,25 @@ class Project extends BaseController {
 		$projectsModel = model('Projects_model');
 		// business logic validation
 		if ($projectName && $projectsModel->check_project_name_exists($projectName)) {
-			$validationErrorText .= "Project name already exists: $projectName. ";
+			$validationErrorText .= " Project name already exists: $projectName.";
 			$isRequestValid = false;
 		}
 
 		if ($projectCode && $projectsModel->check_project_code_exists($projectCode)) {
-			$validationErrorText .= "Project code already exists: $projectCode. ";
+			$validationErrorText .= " Project code already exists: $projectCode.";
 			$isRequestValid = false;
 		}
 
 		if (!$isRequestValid) {
 			// $this->log_debug("project insert", $validationErrorText);
 
-			echo "Invalid Project POST request: $validationErrorText";
-			http_response_code(400);
-			exit();
+			$msg = "Invalid Project POST request:$validationErrorText";
+			log_message('info', "[project insert] validation error:$msg");
+
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader('Location')
+				->setJSON(['error'=>$msg]);
 		}
 
 		// save to database
@@ -131,8 +135,9 @@ class Project extends BaseController {
 		$newuri = base_url("$resource/$new_id");
 		$body = array("id"=>$new_id);
 
+		log_message('info', "[project insert] result ok: ". json_encode($body));
 		return $this->response
-			->setStatusCode(201)
+			->setStatusCode(201) // 201: resourse created
 			->setHeader("Location", $newuri)
 			->setContentType("application/json")
 			->setJSON($body);

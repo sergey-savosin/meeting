@@ -45,7 +45,9 @@ class ProjectTest extends FeatureTestCase
 		parent::tearDown();
 	}
 
-
+	/**
+	* Тест модели
+	*/
 	public function test_ProjectModelNewProjectAdded()
 	{
 		$this->projects_model->new_project('test1', 'test1', null, null, null, null);
@@ -54,6 +56,9 @@ class ProjectTest extends FeatureTestCase
 		$this->dontSeeInDatabase('project', ['project_name' => 'test21']);
 	}
 
+	/**
+	* Тест модели
+	*/
 	public function test_ProjectModelGetProjectListWorks()
 	{
 		// Arrange
@@ -91,7 +96,7 @@ class ProjectTest extends FeatureTestCase
 	
 	- GET project
 	*****/
-	public function test_UnauthorizedGetProjectStartsRedirect()
+	public function test_GetProjectUnauthorizedSessionStartsRedirect()
 	{
 		$result = $this->get('project/index');
 		$this->assertNotNull($result);
@@ -107,7 +112,7 @@ class ProjectTest extends FeatureTestCase
 	- POST existing user
 	- GET project
 	*****/
-	public function test_AuthorizedGetProjectShowsProjectList()
+	public function test_GetProjectAuthorizedSessionShowsProjectList()
 	{
 		// Arrange
 		$userResult = $this->post('user/login', [
@@ -130,6 +135,48 @@ class ProjectTest extends FeatureTestCase
 		$response->assertSee('Начало голосования');
 		$response->assertSee('ProjectName-123');
 		$response->assertSee('ProjectCode-123');
+	}
+
+	/**
+	* POST project - валидация параметров приводит к ошибке
+	*
+	* - POST project
+	*
+	* @testWith ["", "ProjectCode123", "Invalid Project POST request: Empty ProjectName value in request."]
+ 	*			["ProjectName123", "", "Invalid Project POST request: Empty ProjectCode value in request."]
+ 	*			["", "", "Invalid Project POST request: Empty ProjectName value in request. Empty ProjectCode value in request."]
+ 	*			["ProjectName-123", "ProjectCode-123", "Invalid Project POST request: Project name already exists: ProjectName-123. Project code already exists: ProjectCode-123."]
+ 	*			["ProjectName-123", "ProjectCode-444", "Invalid Project POST request: Project name already exists: ProjectName-123."]
+ 	*			["ProjectName-444", "ProjectCode-123", "Invalid Project POST request: Project code already exists: ProjectCode-123."]
+	*/
+	public function test_PostProjectParametersValidation(string $projectName, string $projectCode, string $expectedErrorMessage)
+	{
+		// Arrange
+		$params = [
+			'ProjectName'=>$projectName,
+			'ProjectCode'=>$projectCode
+		];
+
+		$_SERVER['CONTENT_TYPE'] = "application/json";
+		
+		// Act
+		$response = $this->post("project/insert", $params);
+
+		// $content = $response->getJSON();
+
+		// Assert
+		$response->assertStatus(400);
+		$response->assertHeaderMissing('Location');
+		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
+		$response->assertJSONExact(['error'=>$expectedErrorMessage]);
+
+		$newId = 2;
+		$criteria = [
+			'Project_Name' => $params['ProjectName'],
+			'Project_Code' => $params['ProjectCode'],
+			'Project_id'	=> $newId,
+		];
+		$this->dontSeeInDatabase('project', $criteria);
 	}
 
 	/**

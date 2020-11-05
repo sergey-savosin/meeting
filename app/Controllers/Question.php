@@ -3,15 +3,15 @@ use CodeIgniter\I18n\Time;
 
 class Question extends BaseController {
 
+	/****************
+	 * V4
+	 * UnitTest
+	 */
 	public function insert() {
-		// $wrid = $this->log_webrequest();
-		// $this->set_webrequest_id($wrid);
 		$projects_model = model('Projects_model');
 		$questions_model = model('Questions_model');
 
-		// $questions_model->set_webrequest_id($wrid);
-
-		// $this->log_debug('question insert', 'start question insert');
+		log_message('info', '[question insert] starts.');
 
 		$data = $this->getPostData();
 		$isRequestValid = true;
@@ -29,24 +29,25 @@ class Question extends BaseController {
 		// 2. Validate request attributes
 		if (!$title || empty($title))
 		{
-			$validationErrorText.="Empty Title value in request. ";
+			$validationErrorText.="Empty Title value in request.";
 			$isRequestValid = false;
 		}
 
 		if (!$projectname || empty($projectname))
 		{
-			$validationErrorText.="Empty ProjectName value in request. ";
+			$validationErrorText.="Empty ProjectName value in request.";
 			$isRequestValid = false;
 		}
 
 		if (!$isRequestValid)
 		{
 			$msg = "Invalid Question POST request: $validationErrorText";
-			// $this->log_debug('question insert', $msg);
+			log_message('info', "[question insert] error: $msg");
 
-			printf($msg);
-			http_response_code(400);
-			exit();
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader('Location')
+				->setJSON(['error'=>$msg]);
 		}
 
 		// 4. get projectId
@@ -57,18 +58,20 @@ class Question extends BaseController {
 		if (!$project)
 		{
 			$msg = "Can't find project by projectName: $projectname";
-			// $this->log_debug('question insert', $msg);
+			log_message('info', "[question insert] error: $msg");
 
-			printf($msg);
-			http_response_code(400);
-
-			exit();
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader('Location')
+				->setJSON(['error'=>$msg]);
 		}
 
 		$projectId = $project->project_id;
 
 
 		// 5. Insert data to question table
+		$new_ids = array();
+		$new_id = false;
 		if (!$hasCsvContent) {
 			$new_id = $this->save_one_question($questions_model, $projectId, $title, $comment, $fileUrl,
 				$defaultFileName);
@@ -78,32 +81,38 @@ class Question extends BaseController {
 			$fileUrls = explode(';', $fileUrl);
 			foreach ($titles as $titlePart) {
 				// todo: get comment, title from array
-				$this->save_one_question($questions_model, $projectId, $titlePart, '', '');
+				$temp_id = $this->save_one_question($questions_model, $projectId, $titlePart, '', '', '');
+				$new_ids[] = $temp_id;
 			}
-			$new_id = false;
 		}
 
 		// 6. Return result from service
-		$json = json_encode(array('id' => $new_id));
 
-		$msg = "Return value: ".$json;
-		// $this->log_debug('document insert', $msg);
-
-		http_response_code(201); // 201: resourse created
-
-		// Если вызов в режиме одной вставки, то возвращаем ссылку на новый ресурс
 		if ($new_id) {
+			// Если вызов в режиме одной вставки, то возвращаем ссылку на новый ресурс
 			$resource = $this->request->uri->getSegment(1);
 			$newUri = base_url("$resource/$new_id");
-			header("Location: $newUri");
-			header("Content-Type: application/json");
-			echo $json;
+			$body = array('id' => $new_id);
+
+			log_message('info', "[question insert] result ok: ". json_encode($body));
+
+			return $this->response
+				->setStatusCode(201) // 201: resourse created
+				->setHeader("Location", $newUri)
+				->setJSON($body);
+		} else {
+			// добавлено несколько строк
+			$body = array('id' => $new_ids);
+			return $this->response
+				->setStatusCode(201) // 201: resourse created
+				->removeHeader('Location')
+				->setJSON($body);
 		}
 		
 	}
 
 	function save_one_question($questions_model, $projectId, $title, $comment, $fileUrl, $defaultFileName) {
-		$new_id = $questions_model->new_general_question($projectId, $title);
+		$new_id = $questions_model->new_general_question($projectId, $title, '', '', '');
 		
 		if (!$new_id)
 		{
