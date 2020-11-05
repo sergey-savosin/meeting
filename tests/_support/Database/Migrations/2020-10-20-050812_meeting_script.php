@@ -121,6 +121,22 @@ class MeetingScript extends Migration
 		]);
 		$this->forge->createTable('docfile');
 
+		// project_document
+		$this->forge->addField([
+			'pd_id' => [
+				'type' => 'INT',
+				'auto_increment' => true
+			],
+			'pd_project_id' => [
+				'type' => 'INT',
+			],
+			'pd_doc_id' => [
+				'type' => 'INT'
+			]
+		]);
+		$this->forge->addKey('pd_id', true);
+		$this->forge->createTable('project_document');
+
 		// question
 		$this->forge->addField([
 			'qs_id'     => [
@@ -161,6 +177,7 @@ class MeetingScript extends Migration
 
 	public function down()
 	{
+		$this->forge->dropTable('project_document');
 		$this->forge->dropTable('docfile');
 		$this->forge->dropTable('document');
 		$this->forge->dropTable('project');

@@ -6,11 +6,7 @@ class Document extends BaseController {
 	 V4
 	********************/
 	public function insert() {
-		// $wrid = $this->log_webrequest();
-		// $this->set_webrequest_id($wrid);
-		// $this->Documents_model->set_webrequest_id($wrid);
-
-		// $this->log_debug('document insert', 'start document insert');
+		log_message('info', '[document insert] Starting');
 
 		$data = $this->getPostData();
 		$isRequestValid = true;
@@ -28,35 +24,37 @@ class Document extends BaseController {
 		// 2. Validate request attributes
 		if (!$filename || empty($filename))
 		{
-			$validationErrorText.="Empty FileName value in request. ";
+			$validationErrorText.=" Empty FileName value in request.";
 			$isRequestValid = false;
 		}
 
 		if (!$fileurl || empty($fileurl))
 		{
-			$validationErrorText.="Empty FileUrl value in request. ";
+			$validationErrorText.=" Empty FileUrl value in request.";
 			$isRequestValid = false;
 		}
 
 		if (!$projectname || empty($projectname))
 		{
-			$validationErrorText.="Empty ProjectName value in request. ";
+			$validationErrorText.=" Empty ProjectName value in request.";
 			$isRequestValid = false;
 		}
 
 		if (!$isRequestValid)
 		{
-			$msg = "Invalid Document POST request: $validationErrorText";
-			// $this->log_debug('document insert', $msg);
+			$msg = "Invalid Document POST request:$validationErrorText";
+			$body = ['error' => $msg];
+			log_message('info', "[document insert] error: $msg");
 
-			printf($msg);
-			http_response_code(400);
-			exit();
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader("Location")
+				->setJSON($body);
 		}
 
 		// 4. get projectId
-
 		$projects_model = model('Projects_model');
+
 		// 4a. Try to find projectId
 		$projectname = urldecode($projectname);
 		$project = $projects_model->get_project_by_name($projectname);
@@ -72,48 +70,46 @@ class Document extends BaseController {
 		if (!$projectId)
 		{
 			$msg = "Can't add projectId with projectName: $projectname";
-			// $this->log_debug('document insert', $msg);
+			$body = ['error' => $msg];
+			log_message('info', "[document insert] error: $msg");
 
-			printf($msg);
-			http_response_code(400);
-
-			exit();
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader("Location")
+				->setJSON($body);
 		}
 
-		// 5. Insert data to document table
-		// 3. Correct Url
+		// 5. Correct Url
 		$documents_model = model('Documents_model');
 
 		$correctedUrl = $documents_model->correctFileDownloadUrl($fileurl);
 		log_message('info', 'Document - corrected URL for download: '.$correctedUrl);
 
-		// 3a. Download file by Url
-		$doc_id = $documents_model->new_document_with_body($correctedUrl, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager);
-		// ToDo: Try-Catch
+		// 5a. Download file by Url and iInsert data to document table
+		$new_id = $documents_model->new_document_with_body($correctedUrl, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager);
 
-		if (!$doc_id)
+		if (!$new_id)
 		{
 			$msg = "Can't load file or save document to db: $filename from URL: $correctedUrl";
-			// $this->log_debug('document insert', $msg);
+			$body = ['error' => $msg];
+			log_message('info', "[document insert] error:$msg");
 
-			printf($msg);
-			http_response_code(400);
-
-			exit();
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader("Location")
+				->setJSON($body);
 		}
 
 		// 6. Return result from service
-		$json = json_encode(array('id' => $doc_id));
+		$resource = $this->request->uri->getSegment(1);
+		$newuri = base_url("$resource/$new_id");
+		$body = array("id"=>$new_id);
 
-		$msg = "Return value: ".$json;
-		// $this->log_debug('document insert', $msg);
-
-		http_response_code(201); // 201: resourse created
-		$site = 'https://vprofy.ru';
-		header("Location: $site/" . $_SERVER['REQUEST_URI'] . "/$doc_id");
-		header("Content-Type: application/json");
-		print $json;
-		
+		log_message('info', "[document insert] result ok: ". json_encode($body));
+		return $this->response
+			->setStatusCode(201) // 201: resourse created
+			->setHeader("Location", $newuri)
+			->setJSON($body);
 	}
 
 	/*
