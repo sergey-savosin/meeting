@@ -54,17 +54,21 @@ class DocumentTest extends FeatureTestCase
 
 	/**
 	* POST document с указанием существующего ProjectName добавляет документ
-	
-	- POST document
+	*
+	* - POST document
+	* neg: ["https://aubot.azurewebsites.net/api/download/1pvOz47s671c1OJb5c_hwI2Woo7EJQosLIXHyv5TWdxU", "test"]
+	* big: ["https://docs.google.com/document/d/1bVxQsgvBLoGJtfJL6gUsm6zzFOaC_KIc65ntsHShcpU", "Арантас ФА часть 1.docx"]
+	* @testWith 
+	* ["https://docs.google.com/spreadsheets/d/1-vTMclGuOJeaw4yqm3AWvg04q-C4sHyQ0zmKiQTY9aY/export?format=xlsx", "Автобанкротство - тайм шит.xlsx"]
+	* ["https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB", "Untitled.jpg"]
 	*****/
-	public function test_InsertDocumentWithExistingProjectNameWorks()
+	public function test_InsertDocumentWithExistingProjectNameWorks($url, $filename)
 	{
 		// Arrange
 		$params = [
-			'ProjectName'=>'ProjectName-125',
+			'ProjectName'=>$this->defaultProjectName,
 			'FileName'=>'test.xlsx',
-			'FileUrl'=>
-		'https://docs.google.com/spreadsheets/d/1-vTMclGuOJeaw4yqm3AWvg04q-C4sHyQ0zmKiQTY9aY/export?format=xlsx',
+			'FileUrl'=>$url,
 			'IsForCreditor'=>'true'
 
 		];
@@ -72,13 +76,14 @@ class DocumentTest extends FeatureTestCase
 		$_SERVER['CONTENT_TYPE'] = "application/json";
 		
 		// Act
+		ob_start();
 		$response = $this->post("document/insert", $params);
+		$output = ob_get_clean(); // in case you want to check the actual body
 
 		// $content = $response->getJSON();
 
 		// Assert
 		$doc_id = 1;
-		$doc_filename = 'Автобанкротство - тайм шит.xlsx';
 
 		$response->assertStatus(201); // created
 		$response->assertJSONExact(['id' => $doc_id]);
@@ -87,7 +92,7 @@ class DocumentTest extends FeatureTestCase
 
 		$criteria = [
 			'doc_id'  => $doc_id,
-			'doc_filename' => $doc_filename,
+			'doc_filename' => $filename,
 			'doc_is_for_creditor' => 1,
 			'doc_is_for_debtor' => 0,
 			'doc_is_for_manager' => 0

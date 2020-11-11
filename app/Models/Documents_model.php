@@ -39,8 +39,10 @@ class Documents_model extends Model {
 
 	/************
 	 v4
+
+	 UnitTest
 	 ************/
-	function new_document_with_body($url, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager) {
+	function new_document_with_body_old($url, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager) {
 		$ua = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13';
 		$ck = 'NID=197=fOSKSSxLFKeCpm7hlXff0qJ_HBd-wLDFgGH7mj37pPvivWyYVG7HqhZrKWIN_9g3jxy1fLr-dcQaqlrBeMxoOd3CugsR0bl00cU6coMstYaukQvCCqDwkSIUVfZNserollFirVBkMrqpmEvoEbrvXOqUbqDuLE5yqpLV69kmvtc; expires=Sun, 02-Aug-2020 15:48:51 GMT; path=/; domain=.google.com; HttpOnly';
 		//$ckfile = tempnam ("/domains/vprofy.ru/tmp", "CURLCOOKIE");
@@ -58,9 +60,9 @@ class Documents_model extends Model {
 		$options = array(
 			CURLOPT_TIMEOUT => 600, // set this to 10 minutes so we dont timeout on big files
 			CURLOPT_RETURNTRANSFER => true, //!
-			CURLOPT_VERBOSE => true,
-			CURLOPT_COOKIE => $ck,
-			CURLOPT_COOKIEJAR => $ckfile,
+			CURLOPT_VERBOSE => true, //true
+			CURLOPT_COOKIE => $ckfile, //$ck
+			CURLOPT_COOKIEJAR => $ckfile, //$ckfile,
 			CURLOPT_AUTOREFERER => true,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_MAXREDIRS => 20,
@@ -71,21 +73,22 @@ class Documents_model extends Model {
 		curl_setopt_array($ch, $options);
 
 		// this function is called by curl for each header received
-		curl_setopt($ch, CURLOPT_HEADERFUNCTION,
-			function($curl, $header) use (&$headers)
-			{
-			    $len = strlen($header);
-			    $header = explode(':', $header, 2);
-			    if (count($header) < 2) // ignore invalid headers
-			        return $len;
+		// curl_setopt($ch, CURLOPT_HEADERFUNCTION,
+		// 	function($curl, $header) use (&$headers)
+		// 	{
+		// 	    $len = strlen($header);
+		// 	    $header = explode(':', $header, 2);
+		// 	    if (count($header) < 2) // ignore invalid headers
+		// 	        return $len;
 			    
-			    $headers[strtolower(trim($header[0]))][] = trim($header[1]);
+		// 	    $headers[strtolower(trim($header[0]))][] = trim($header[1]);
 			    
-			    return $len;
-			}
-		);
+		// 	    return $len;
+		// 	}
+		// );
 
 		$curlres = curl_exec($ch);
+		log_message('info', 'body:'.$curlres);
 
 		if (array_key_exists("content-disposition", $headers)) {
 			$newFileName = $this->extractFileName($headers["content-disposition"][0]);
@@ -170,6 +173,120 @@ class Documents_model extends Model {
 
 		return $doc_id;
 	}
+
+	/************
+	 v4
+
+	 UnitTest
+	 ************/
+	function new_document_with_body($url, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager) {
+		$options = [
+			'timeout'  => 600 // 10 minutes
+		];
+		$client = \Config\Services::curlrequest($options);
+
+		$response = $client->request('GET', $url, [
+				'timeout' => 600, // 10 minutes
+				'cookie' => '',
+				'debug' => true,
+				'allow_redirects' => [
+					'max'       => 20,
+					//'protocols' => ['https'] // Force HTTPS domains only.
+				]
+			]);
+
+		log_message('info', 'headers len: '.count($response->getHeaders()));
+		log_message('info', 'headers: '.json_encode($response->getHeaders()));
+		$ctype = $response->getHeaderLine("content-type");
+		log_message('info', 'content-type: '.$ctype);
+		$location = $response->getHeaderLine("location");
+		log_message('info', 'location: '.$location);
+		$disposition = $response->getHeaderLine("content-disposition");
+		log_message('info', 'content-disposition: '.$disposition);
+		if (!empty($disposition)) {
+			$newFileName = $this->extractFileName($disposition);
+		}
+
+		$body = $response->getBody();
+		log_message('info', 'body len: '.strlen($body));
+
+		if (isset($newFileName) && ($newFileName) && !empty($newFileName))
+		{
+			$outFileName = $newFileName;
+			$msg = 'using external filename: '.$outFileName;
+
+		} else {
+			$outFileName = $filename;
+			$msg = 'using provided filename: '.$outFileName;
+		}
+		log_message('info', 'new_document_with_body. '.$msg);
+
+		$url_status = $response->getStatusCode();
+		log_message('info', 'status: '.$url_status);
+
+		// Validate url_status
+		if (empty($url_status))
+		{
+			$msg = "No HTTP code was returned. URL: ".$url;
+			// $this->log_debug('new_document_with_body', $msg);
+
+			throw new \Exception($msg."\r\n");
+		}
+
+		if ($url_status<>200)
+		{
+			$msg = "Can not download file from URL. Response code: ".$url_status.". URL: ".$url;
+			// $this->log_debug('new_document_with_body', $msg."\r\n");
+
+			throw new \Exception($msg);
+		}
+
+		log_message('info', '[*] file downloaded.');
+
+		// Save file to database
+		//ToDo: add transaction
+
+		$data = array ('doc_filename' => $outFileName,
+					'doc_is_for_creditor' => $isforcreditor,
+					'doc_is_for_debtor' => $isfordebtor,
+					'doc_is_for_manager' => $isformanager);
+		//$db = \Config\Database::connect();
+		$db = $this->db;
+		
+		if ($db->table('document')->insert($data)) {
+			log_message('info', '[*] doc rec inserted.');
+			$doc_id = $db->insertID();
+		} else {
+			$doc_id = false;
+		}
+
+		//ToDo: if $doc_id = false => Exception + log_message
+
+		$data = array ('pd_project_id' => $projectId,
+						'pd_doc_id' => $doc_id);
+		if ($db->table('project_document')->insert($data)) {
+			$pd_id = $db->insertID();
+		} else {
+			$pd_id = false;
+		}
+
+		//ToDo: if $pd_id = false => Exception + log_message
+
+		$data = array ('docfile_doc_id' => $doc_id,
+						'docfile_body' => $body);
+
+		if ($db->table('docfile')->insert($data)) {
+			log_message('info', '[*] docfile rec inserted.');
+		} else {
+			log_message('info', '[*] error');
+		}
+
+		log_message('info', '[*] ok.');
+		// log_message('info', '[*] body: '.$body);
+
+		return $doc_id;
+	}
+
 
 	/**
 	* public function

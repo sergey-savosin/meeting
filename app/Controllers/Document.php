@@ -4,6 +4,8 @@ class Document extends BaseController {
 
 	/*******************
 	 V4
+
+	 UnitTest
 	********************/
 	public function insert() {
 		log_message('info', '[document insert] Starting');

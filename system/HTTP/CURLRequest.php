@@ -447,6 +447,7 @@ class CURLRequest extends Request
 		}
 
 		$output = $this->sendRequest($curl_options);
+		log_message('info', 'curl: '.$output);
 
 		if (strpos($output, 'HTTP/1.1 100 Continue') === 0)
 		{
