@@ -184,32 +184,26 @@ class Documents_model extends Model {
 			'timeout'  => 600 // 10 minutes
 		];
 		$client = \Config\Services::curlrequest($options);
-
-		$response = $client->request('GET', $url, [
+		$options = [
 				'timeout' => 600, // 10 minutes
 				'cookie' => '',
-				'debug' => true,
+				'debug' => false,
 				'allow_redirects' => [
-					'max'       => 20,
-					//'protocols' => ['https'] // Force HTTPS domains only.
+					'max' => 20,
 				]
-			]);
+			];
 
-		log_message('info', 'headers len: '.count($response->getHeaders()));
-		log_message('info', 'headers: '.json_encode($response->getHeaders()));
+		$response = $client->request('GET', $url, $options, true);
+
 		$ctype = $response->getHeaderLine("content-type");
-		log_message('info', 'content-type: '.$ctype);
 		$location = $response->getHeaderLine("location");
-		log_message('info', 'location: '.$location);
 		$disposition = $response->getHeaderLine("content-disposition");
-		log_message('info', 'content-disposition: '.$disposition);
+
 		if (!empty($disposition)) {
 			$newFileName = $this->extractFileName($disposition);
 		}
 
 		$body = $response->getBody();
-		log_message('info', 'body len: '.strlen($body));
-
 		if (isset($newFileName) && ($newFileName) && !empty($newFileName))
 		{
 			$outFileName = $newFileName;
@@ -219,10 +213,8 @@ class Documents_model extends Model {
 			$outFileName = $filename;
 			$msg = 'using provided filename: '.$outFileName;
 		}
-		log_message('info', 'new_document_with_body. '.$msg);
 
 		$url_status = $response->getStatusCode();
-		log_message('info', 'status: '.$url_status);
 
 		// Validate url_status
 		if (empty($url_status))

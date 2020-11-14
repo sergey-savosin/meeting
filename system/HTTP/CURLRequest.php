@@ -147,7 +147,7 @@ class CURLRequest extends Request
 	 *
 	 * @return \CodeIgniter\HTTP\ResponseInterface
 	 */
-	public function request($method, string $url, array $options = []): ResponseInterface
+	public function request($method, string $url, array $options = [], bool $nativeheaders = null): ResponseInterface
 	{
 		$this->parseOptions($options);
 
@@ -155,7 +155,7 @@ class CURLRequest extends Request
 
 		$method = filter_var($method, FILTER_SANITIZE_STRING);
 
-		$this->send($method, $url);
+		$this->send($method, $url, $nativeheaders);
 
 		return $this->response;
 	}
@@ -415,8 +415,14 @@ class CURLRequest extends Request
 	 *
 	 * @return \CodeIgniter\HTTP\ResponseInterface
 	 */
-	public function send(string $method, string $url)
+	public function send(string $method, string $url, bool $nativeheaders = null)
 	{
+		if (null === $nativeheaders) {
+			$nativeheaders = false;
+		}
+		// $str_nh = ($nativeheaders === true ? 'true' : 'false');
+		// log_message('info', "nativeheaders = $str_nh");
+
 		// Reset our curl options so we're on a fresh slate.
 		$curl_options = [];
 
@@ -431,7 +437,12 @@ class CURLRequest extends Request
 
 		$curl_options[CURLOPT_URL]            = $url;
 		$curl_options[CURLOPT_RETURNTRANSFER] = true;
-		$curl_options[CURLOPT_HEADER]         = true;
+		
+		// hide headers from output for $nativeheaders option
+		if ($nativeheaders === false) {
+			$curl_options[CURLOPT_HEADER]     = true;
+		}
+		
 		$curl_options[CURLOPT_FRESH_CONNECT]  = true;
 		// Disable @file uploads in post data.
 		$curl_options[CURLOPT_SAFE_UPLOAD] = true;
@@ -446,8 +457,8 @@ class CURLRequest extends Request
 			sleep($this->delay);
 		}
 
-		$output = $this->sendRequest($curl_options);
-		log_message('info', 'curl: '.$output);
+		$output = $this->sendRequest($curl_options, $nativeheaders);
+		// log_message('info', 'curl: '.$output);
 
 		if (strpos($output, 'HTTP/1.1 100 Continue') === 0)
 		{
@@ -457,7 +468,7 @@ class CURLRequest extends Request
 		// Split out our headers and body
 		$break = strpos($output, "\r\n\r\n");
 
-		if ($break !== false)
+		if ($break !== false && $nativeheaders === false)
 		{
 			// Our headers
 			$headers = explode("\n", substr($output, 0, $break));
@@ -808,11 +819,33 @@ class CURLRequest extends Request
 	 *
 	 * @return string
 	 */
-	protected function sendRequest(array $curl_options = []): string
+	protected function sendRequest(array $curl_options = [], $nativeheaders): string
 	{
 		$ch = curl_init();
 
 		curl_setopt_array($ch, $curl_options);
+
+		if ($nativeheaders === true) {
+			// this function is called by curl for each header received
+			curl_setopt($ch, CURLOPT_HEADERFUNCTION,
+				function($curl, $header) //use (&$headers)
+				{
+					// log_message('info', 'CR::sendRequest headerfunc. Header: '.$header);
+
+					$len = strlen($header);
+					$header = explode(':', $header, 2);
+					if (count($header) < 2) // ignore invalid headers
+					    return $len;
+
+					$title = strtolower(trim($header[0]));
+					$value = trim($header[1]);
+					//$headers[strtolower(trim($header[0]))][] = trim($header[1]);
+					$this->response->setHeader($title, $value);
+
+					return $len;
+				}
+			);
+		}
 
 		// Send the request and wait for a response.
 		$output = curl_exec($ch);
@@ -822,8 +855,12 @@ class CURLRequest extends Request
 			throw HTTPException::forCurlError(curl_errno($ch), curl_error($ch));
 		}
 
+		$httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$this->response->setStatusCode($httpcode);
+
 		curl_close($ch);
 
+		//return ['httpcode'=>$httpcode, 'output'=>$output];
 		return $output;
 	}
 

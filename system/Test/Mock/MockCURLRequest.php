@@ -26,7 +26,7 @@ class MockCURLRequest extends CURLRequest
 
 	//--------------------------------------------------------------------
 
-	protected function sendRequest(array $curl_options = []): string
+	protected function sendRequest(array $curl_options = [], $nativeheaders = null): string
 	{
 		// Save so we can access later.
 		$this->curl_options = $curl_options;

@@ -38,7 +38,7 @@ class DocumentTest extends FeatureTestCase
 	Mock CurlRequest
 	
 	*****/
-	public function test_CurlRequestMock()
+	public function test_InsertDocumentCurlRequestMock()
 	{
 		// Arrange
 		$config = new \Config\App;
@@ -64,6 +64,9 @@ class DocumentTest extends FeatureTestCase
 	*****/
 	public function test_InsertDocumentWithExistingProjectNameWorks($url, $filename)
 	{
+		// clear mock
+		Services::injectMock('curlrequest', null);
+
 		// Arrange
 		$params = [
 			'ProjectName'=>$this->defaultProjectName,
