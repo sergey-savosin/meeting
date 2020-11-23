@@ -14,7 +14,7 @@ class QuestionTest extends FeatureTestCase
 	protected $additionalCategoryId = 2;
 	protected $acceptAdditionalCategoryId = 3;
 	protected $defaultProjectId = 1;
-	protected string $defaultProjectName = 'ProjectName-123';
+	protected $defaultProjectName = 'ProjectName-123';
 	protected $defaultUserId = 1;
 
 	public function setUp(): void
@@ -73,11 +73,12 @@ class QuestionTest extends FeatureTestCase
 		$result = $q_list->getResult();
 
 		// Assert
-		$this->assertCount(1, $result);
-		$res = $result[0];
+		$this->assertCount(2, $result); // seed item + new item
+		$res = $result[1];
+		$expectedId = 2;
 
 		$expected = new \stdClass;
-		$expected->qs_id = 1;
+		$expected->qs_id = $expectedId;
 		$expected->qs_project_id = $this->defaultProjectId;
 		$expected->qs_category_id = $this->generalCategoryId;
 		$expected->qs_title = $title;
@@ -145,7 +146,7 @@ class QuestionTest extends FeatureTestCase
 		$result = $this->post('question', $params);
 
 		// Assert
-		$expectedId = 1;
+		$expectedId = 2;
 		$this->assertNotNull($result);
 		$this->assertFalse($result->isRedirect());
 		$result->assertStatus(201);
@@ -186,14 +187,14 @@ class QuestionTest extends FeatureTestCase
 		$result = $this->post('question', $params);
 
 		// Assert
-		$expectedId = 1;
+		$expectedId = 2;
 
 		$this->assertNotNull($result);
 		$this->assertFalse($result->isRedirect());
 		$result->assertStatus(201);
 		$result->assertHeaderMissing('Location');
 		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$result->assertJSONExact(array('id'=>[1, 2]));
+		$result->assertJSONExact(array('id'=>[$expectedId, $expectedId+1]));
 
 		$criteria = [
 			'qs_title'=>$title1,

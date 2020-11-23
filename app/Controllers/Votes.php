@@ -4,25 +4,25 @@ use CodeIgniter\I18n\Time;
 class Votes extends BaseController {
 
 	public function index() {
-		// $wrid = $this->log_webrequest();
-		// $this->set_webrequest_id($wrid);
+		log_message('info', 'Votes::index started.');
 
 		// get session data
 		$session = session();
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
+			log_message('info', 'Votes::index. Empty user_login_code (session variable).');
 			return redirect()->to(base_url('User/login'));
 		}
 
 		$project_id = $session->get('user_project_id');
 		if (!$project_id) {
-			//$this->log_debug('Votes/index', 'Empty project_id');
+			log_message('info', 'Votes::index. Empty project_id (session variable).');
 			throw new \Exception('Empty project_id');
 		}
 
 		$user_id = $session->get('user_id');
 		if (!$user_id) {
-			//$this->log_debug('Votes/index', 'Empty user_id');
+			log_message('info', 'Votes::index. Empty user_id (session variable).');
 			throw new \Exception('Empty user_id');
 		}
 
@@ -76,32 +76,36 @@ class Votes extends BaseController {
 		if ($this->request->getMethod() === 'get' || !$this->validate($val_rules) ) {
 
 			if ($this->request->getMethod() === 'get') {
+				log_message('info', 'Votes::index - get branch');
 				$validation = null;
 			} else {
 				$validation = $this->validator;
+				log_message('info', 'Votes::index - validation: '
+					.$validation->listErrors('my_list'));
 			}
 
 			$page_data['validation'] = $validation;
 
-			echo view('common/header');
-			echo view('nav/top_nav', $top_nav_data);
-			echo view('votes/view', $page_data);
-			echo view('common/footer');
+			return view('common/header').
+				view('nav/top_nav', $top_nav_data).
+				view('votes/view', $page_data).
+				view('common/footer');
 		} else {
+			log_message('info', "Votes::index posted optradio");
 			// save data to DB
-
-			foreach ($this->request->getPost('optradio') as $key => $value) {
+			foreach ($this->request->getVar('optradio') as $key => $value) {
 				$qs_id = $key;
 				$ans_num = $value;
 				$ans_string = $value;
 				$answer_type_id = 1; // yes, no, abstain
 				$answer = $answers_model->get_answer($qs_id, $user_id);
-				//$this->log_debug('Votes/index', "ans_id: $answer->ans_id");
+				// log_message('info', "Votes::index key-value: $key, $value");
+
 				if ($answer) {
-					//$this->log_debug('Votes/index', "updating answer...");
+					// log_message('info', "Votes::index updating answer: $key = $value.");
 					$res = $answers_model->update_general_answer($answer->ans_id, $ans_num, $ans_string, $answer_type_id);
 				} else {
-					// $this->log_debug('Votes/index', "inserting answer...");
+					// log_message('info', "Votes::index inserting answer: $key = $value.");
 					$res = $answers_model->new_general_answer($qs_id, $user_id, $ans_num, $ans_string, $answer_type_id);
 				}
 				if (!$res) {

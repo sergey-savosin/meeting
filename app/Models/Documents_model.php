@@ -194,6 +194,7 @@ class Documents_model extends Model {
 			];
 
 		$response = $client->request('GET', $url, $options, true);
+		//var_dump($response);
 
 		$ctype = $response->getHeaderLine("content-type");
 		$location = $response->getHeaderLine("location");

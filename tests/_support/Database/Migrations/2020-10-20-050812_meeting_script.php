@@ -171,12 +171,38 @@ class MeetingScript extends Migration
 		]);
 		$this->forge->addKey('qs_id', true);
 		$this->forge->createTable('question');
+
+		// answer
+		$this->forge->addField([
+			'ans_id' => [
+				'type' => 'int',
+				'auto_increment' => true
+			],
+			'ans_question_id' => [
+				'type' => 'int'
+			],
+			'ans_user_id' => [
+				'type' => 'int'
+			],
+			'ans_number' => [
+				'type' => 'int'
+			],
+			'ans_string' => [
+				'type' => 'int' // ToDo: correct type?
+			],
+			'ans_answer_type_id' => [
+				'type' => 'int'
+			]
+		]);
+		$this->forge->addKey('ans_id', true);
+		$this->forge->createTable('answer');
 	}
 
 	//--------------------------------------------------------------------
 
 	public function down()
 	{
+		$this->forge->dropTable('answer');
 		$this->forge->dropTable('project_document');
 		$this->forge->dropTable('docfile');
 		$this->forge->dropTable('document');

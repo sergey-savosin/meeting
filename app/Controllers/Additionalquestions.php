@@ -2,32 +2,32 @@
 
 class AdditionalQuestions extends BaseController {
 
+	/***********
+	* CI4
+	* Unit Test
+	*/
 	public function index() {
-		// $wrid = $this->log_webrequest();
-		// $this->set_webrequest_id($wrid);
-
 		// get session data
 		$session = session();
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
-			redirect()->to(base_url('user/login'));
+			return redirect()->to(base_url('User/login'));
 		}
 
+		// validation
 		$project_id = $session->get('user_project_id');
 		if (!$project_id) {
-			// $this->log_debug('AdditionalQuestions/index', 'Empty project_id');
 			throw new \Exception('Empty project_id');
 		}
 
 		$user_id = $session->get('user_id');
 		if (!$user_id) {
-			// $this->log_debug('AdditionalQuestions/index', 'Empty user_id');
 			throw new \Exception('Empty user_id');
 		}
 
 		$qs_title_value = $this->request->getPost('qs_title');
 
-		// data for view
+		// prepare data for view
 		$questions_model = model('Questions_model');
 		$page_data['additional_questions_query'] = 
 			$questions_model->fetch_additional_questions_for_user($user_id);
