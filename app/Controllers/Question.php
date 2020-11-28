@@ -73,9 +73,11 @@ class Question extends BaseController {
 		$new_ids = array();
 		$new_id = false;
 		if (!$hasCsvContent) {
+			log_message('info', "Question::insert. Title: $title");
 			$new_id = $this->save_one_question($questions_model, $projectId, $title, $comment, $fileUrl,
 				$defaultFileName);
 		} else {
+			log_message('info', "Question::insert. Title with csv: $title");
 			$titles = explode(';', $title);
 			$comments = explode(';', $comment);
 			$fileUrls = explode(';', $fileUrl);

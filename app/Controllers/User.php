@@ -98,15 +98,16 @@ class User extends BaseController {
 		helper('url');
 
 		// Return result from service
-		$json = json_encode(array("id" => $new_id));
 
-		http_response_code(201); // 201: resource created
-		$uri = $this->request->uri;
-		$resource = $uri->getSegment(1);
-		$newUri = base_url("$resource/$new_id");
-		header("Location: $newUri");
-		header("Content-Type: application/json");
-		echo $json;
+		$resource = $this->request->uri->getSegment(1);
+		$newuri = base_url("$resource/$new_id");
+		$body = array("id" => $new_id);
+		return $this->response
+			->setStatusCode(201) // 201: resourse created
+			->setHeader("Location", $newuri)
+			->setContentType("application/json")
+			->setJSON($body);
+
 	}
 
 
