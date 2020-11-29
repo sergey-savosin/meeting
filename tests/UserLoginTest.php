@@ -1,15 +1,19 @@
-<?php namespace UserTest\Controller;
+<?php namespace UserTest;
 
-//use CodeIgniter\Test\CIUnitTestCase;
-//use CodeIgniter\Test\CIDatabaseTestCase;
 use CodeIgniter\Test\FeatureTestCase;
 use App\Database\Seeds;
 
-class UserTest extends FeatureTestCase
+class UserLoginTest extends FeatureTestCase
 {
 
 	protected $refresh  = true;
 	protected $seed     = \MeetingSeeder::class;
+
+	protected $defaultProjectId = 1;
+	protected $defaultProjectName = 'ProjectName-123';
+	protected $defaultUserId = 1;
+	protected $defaultUserLoginCode = '123';
+	protected $creditorUserTypeId = 1;
 
 	public function setUp(): void
 	{
@@ -17,6 +21,9 @@ class UserTest extends FeatureTestCase
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 		$str = \Config\Services::request()->config->baseURL;
+
+
+		$_SERVER['CONTENT_TYPE'] = "application/json";
 	}
 
 	public function tearDown(): void

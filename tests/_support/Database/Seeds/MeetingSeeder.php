@@ -14,11 +14,20 @@ class MeetingSeeder extends Seeder
 		];
 		$this->db->table('project')->insert($row);
 
+		// usertype
+		$row = ['usertype_id' => 1, 'usertype_name' => 'Creditor'];
+		$this->db->table('usertype')->insert($row);
+		$row = ['usertype_id' => 2, 'usertype_name' => 'Debtor'];
+		$this->db->table('usertype')->insert($row);
+		$row = ['usertype_id' => 3, 'usertype_name' => 'Manager'];
+		$this->db->table('usertype')->insert($row);
+
 		// user
 		$row = [
 			'user_login_code' => '123',
 			'user_project_id' => 1,
 			'user_usertype_id' => 1, //?
+			'user_can_vote' => 1
 
 		];
 		$this->db->table('user')->insert($row);

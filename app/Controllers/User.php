@@ -28,28 +28,29 @@ class User extends BaseController {
 
 		// validate required parameters
 		if (!$projectName) {
-			$validationErrorText .= "Empty ProjectName value in request. ";
+			$validationErrorText .= " Empty ProjectName value in request.";
 			$isRequestValid = false;
 		}
 
 		if (!$loginCode) {
-			$validationErrorText .= "Empty LoginCode value in request. ";
+			$validationErrorText .= " Empty LoginCode value in request.";
 			$isRequestValid = false;
 		}
 
 		if (!$userType) {
-			$validationErrorText .= "Empty UserType value in request. ";
+			$validationErrorText .= " Empty UserType value in request.";
 			$isRequestValid = false;
 		}
 
 		if ($canVote && strtoupper($canVote) === "TRUE") {
-			$canVoteBit = 1;
+			$canVoteBit = true;
 		} else {
-			$canVoteBit = 0;
+			$canVoteBit = false;
 		}
 
 		if ($votesNumber && !is_numeric($votesNumber)) {
-			$validationErrorText .= "VotesNumber parameter has incorrect format: $votesNumber";
+			$validationErrorText .= 
+				" VotesNumber parameter has incorrect format: $votesNumber.";
 			$isRequestValid = false;
 		}
 
@@ -57,43 +58,56 @@ class User extends BaseController {
 		$users_model = model('Users_model');
 
 		//Get ProjectId By ProjectName
-		$project = $projects_model->get_project_by_name($projectName);
-		$projectId = false;
+		if (!empty($projectName)) {
+			$project = $projects_model->get_project_by_name($projectName);
+			$projectId = false;
 
-		if (!$project) {
-			$validationErrorText .= "Project not found: $projectName. ";
-			$isRequestValid = false;
-		} else {
-			$projectId = $project->project_id;
+			if (!$project) {
+				$validationErrorText .= " Project not found: $projectName.";
+				$isRequestValid = false;
+			} else {
+				$projectId = $project->project_id;
+			}
 		}
 
-		//Get UserTypeId By UserTypeName
-		$userTypeRow = $users_model->get_usertype_by_usertypename($userType);
+		// Get UserTypeId By UserTypeName
+		if (!empty($userType)) {
+			$userTypeRow = $users_model->get_usertype_by_usertypename($userType);
 
-		if ( !$userTypeRow ) {
-			$validationErrorText .= "User type not found: $userType. Valid values are: Creditor, Debtor, Manager. ";
-			$isRequestValid = false;
-		} else {
-			$userTypeId = $userTypeRow->usertype_id;
+			if ( !$userTypeRow ) {
+				$validationErrorText .=
+					" User type not found: $userType. ".
+					"Valid values are: Creditor, Debtor, Manager.";
+				$isRequestValid = false;
+			} else {
+				$userTypeId = $userTypeRow->usertype_id;
+			}
 		}
 
-		//Check Is User Exists By LoginCode
-		$user = $users_model->get_user_by_logincode($loginCode);
+		// Check Is User Exists By LoginCode
+		if (!empty($loginCode)) {
+			$user = $users_model->get_user_by_logincode($loginCode);
 
-		if ($user) {
-			$validationErrorText .= "User login code already exists: $loginCode. ";
-			$isRequestValid = false;
+			if ($user) {
+				$validationErrorText .= " User login code already exists: $loginCode.";
+				$isRequestValid = false;
+			}
 		}
 
 		if (!$isRequestValid) {
-			// $this->log_debug("User insert", $validationErrorText);
-			echo "Invalid User POST request: $validationErrorText";
-			http_response_code(400);
-			exit();
+			$msg = "Invalid User POST request:$validationErrorText";
+			log_message('info', "[user::insert] validation error:$msg");
+
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader('Location')
+				->setJSON(['error'=>$msg]);
 		}
 
 		// User Insert
-		$new_id = $users_model->new_user($projectId, $loginCode, $userTypeId, $canVoteBit, $votesNumber, $memberName);
+		$new_id = $users_model->new_user(
+			$projectId, $loginCode, $userTypeId,
+			$canVoteBit, $votesNumber, $memberName);
 
 		helper('url');
 

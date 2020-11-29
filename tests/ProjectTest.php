@@ -8,21 +8,6 @@ use App\Database\Seeds;
 class ProjectTest extends FeatureTestCase
 {
 
-	// protected $setUpMethods = [
-	//     'mockEmail',
-	//     'mockSession',
-	// ];
-
-	// protected $tearDownMethods = [
-	//     'purgeRows',
-	// ];
-
-	// protected function purgeRows()
-	// {
-	//     // $this->model->purgeDeleted();
-	//     echo "\r\n-----purgeRows----";
-	// }
-
 	protected $refresh  = true;
 	protected $seed     = \MeetingSeeder::class;
 
@@ -142,12 +127,12 @@ class ProjectTest extends FeatureTestCase
 	*
 	* - POST project
 	*
-	* @testWith ["", "ProjectCode123", "Invalid Project POST request: Empty ProjectName value in request."]
- 	*			["ProjectName123", "", "Invalid Project POST request: Empty ProjectCode value in request."]
- 	*			["", "", "Invalid Project POST request: Empty ProjectName value in request. Empty ProjectCode value in request."]
- 	*			["ProjectName-123", "ProjectCode-123", "Invalid Project POST request: Project name already exists: ProjectName-123. Project code already exists: ProjectCode-123."]
- 	*			["ProjectName-123", "ProjectCode-444", "Invalid Project POST request: Project name already exists: ProjectName-123."]
- 	*			["ProjectName-444", "ProjectCode-123", "Invalid Project POST request: Project code already exists: ProjectCode-123."]
+	* @testWith ["", "ProjectCode123", "Empty ProjectName value in request."]
+ 	*			["ProjectName123", "", "Empty ProjectCode value in request."]
+ 	*			["", "", "Empty ProjectName value in request. Empty ProjectCode value in request."]
+ 	*			["ProjectName-123", "ProjectCode-123", "Project name already exists: ProjectName-123. Project code already exists: ProjectCode-123."]
+ 	*			["ProjectName-123", "ProjectCode-444", "Project name already exists: ProjectName-123."]
+ 	*			["ProjectName-444", "ProjectCode-123", "Project code already exists: ProjectCode-123."]
 	*/
 	public function test_PostProjectParametersValidation(string $projectName, string $projectCode, string $expectedErrorMessage)
 	{
@@ -168,7 +153,9 @@ class ProjectTest extends FeatureTestCase
 		$response->assertStatus(400);
 		$response->assertHeaderMissing('Location');
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$response->assertJSONExact(['error'=>$expectedErrorMessage]);
+		
+		$msg = 'Invalid Project POST request: '.$expectedErrorMessage;
+		$response->assertJSONExact(['error' => $msg]);
 
 		$newId = 2;
 		$criteria = [

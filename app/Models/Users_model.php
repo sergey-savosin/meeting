@@ -21,7 +21,8 @@ class Users_model extends Model {
 
 	 returns ID
 	*/
-	function new_user($projectId, $loginCode, $userTypeId, $canVote, $votesNumber, $memberName) {
+	function new_user($projectId, $loginCode, $userTypeId, 
+		$canVote, $votesNumber, $memberName) {
 		$user_data = array('user_project_id' => $projectId,
 						'user_login_code' => $loginCode,
 						'user_usertype_id' => $userTypeId,

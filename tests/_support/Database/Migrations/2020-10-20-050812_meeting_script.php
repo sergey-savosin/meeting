@@ -44,6 +44,19 @@ class MeetingScript extends Migration
 		$this->forge->addKey('project_id', true);
 		$this->forge->createTable('project');
 
+		// usertype
+		$this->forge->addField([
+			'usertype_id' => [
+				'type' => 'INT'
+			],
+			'usertype_name' => [
+				'type' => 'VARCHAR',
+				'constraint' => '50'
+			]
+		]);
+		$this->forge->addkey('usertype_id', true);
+		$this->forge->createTable('usertype');
+
 		// user
 		$this->forge->addField([
 			'user_id'     => [
@@ -67,7 +80,7 @@ class MeetingScript extends Migration
 			],
 			'user_can_vote' => [
 				'type'		=> 'bit',
-				'default'		=> 0
+				//'default'		=> 0
 			],
 			'user_votes_number' => [
 				'type'		=> 'DECIMAL',
@@ -207,6 +220,7 @@ class MeetingScript extends Migration
 		$this->forge->dropTable('docfile');
 		$this->forge->dropTable('document');
 		$this->forge->dropTable('project');
+		$this->forge->dropTable('usertype');
 		$this->forge->dropTable('user');
 		$this->forge->dropTable('question');
 
