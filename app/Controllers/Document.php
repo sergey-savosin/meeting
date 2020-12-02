@@ -56,6 +56,7 @@ class Document extends BaseController {
 
 		// 4. get projectId
 		$projects_model = model('Projects_model');
+		$documents_model = model('Documents_model');
 
 		// 4a. Try to find projectId
 		$projectname = urldecode($projectname);
@@ -82,19 +83,18 @@ class Document extends BaseController {
 		}
 
 		// 5. Correct Url
-		$documents_model = model('Documents_model');
-
 		$correctedUrl = $documents_model->correctFileDownloadUrl($fileurl);
 		log_message('info', 'Document - corrected URL for download: '.$correctedUrl);
 
 		// 5a. Download file by Url and iInsert data to document table
-		$new_id = $documents_model->new_document_with_body($correctedUrl, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager);
+		$new_id = $documents_model->new_document_with_body($correctedUrl, $filename,
+			$isforcreditor, $isfordebtor, $isformanager);
 
 		if (!$new_id)
 		{
-			$msg = "Can't load file or save document to db: $filename from URL: $correctedUrl";
+			$msg = "Can't load file or save document to db: $filename from URL: $correctedUrl.";
 			$body = ['error' => $msg];
-			log_message('info', "[document insert] error:$msg");
+			log_message('info', "[document insert] error: $msg");
 
 			return $this->response
 				->setStatusCode(400)
@@ -102,7 +102,21 @@ class Document extends BaseController {
 				->setJSON($body);
 		}
 
-		// 6. Return result from service
+		// 6. Link project and document
+		$pd_id = $projects_model->link_project_and_document($projectId, $new_id);
+		if (!$pd_id)
+		{
+			$msg = "Can't link project to document.";
+			$body = ['error' => $msg];
+			log_message('info', "[document insert] error: $msg");
+
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader("Location")
+				->setJSON($body);
+		}
+
+		// 7. Return result from service
 		$resource = $this->request->uri->getSegment(1);
 		$newuri = base_url("$resource/$new_id");
 		$body = array("id"=>$new_id);

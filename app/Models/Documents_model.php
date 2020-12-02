@@ -179,7 +179,8 @@ class Documents_model extends Model {
 
 	 UnitTest
 	 ************/
-	function new_document_with_body($url, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager) {
+	function new_document_with_body($url, $filename,
+				$isforcreditor, $isfordebtor, $isformanager) {
 		$options = [
 			'timeout'  => 600 // 10 minutes
 		];
@@ -255,16 +256,6 @@ class Documents_model extends Model {
 
 		//ToDo: if $doc_id = false => Exception + log_message
 
-		$data = array ('pd_project_id' => $projectId,
-						'pd_doc_id' => $doc_id);
-		if ($db->table('project_document')->insert($data)) {
-			$pd_id = $db->insertID();
-		} else {
-			$pd_id = false;
-		}
-
-		//ToDo: if $pd_id = false => Exception + log_message
-
 		$data = array ('docfile_doc_id' => $doc_id,
 						'docfile_body' => $body);
 
@@ -279,7 +270,6 @@ class Documents_model extends Model {
 
 		return $doc_id;
 	}
-
 
 	/**
 	* public function

@@ -10,6 +10,7 @@ class Question extends BaseController {
 	public function insert() {
 		$projects_model = model('Projects_model');
 		$questions_model = model('Questions_model');
+		$documents_model = model('Documents_model');
 
 		log_message('info', '[question insert] starts.');
 
@@ -73,9 +74,45 @@ class Question extends BaseController {
 		$new_ids = array();
 		$new_id = false;
 		if (!$hasCsvContent) {
+		
+			// 0. ToDo: begin tran
+
+			// 1. save question
 			log_message('info', "Question::insert. Title: $title");
-			$new_id = $this->save_one_question($questions_model, $projectId, $title, $comment, $fileUrl,
-				$defaultFileName);
+			$new_id = $this->save_one_question($questions_model, $projectId, $title,
+				$comment);
+			if (!$new_id)
+				{
+					$msg = " Can't save question to db: $title.";
+					log_message('info', "Question::save_one_document - error:$msg");
+					
+					return $this->response
+						->setStatusCode(400)
+						->removeHeader("Location")
+						->setJSON($body);
+				}
+			
+			// 2. save document
+			if (!empty($fileUrl)) {
+				$doc_id = $this->save_one_document($documents_model, $fileUrl, $defaultFileName);
+
+				if (!$doc_id) {
+					$msg = " Can't load file or save document to db: $filename from URL: $correctedUrl.";
+					$body = ['error' => $msg];
+					log_message('info', "Question::save_one_document - error:$msg");
+
+					return $this->response
+						->setStatusCode(400)
+						->removeHeader("Location")
+						->setJSON($body);
+				}
+
+				// 3. link document and question
+				$qd_id = $this->link_question_and_document($questions_model, $new_id, $doc_id);
+			}
+		
+			// 4. ToDo: commit tran
+
 		} else {
 			log_message('info', "Question::insert. Title with csv: $title");
 			$titles = explode(';', $title);
@@ -83,7 +120,7 @@ class Question extends BaseController {
 			$fileUrls = explode(';', $fileUrl);
 			foreach ($titles as $titlePart) {
 				// todo: get comment, title from array
-				$temp_id = $this->save_one_question($questions_model, $projectId, $titlePart, '', '', '');
+				$temp_id = $this->save_one_question($questions_model, $projectId, $titlePart, '');
 				$new_ids[] = $temp_id;
 			}
 		}
@@ -113,17 +150,38 @@ class Question extends BaseController {
 		
 	}
 
-	function save_one_question($questions_model, $projectId, $title, $comment, $fileUrl, $defaultFileName) {
+	/**
+	* Сохранить в БД вопрос
+	*/
+	function save_one_question($questions_model, $projectId, $title, $comment) {
 		$new_id = $questions_model->new_general_question($projectId, $title, '', '', '');
 		
-		if (!$new_id)
-		{
-			$msg = "Can't save question to db: $title";
-			printf($msg);
-			http_response_code(400);
+		return $new_id;
+	}
 
-			exit();
-		}
+	/**
+	* Скачать и сохранить в БД документ
+	* @return doc_id
+	*/
+	function save_one_document($documents_model, $fileUrl, $defaultFileName) {
+		// 1. Correct Url
+		$correctedUrl = $documents_model->correctFileDownloadUrl($fileUrl);
+		log_message('info', 
+			'Question::save_one_document - corrected URL for download: '.$correctedUrl);
+
+		// 2. Download file by Url and iInsert data to document table
+		$new_id = $documents_model->new_document_with_body($correctedUrl,
+			$defaultFileName,
+			true, true, true);
+
+		return $new_id;
+	}
+
+	/**
+	* Связать документ и вопрос
+	*/
+	function link_question_and_document($questions_model, $qs_id, $doc_id) {
+		$new_id = $questions_model->link_question_and_document($qs_id, $doc_id);
 
 		return $new_id;
 	}

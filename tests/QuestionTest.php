@@ -93,7 +93,7 @@ class QuestionTest extends FeatureTestCase
 	/**
 	* POST question со значениями параметров, приводящих к ошибке
 	*
-	* - POST project
+	* - POST question
 	*
 	* @testWith ["", "ProjectName", "Invalid Question POST request: Empty Title value in request."]
  	*			["TestTitle", "", "Invalid Question POST request: Empty ProjectName value in request."]
@@ -127,7 +127,7 @@ class QuestionTest extends FeatureTestCase
 	/****
 	POST question с указанием существующего ProjectName добавляет вопрос
 	
-	- POST project
+	- POST question
 	*****/
 	public function test_InsertQuestionWithExistingProjectNameWorks()
 	{
@@ -166,7 +166,7 @@ class QuestionTest extends FeatureTestCase
 	POST question с указанием существующего ProjectName и режима HasCsvContent.
 	Результат: добавлено 2 вопроса.
 	
-	- POST project
+	- POST question
 	*****/
 	public function test_InsertTwoQuestionsWithExistingProjectNameWorks()
 	{
@@ -212,4 +212,68 @@ class QuestionTest extends FeatureTestCase
 
 	}
 
+	/**
+	* POST question с указанием существующего ProjectName и с FileUrl добавляет вопрос
+	*
+	* - POST question
+	* @testWith 
+	* ["https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB", "Untitled.jpg"]
+	*/
+	public function test_InsertQuestionWithFileUrlWorks($url, $filename)
+	{
+		// Arrange
+		$projectName = $this->defaultProjectName;
+		$title = 'Question title - 123;Question title = 555';
+
+		$params = [
+			'Title'=>$title,
+			'ProjectName'=>$projectName,
+			'FileName'=>'test.xlsx',
+			'FileUrl'=>$url,
+		];
+
+		$_SERVER['CONTENT_TYPE'] = "application/json";
+
+		// Act
+		$result = $this->post('question', $params);
+
+		// Assert
+		$expectedId = 2;
+		$docId = 1;
+
+		$this->assertNotNull($result);
+		$this->assertFalse($result->isRedirect());
+		$result->assertStatus(201);
+		$result->assertHeader('Location', "http://localhost/question/$expectedId");
+		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
+		$result->assertJSONExact(['id'=>$expectedId]);
+
+		$criteria = [
+			'qs_title'=>$title,
+			'qs_id'=>$expectedId,
+			'qs_project_id'=>$this->defaultProjectId
+		];
+		$this->seeInDatabase('question', $criteria);
+
+		$criteria = [
+			'doc_id'  => $docId,
+			'doc_filename' => $filename,
+			'doc_is_for_creditor' => 1,
+			'doc_is_for_debtor' => 1,
+			'doc_is_for_manager' => 1
+		];
+		$this->seeInDatabase('document', $criteria);
+
+		$criteria = [
+			'docfile_doc_id' => $docId,
+		];
+		$this->seeInDatabase('docfile', $criteria);
+
+		$criteria = [
+			'qd_question_id' => $expectedId,
+			'qd_doc_id' => $docId,
+		];
+		$this->seeInDatabase('question_document', $criteria);
+
+	}
 }

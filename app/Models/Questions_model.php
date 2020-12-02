@@ -173,4 +173,22 @@ class Questions_model extends Model {
 		return $base_id;
 	}
 
+	/**
+	*
+	*/
+	function link_question_and_document($qs_id, $doc_id) {
+		$db = $this->db;
+
+		$data = [
+			'qd_question_id' => $qs_id,
+			'qd_doc_id' => $doc_id,
+			];
+		
+		if ($db->table('question_document')->insert($data)) {
+			return $db->insertID();
+		} else {
+			return false;
+		}
+	}
+
 }

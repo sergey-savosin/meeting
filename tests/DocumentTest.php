@@ -127,6 +127,12 @@ class DocumentTest extends FeatureTestCase
 			'docfile_doc_id' => $doc_id,
 		];
 		$this->seeInDatabase('docfile', $criteria);
+
+		$criteria = [
+			'pd_project_id' => $this->defaultProjectId,
+			'pd_doc_id' => $doc_id,
+		];
+		$this->seeInDatabase('project_document', $criteria);
 	}
 
 

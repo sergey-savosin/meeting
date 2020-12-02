@@ -185,6 +185,22 @@ class MeetingScript extends Migration
 		$this->forge->addKey('qs_id', true);
 		$this->forge->createTable('question');
 
+		// question_document
+		$this->forge->addField([
+			'qd_id' => [
+				'type' => 'int',
+				'auto_increment' => true
+			],
+			'qd_question_id' => [
+				'type' => 'int'
+			],
+			'qd_doc_id' => [
+				'type' => 'int'
+			]
+		]);
+		$this->forge->addKey('qd_id', true);
+		$this->forge->createTable('question_document');
+
 		// answer
 		$this->forge->addField([
 			'ans_id' => [
@@ -217,6 +233,7 @@ class MeetingScript extends Migration
 	{
 		$this->forge->dropTable('answer');
 		$this->forge->dropTable('project_document');
+		$this->forge->dropTable('question_document');
 		$this->forge->dropTable('docfile');
 		$this->forge->dropTable('document');
 		$this->forge->dropTable('project');

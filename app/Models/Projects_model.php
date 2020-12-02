@@ -35,6 +35,18 @@ class Projects_model extends Model {
 		}
 	}
 
+	function link_project_and_document($projectId, $docId) {
+
+		$data = array ('pd_project_id' => $projectId,
+						'pd_doc_id' => $docId);
+		$db = $this->db;
+		if ($db->table('project_document')->insert($data)) {
+			return $db->insertID();
+		} else {
+			return false;
+		}
+	}
+
 	/*********************
 	 Удаление проекта
 	 V4
