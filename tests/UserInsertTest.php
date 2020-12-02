@@ -165,7 +165,7 @@ class UserInsertTest extends FeatureTestCase
 	* @testWith ["testPr", "", "Creditor", "Empty LoginCode value in request."]
 	* @testWith ["testPr", "testLogin", "", "Empty UserType value in request."]
 	*/
-	public function test_PostUserValidateRequiredPamarsShowsError(
+	public function test_PostUserValidateRequiredParamsShowsError(
 		$projectName, $loginCode, $userType, $errorMessage)
 	{
 		$userMemberName = 'Иван Иванович Стратосферов';
@@ -193,6 +193,120 @@ class UserInsertTest extends FeatureTestCase
 		$response->assertHeaderMissing('Location');
 
 		$error_msg = "Invalid User POST request: $errorMessage";
+		$response->assertJSONExact(['error' => $error_msg]);
+
+		$criteria = [
+			'user_member_name' => $userMemberName
+		];
+		$this->dontSeeInDatabase('user', $criteria);
+	}
+
+	/**
+	* POST user - валидация наличия обязательных параметров
+	* - POST user с несуществующим проектом
+	* @testWith ["123-123", "VotesNumber parameter has incorrect format:"]
+	* @testWith ["0,123", "VotesNumber parameter has incorrect format:"]
+	* @testWith ["123 123", "VotesNumber parameter has incorrect format:"]
+	*/
+	public function test_PostUserValidateVotesNumberShowsError(
+		$userVotesNumber, $errorMessage)
+	{
+		$userMemberName = 'Иван Иванович Стратосферов';
+
+		// Arrange
+		$params = [
+			"ProjectName" => $this->defaultProjectName,
+			"LoginCode" => $this->defaultUserLoginCode.'00',
+			"UserType" => 'Creditor',
+			"CanVote" => 'true',
+			'VotesNumber' => $userVotesNumber,
+			"MemberName" => $userMemberName
+		];
+
+		// Act
+		$response = $this->post("user/insert", $params);
+
+		// Assert
+		$id = $this->defaultUserId + 1;
+		$response->assertStatus(400); // error
+		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
+		$response->assertHeaderMissing('Location');
+
+		$error_msg = "Invalid User POST request: $errorMessage $userVotesNumber.";
+		$response->assertJSONExact(['error' => $error_msg]);
+
+		$criteria = [
+			'user_member_name' => $userMemberName
+		];
+		$this->dontSeeInDatabase('user', $criteria);
+	}
+
+	/**
+	* POST user - валидация наличия обязательных параметров
+	* - POST user с несуществующим проектом
+	* @testWith ["Creditor", "1"]
+	* @testWith ["Debtor", "2"]
+	* @testWith ["Manager", "3"]
+	*/
+	public function test_PostUserValidateUserTypeOk($userType, $expectedUserTypeId)
+	{
+		$userMemberName = 'Иван Иванович Стратосферов';
+		$loginCode = $this->defaultUserLoginCode.'00';
+
+		// Arrange
+		$params = [
+			"ProjectName" => $this->defaultProjectName,
+			"LoginCode" => $loginCode,
+			"UserType" => $userType,
+			"CanVote" => 'true',
+			'VotesNumber' => 10,
+			"MemberName" => $userMemberName
+		];
+
+		// Act
+		$response = $this->post("user/insert", $params);
+
+		// Assert
+		$id = $this->defaultUserId + 1;
+		$response->assertStatus(201); // created
+		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
+		$response->assertJSONExact(['id' => $id]);
+
+		$criteria = [
+			'user_member_name' => $userMemberName,
+			'user_usertype_id' => $expectedUserTypeId
+		];
+		$this->seeInDatabase('user', $criteria);
+	}
+
+	/**
+	* POST user - валидация наличия обязательных параметров
+	* - POST user с несуществующим проектом
+	* @testWith ["Credetor", "User type not found: Credetor. Valid values are: Creditor, Debtor, Manager"]
+	*/
+	public function test_PostUserValidateUserTypeShowsError($userType, $errorMessage)
+	{
+		$userMemberName = 'Иван Иванович Стратосферов';
+		$loginCode = $this->defaultUserLoginCode.'00';
+
+		// Arrange
+		$params = [
+			"ProjectName" => $this->defaultProjectName,
+			"LoginCode" => $loginCode,
+			"UserType" => $userType,
+			"CanVote" => 'true',
+			'VotesNumber' => 10,
+			"MemberName" => $userMemberName
+		];
+
+		// Act
+		$response = $this->post("user/insert", $params);
+
+		// Assert
+		$response->assertStatus(400); // created
+		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
+		$response->assertHeaderMissing('Location');
+		$error_msg = "Invalid User POST request: $errorMessage.";
 		$response->assertJSONExact(['error' => $error_msg]);
 
 		$criteria = [
