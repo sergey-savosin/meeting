@@ -44,8 +44,8 @@ class VotesControllerTest extends FeatureTestCase
 
 	/**
 	* POST votes показывает ошибку валидации
-
-	- POST project
+	*
+	* - POST votes
 	*/
 	public function test_VotesControllerPostShowValidationError()
 	{
@@ -56,7 +56,6 @@ class VotesControllerTest extends FeatureTestCase
 		$request = \Config\Services::request();
 		$request->setGlobal('request', $data);
 		$request->setMethod('post');
-		// $request->setGlobal('post', $data);
 		
 		// Act
 		$result = $this->withRequest($request)
@@ -70,9 +69,9 @@ class VotesControllerTest extends FeatureTestCase
 	}
 
 	/**
-	* POST project обновляет вопрос по умолчанию
-
-	- POST project
+	* POST votes обновляет существующий ответ
+	*
+	* - POST votes
 	*/
 	public function test_VotesControllerPostUpdatesDefaultAnswer()
 	{
@@ -84,8 +83,6 @@ class VotesControllerTest extends FeatureTestCase
 		$request = \Config\Services::request();
 		$request->setGlobal('request', $data);
 		$request->setMethod('post');
-		// $emptydata = [];
-		// $request->setGlobal('post', $emptydata);
 		
 		// Act
 		$result = $this->withRequest($request)
@@ -99,9 +96,10 @@ class VotesControllerTest extends FeatureTestCase
 	}
 
 	/**
-	* POST project обновляет вопрос по умолчанию
-
-	- POST project
+	* POST votes обновляет существующий ответ и добавляет ответ на новый вопросы
+	*
+	* - Добавить новый вопрос
+	* - POST votes
 	*/
 	public function test_VotesControllerPostCreatesNewAnswer()
 	{
@@ -116,7 +114,8 @@ class VotesControllerTest extends FeatureTestCase
 		$title = "Test question - 456";
 		$comment = "Question comment 456";
 
-		$this->questions_model->new_general_question($this->defaultProjectId, $title, $comment, '', '');
+		$this->questions_model->new_general_question($this->defaultProjectId,
+			$title, $comment);
 
 		$this->seeInDatabase('question',
 				[
@@ -134,8 +133,6 @@ class VotesControllerTest extends FeatureTestCase
 		$request = \Config\Services::request();
 		$request->setGlobal('request', $data);
 		$request->setMethod('post');
-		// $emptydata = [];
-		// $request->setGlobal('post', $emptydata);
 		
 		// Act
 		$result = $this->withRequest($request)
