@@ -94,7 +94,8 @@ class Question extends BaseController {
 			
 			// 2. save document
 			if (!empty($fileUrl)) {
-				$doc_id = $this->save_one_document($documents_model, $fileUrl, $defaultFileName);
+				$doc_id = $this->save_one_document($documents_model, 
+					$fileUrl, $defaultFileName);
 
 				if (!$doc_id) {
 					$msg = " Can't load file or save document to db: $filename from URL: $correctedUrl.";
@@ -154,7 +155,8 @@ class Question extends BaseController {
 	* Сохранить в БД вопрос
 	*/
 	function save_one_question($questions_model, $projectId, $title, $comment) {
-		$new_id = $questions_model->new_general_question($projectId, $title, '', '', '');
+		$new_id = $questions_model->new_general_question($projectId,
+			$title, $comment);
 		
 		return $new_id;
 	}

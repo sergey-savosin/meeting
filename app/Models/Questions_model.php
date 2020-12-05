@@ -28,6 +28,24 @@ class Questions_model extends Model {
 		}
 	}
 
+	/**
+	* Документы вопроса основной повестки.
+	*/
+	function fetch_documents_for_questionid($questionId) {
+		$query = "SELECT d.doc_id, d.doc_filename
+		FROM question_document qd
+		INNER JOIN document d ON d.doc_id = qd.qd_doc_id
+		WHERE qd.qd_question_id = ?
+		";
+		$result = $this->db->query($query, array($questionId));
+
+		if ($result) {
+			return $result;
+		} else {
+			return false;
+		}
+	}
+
 	/******************
 	 v4
 
@@ -99,13 +117,13 @@ class Questions_model extends Model {
 	Параметры:
 		project_id
 		title
+		comment
 	Возвращает:
 		Скаляр
 
 	UnitTest
 	*/
-	function new_general_question($project_id, $title, $comment, $fileUrl,
-			$defaultFileName) {
+	function new_general_question($project_id, $title, $comment) {
 
 		$question_data = array ('qs_project_id' => $project_id,
 				'qs_title' => $title,

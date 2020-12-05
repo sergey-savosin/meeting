@@ -1,56 +1,62 @@
-<table class="table table-hover">
-	<thead>
-		<tr>
-			<th><?php echo lang('app.documents_title');?></th>
-		</tr>
-	</thead>
-	<tbody>
+<div class="h2"> Проект: <?php echo $project->project_name; ?></div>
+
+<div class="panel panel-default panel-primary">
+	<div class="panel-heading">
+		<?php echo lang('app.documents_title');?>
+	</div>
+	<div class="panel-body">
 		<?php foreach($documents_query->getResult() as $result) : ?>
-		<tr>
-			<td>
-				<?php echo $result->doc_filename; ?>
+			<ul>
+				<li class="list-group-item">
+				<label>Документ:</label> <?php echo $result->doc_filename; ?>
 
 				<?php echo anchor(base_url('document/download/' . $result->doc_id),
-				lang('app.document_download')) ;?>
-			</td>
-		</tr>
+					lang('app.document_download')) ;?>
+				</li>
+			</ul>
 		<?php endforeach ; ?>
-	</tbody>
-</table>
+	</div>
+</div>
 
-<table class="table table-hover">
-	<thead>
-		<tr>
-			<th><?php echo lang('app.documents_general_questions_list_title');?></th>
-		</tr>
-	</thead>
-	<tbody>
-		<?php foreach($general_questions_query->getResult() as $result) : ?>
-		<tr>
-			<td>
-				<?php echo $result->qs_title; ?>
-			</td>
-		</tr>
+<div class="panel panel-default panel-primary">
+	<div class="panel-heading">
+		Вопросы основной повестки.
+	</div>
+	<div class="panel-body">
+		<?php foreach($general_questions as $question) : ?>
+			<ul>
+				<li class="list-group-item list-group-item-info">
+					<label>Вопрос:</label> <?php echo $question['qs_title']; ?>
+				</li>
+				<li class="list-group-item">
+					<label>Описание:</label> <?php echo $question['qs_comment']; ?>
+				</li>
+			<?php foreach($question['documents'] as $doc_id=>$qd) : ?>
+				<li class="list-group-item">
+					<label>Документ:</label> <?php echo $qd['doc_filename'] ?>
+				<?php echo anchor(base_url('document/download/' . $doc_id),
+					lang('app.document_download')) ;?>
+				</li>
+			<?php endforeach ; ?>
+			</ul>
 		<?php endforeach ; ?>
-	</tbody>
-</table>
+	</div>
+</div>
 
-<table class="table table-hover">
-	<thead>
-		<tr>
-			<th><?php echo lang('app.documents_additional_questions_list_title');?></th>
-		</tr>
-	</thead>
-	<tbody>
+<div class="panel panel-default panel-primary">
+	<div class="panel-heading">
+		<?php echo lang('app.documents_additional_questions_list_title');?>
+	</div>
+	<div class="panel-body">
 		<?php foreach($additional_questions_query->getResult() as $result) : ?>
-		<tr>
-			<td>
-				<?php echo $result->qs_title; ?>
-			</td>
-		</tr>
+		<ul>
+			<li class="list-group-item list-group-item-info">
+				<label>Вопрос:</label> <?php echo $result->qs_title; ?>
+			</li>
+		</ul>
 		<?php endforeach ; ?>
-	</tbody>
-</table>
+	</div>
+</div>
 
 <?php if ($acquaintance_stage_state == 'early'): ?>
 	<p>

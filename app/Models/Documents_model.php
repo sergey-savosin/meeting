@@ -253,6 +253,7 @@ class Documents_model extends Model {
 		} else {
 			$doc_id = false;
 		}
+		log_message('info', "DocModel::new_document_with_body - doc_id: $doc_id");
 
 		//ToDo: if $doc_id = false => Exception + log_message
 

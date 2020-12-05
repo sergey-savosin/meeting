@@ -42,7 +42,10 @@ class QuestionTest extends FeatureTestCase
 
 		$this->questions_model->new_general_question($this->defaultProjectId, $title, $comment, '', '');
 
-		$this->seeInDatabase('question', ['qs_title' => $title, 'qs_category_id' => $this->generalCategoryId]);
+		$data = ['qs_title' => $title,
+			'qs_category_id' => $this->generalCategoryId,
+			'qs_comment' => $comment];
+		$this->seeInDatabase('question', $data);
 	}
 
 	/**
@@ -124,6 +127,8 @@ class QuestionTest extends FeatureTestCase
 		$result->assertJSONExact(['error'=>$errorMessage]);
 	}
 
+	// ToDo: test when fileUrl is set, but defaultFileName is absent
+
 	/****
 	POST question с указанием существующего ProjectName добавляет вопрос
 	
@@ -134,10 +139,12 @@ class QuestionTest extends FeatureTestCase
 		// Arrange
 		$projectName = $this->defaultProjectName;
 		$title = 'Question title - 123;Question title = 555';
+		$comment = 'Question comment - 444';
 
 		$params = [
-			'Title'=>$title,
-			'ProjectName'=>$projectName
+			'Title' => $title,
+			'ProjectName' => $projectName,
+			'Comment' => $comment,
 		];
 
 		$_SERVER['CONTENT_TYPE'] = "application/json";
@@ -157,7 +164,8 @@ class QuestionTest extends FeatureTestCase
 		$criteria = [
 			'qs_title'=>$title,
 			'qs_id'=>$expectedId,
-			'qs_project_id'=>$this->defaultProjectId
+			'qs_project_id'=>$this->defaultProjectId,
+			'qs_comment' => $comment
 		];
 		$this->seeInDatabase('question', $criteria);
 	}
