@@ -46,7 +46,7 @@ return [
 	// Documents
 	'votes_send_button' => 'Голосовать',
 	'votes_goto_additionalquestions' => 'Добавить дополнительные вопросы...',
-	'additional_questions_form_instruction' => 'Добавьте ваш дополнительный вопрос',
+	'additional_questions_form_instruction' => 'Добавьте новый дополнительный вопрос',
 	'additional_questions_list_header' => 'Список ваших дополнительных вопросов',
 	'additional_questions_title' => 'Текст вопроса',
 	'additional_questions_goto_documents' => 'Вернуться к документам и вопросам...',

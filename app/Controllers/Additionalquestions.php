@@ -26,6 +26,7 @@ class AdditionalQuestions extends BaseController {
 		}
 
 		$qs_title_value = $this->request->getPost('qs_title');
+		$qs_comment_value = $this->request->getPost('qs_comment');
 
 		// prepare data for view
 		$questions_model = model('Questions_model');
@@ -57,7 +58,8 @@ class AdditionalQuestions extends BaseController {
 			echo view('common/footer');
 		} else {
 			// save data to DB
-			$res = $questions_model->new_additional_question($project_id, $qs_title_value, $user_id);
+			$res = $questions_model->new_additional_question($project_id,
+				$user_id, $qs_title_value, $qs_comment_value);
 			if ($res) {
 				// go to default page
 				return redirect()->to(base_url('/additionalquestions'));

@@ -64,9 +64,11 @@ class AdditionalQuestionTest extends FeatureTestCase
 		$userResult->assertSessionHas('user_project_id', '1');
 
 		$title = "Test question - 123";
+		$comment = "Test comment - 444";
 
 		// add additional question
-		$this->questions_model->new_additional_question($this->defaultProjectId, $title, $this->defaultUserId);
+		$this->questions_model->new_additional_question($this->defaultProjectId,
+			$this->defaultUserId, $title, $comment);
 
 		$this->seeInDatabase('question', ['qs_title' => $title, 'qs_category_id' => $this->additionalCategoryId]);
 		$this->seeInDatabase('question', ['qs_title' => $title, 'qs_category_id' => $this->acceptAdditionalCategoryId]);
@@ -79,14 +81,15 @@ class AdditionalQuestionTest extends FeatureTestCase
 		$response->assertOK();
 		$response->assertSee('Список ваших дополнительных вопросов');
 		$response->assertSee($title);
+		$response->assertSee($comment);
 	}
 
-	/****
-	POST additionalquestion приводит к добавлению доп. вопроса
-	
-	- POST existing user
-	- GET additionalquestion
-	*****/
+	/**
+	* POST additionalquestion приводит к добавлению доп. вопроса
+	*
+	* - POST existing user
+	* - GET additionalquestion
+	*/
 	public function test_PostAdditionalQuestionAuthorizedSessionAddsAdditionalQuestion()
 	{
 		// Arrange
@@ -99,9 +102,13 @@ class AdditionalQuestionTest extends FeatureTestCase
 		$userResult->assertSessionHas('user_project_id', '1');
 
 		$title = "Test question - 123";
+		$comment = "Test comment = 444";
 
 		// Act
-		$data = ['qs_title'=>$title];
+		$data = [
+			'qs_title' => $title,
+			'qs_comment' => $comment
+		];
 		$response = $this->withSession()->post('additionalquestions/index', $data);
 		
 		// Assert
@@ -114,11 +121,13 @@ class AdditionalQuestionTest extends FeatureTestCase
 		$this->seeInDatabase('question',
 			[
 				'qs_title' => $title,
+				'qs_comment' => $comment,
 				'qs_category_id' => $this->additionalCategoryId
 			]);
 		$this->seeInDatabase('question', 
 			[
-				'qs_title' => $title, 
+				'qs_title' => $title,
+				'qs_comment' => $comment,
 				'qs_category_id' => $this->acceptAdditionalCategoryId
 			]);
 

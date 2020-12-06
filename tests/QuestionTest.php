@@ -55,11 +55,26 @@ class QuestionTest extends FeatureTestCase
 	public function test_QuestionModelNewAdditionalQuestionAdded()
 	{
 		$title = "Test question - 123";
+		$comment = "Test comment - 444";
 
-		$this->questions_model->new_additional_question($this->defaultProjectId, $title, $this->defaultUserId);
+		// Act
+		$this->questions_model->new_additional_question($this->defaultProjectId,
+			$this->defaultUserId, $title, $comment);
 
-		$this->seeInDatabase('question', ['qs_title' => $title, 'qs_category_id' => $this->additionalCategoryId]);
-		$this->seeInDatabase('question', ['qs_title' => $title, 'qs_category_id' => $this->acceptAdditionalCategoryId]);
+		// Assert
+		$data = [
+			'qs_title' => $title,
+			'qs_comment' => $comment,
+			'qs_category_id' => $this->additionalCategoryId
+		];
+		$this->seeInDatabase('question', $data);
+
+		$data = [
+			'qs_title' => $title,
+			'qs_comment' => $comment,
+			'qs_category_id' => $this->acceptAdditionalCategoryId
+		];
+		$this->seeInDatabase('question', $data);
 	}
 
 	/**

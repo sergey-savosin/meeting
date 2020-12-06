@@ -145,16 +145,18 @@ class Questions_model extends Model {
 
 	Параметры:
 		project_id
-		title
 		user_id
-	Возвразает:
+		title
+		comment
+	Возвращает:
 		Скаляр
 	************/
-	function new_additional_question($project_id, $title, $user_id) {
+	function new_additional_question($project_id, $user_id, $title, $comment) {
 		// ToDo: add transation here
 		$question_data = ['qs_project_id' => $project_id,
 				'qs_user_id' => $user_id,
 				'qs_title' => $title,
+				'qs_comment' => $comment,
 				'qs_category_id' => 2 /* additional question */
 		];
 
@@ -171,6 +173,7 @@ class Questions_model extends Model {
 		$secondary_data = ['qs_project_id' => $project_id,
 				'qs_user_id' => $user_id,
 				'qs_title' => $title,
+				'qs_comment' => $comment,
 				'qs_category_id' => 3, /* accept additional question */
 				'qs_base_question_id' => $base_id
 			];
