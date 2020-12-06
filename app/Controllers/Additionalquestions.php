@@ -38,7 +38,13 @@ class AdditionalQuestions extends BaseController {
 		// $this->form_validation->set_rules("qs_title",
 		// 		lang('app.additional_questions_title'),
 		// 		'required');
-		$val_rules['qs_title'] = 'required';
+		$val_rules['qs_title'] = [
+			'label' => 'qs_title_value',
+			'rules' => 'required',
+			'errors' => [
+				'required' => 'Укажите Текст вопроса.'
+			]
+		];
 		helper(['form', 'url']);
 		$top_nav_data['uri'] = $this->request->uri;
 

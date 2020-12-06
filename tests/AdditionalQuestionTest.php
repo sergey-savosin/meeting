@@ -88,7 +88,7 @@ class AdditionalQuestionTest extends FeatureTestCase
 	* POST additionalquestion приводит к добавлению доп. вопроса
 	*
 	* - POST existing user
-	* - GET additionalquestion
+	* - POST additionalquestion with Title, Comment
 	*/
 	public function test_PostAdditionalQuestionAuthorizedSessionAddsAdditionalQuestion()
 	{
@@ -132,5 +132,54 @@ class AdditionalQuestionTest extends FeatureTestCase
 			]);
 
 	}
+
+	/**
+	* POST additionalquestion приводит к ошибки валидации
+	*
+	* - POST existing user
+	* - POST additionalquestion with empty Title
+	*/
+	public function test_PostAdditionalQuestionValidation()
+	{
+		// Arrange
+		$userResult = $this->post('user/login', [
+			'usr_code' => '123'
+		]);
+		$this->assertNotNull($userResult);
+
+		$userResult->assertSessionHas('user_login_code', '123');
+		$userResult->assertSessionHas('user_project_id', '1');
+
+		$title = "Test question - 123";
+		$comment = "Test comment = 444";
+
+		// Act
+		$data = [
+			'qs_title' => '',
+			'qs_comment' => $comment
+		];
+		$response = $this->withSession()->post('additionalquestions/index', $data);
+		
+		// Assert
+		$this->assertNotNull($response);
+		$response->assertOK();
+		$this->assertFalse($response->isRedirect());
+
+		$this->dontSeeInDatabase('question',
+			[
+				'qs_title' => $title,
+				'qs_comment' => $comment,
+				'qs_category_id' => $this->additionalCategoryId
+			]);
+		$this->dontSeeInDatabase('question', 
+			[
+				'qs_title' => $title,
+				'qs_comment' => $comment,
+				'qs_category_id' => $this->acceptAdditionalCategoryId
+			]);
+
+		$response->assertSee("Укажите Текст вопроса");
+	}
+
 
 }

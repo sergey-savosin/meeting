@@ -1,7 +1,5 @@
 <?php namespace ProjectTest\Controller;
 
-//use CodeIgniter\Test\CIUnitTestCase;
-//use CodeIgniter\Test\CIDatabaseTestCase;
 use CodeIgniter\Test\FeatureTestCase;
 use App\Database\Seeds;
 
@@ -17,10 +15,12 @@ class ProjectTest extends FeatureTestCase
 	public function setUp(): void
 	{
 		parent::setUp();
-		//helper('text');
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 		$str = \Config\Services::request()->config->baseURL;
+
+		$validation = \Config\Services::validation();
+		$validation->reset();
 
 		$this->projects_model = model('Projects_model');
 	}

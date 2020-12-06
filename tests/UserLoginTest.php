@@ -22,6 +22,8 @@ class UserLoginTest extends FeatureTestCase
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 		$str = \Config\Services::request()->config->baseURL;
 
+		$validation = \Config\Services::validation();
+		$validation->reset();
 
 		$_SERVER['CONTENT_TYPE'] = "application/json";
 	}

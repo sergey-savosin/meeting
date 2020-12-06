@@ -1,14 +1,6 @@
 <?php namespace App\Controllers;
 
 class User extends BaseController {
-	// function __construct() {
-	// 	parent::__construct();
-	// 	$this->load->library('form_validation');
-
-	// 	$this->load->model('Users_model');
-	// 	$this->load->model('Projects_model');
-	// }
-
 	public function insert() {
 		// $wrid = $this->log_webrequest();
 		// $this->set_webrequest_id($wrid);
@@ -128,8 +120,7 @@ class User extends BaseController {
 	public function login() {
 		helper(['form', 'url']);
 
-		// $wrid = $this->log_webrequest();
-		// $this->set_webrequest_id($wrid);
+		log_message('info', 'user::login started. Method: '.$this->request->getMethod());
 
 		$top_nav_data['uri'] = $this->request->uri;
 		$val_rules['usr_code'] = 'required|min_length[1]|max_length[255]';
