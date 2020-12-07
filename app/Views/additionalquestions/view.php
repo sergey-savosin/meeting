@@ -54,12 +54,14 @@
 				<textarea class="form-control" rows="2" name="qs_comment" id="qs_comment"><?php
 					echo set_value('qs_comment'); ?></textarea>
 
-				<label for="fileToUpload"> Выберите файл
+				<label for="documentFile"> Выберите файл
 				</label>
 				<?php $data = [
-					'name' => 'fileToUpload',
-					'id'=>'fileToUpload',
-					'accept'=>'image/png, image/jpeg']; 
+					'name' => 'documentFile[]',
+					'id'=>'documentFile',
+					'accept'=>'image/png, image/jpeg',
+					'multiple'=>'true'
+				]; 
 				echo form_upload($data); ?>
 			</div>
 			<div class="form-group">

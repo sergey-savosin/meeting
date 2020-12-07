@@ -72,7 +72,7 @@
 	if ($acquaintance_stage_state != 'active') {echo 'disabled';} ?>"
 	onclick="window.location.href='<?php 
 		if ($acquaintance_stage_state == 'active') {
-			echo site_url('additionalquestions');
+			echo base_url('additionalquestions');
 		} else {
 			echo '#';
 		}?>'">
