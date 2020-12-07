@@ -45,7 +45,10 @@ class Document extends BaseController {
 		if (!$isRequestValid)
 		{
 			$msg = "Invalid Document POST request:$validationErrorText";
-			$body = ['error' => $msg];
+			$body = [
+				'status' => 'error',
+				'error' => $msg
+			];
 			log_message('info', "[document insert] error: $msg");
 
 			return $this->response
@@ -73,7 +76,10 @@ class Document extends BaseController {
 		if (!$projectId)
 		{
 			$msg = "Can't add projectId with projectName: $projectname";
-			$body = ['error' => $msg];
+			$body = [
+				'status' => 'error',
+				'error' => $msg
+			];
 			log_message('info', "[document insert] error: $msg");
 
 			return $this->response
@@ -93,7 +99,10 @@ class Document extends BaseController {
 		if (!$new_id)
 		{
 			$msg = "Can't load file or save document to db: $filename from URL: $correctedUrl.";
-			$body = ['error' => $msg];
+			$body = [
+				'status' => 'error',
+				'error' => $msg
+			];
 			log_message('info', "[document insert] error: $msg");
 
 			return $this->response
@@ -107,7 +116,10 @@ class Document extends BaseController {
 		if (!$pd_id)
 		{
 			$msg = "Can't link project to document.";
-			$body = ['error' => $msg];
+			$body = [
+				'status' => 'error',
+				'error' => $msg
+			];
 			log_message('info', "[document insert] error: $msg");
 
 			return $this->response
@@ -119,7 +131,10 @@ class Document extends BaseController {
 		// 7. Return result from service
 		$resource = $this->request->uri->getSegment(1);
 		$newuri = base_url("$resource/$new_id");
-		$body = array("id"=>$new_id);
+		$body = array(
+			'status' => 'ok',
+			'id' => $new_id
+		);
 
 		log_message('info', "[document insert] result ok: ". json_encode($body));
 		return $this->response

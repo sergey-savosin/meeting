@@ -63,7 +63,7 @@ class QuestionWebApiTest extends FeatureTestCase
 		$result->assertStatus(400);
 		$result->assertHeaderMissing('Location');
 		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$result->assertJSONExact(['error'=>$errorMessage]);
+		$result->assertJSONExact(['status' => 'error', 'error' => $errorMessage]);
 	}
 
 	// ToDo: test when fileUrl is set, but defaultFileName is absent
@@ -98,7 +98,7 @@ class QuestionWebApiTest extends FeatureTestCase
 		$result->assertStatus(201);
 		$result->assertHeader('Location', "http://localhost/question/$expectedId");
 		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$result->assertJSONExact(['id'=>$expectedId]);
+		$result->assertJSONExact(['status' => 'ok', 'id' => $expectedId]);
 
 		$criteria = [
 			'qs_title'=>$title,
@@ -141,7 +141,10 @@ class QuestionWebApiTest extends FeatureTestCase
 		$result->assertStatus(201);
 		$result->assertHeaderMissing('Location');
 		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$result->assertJSONExact(array('id'=>[$expectedId, $expectedId+1]));
+		$result->assertJSONExact([
+			'status' => 'ok',
+			'id' => [$expectedId, $expectedId+1]
+			]);
 
 		$criteria = [
 			'qs_title'=>$title1,
@@ -193,7 +196,7 @@ class QuestionWebApiTest extends FeatureTestCase
 		$result->assertStatus(201);
 		$result->assertHeader('Location', "http://localhost/question/$expectedId");
 		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$result->assertJSONExact(['id'=>$expectedId]);
+		$result->assertJSONExact(['status' => 'ok', 'id' => $expectedId]);
 
 		$criteria = [
 			'qs_title'=>$title,

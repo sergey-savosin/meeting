@@ -110,7 +110,7 @@ class DocumentTest extends FeatureTestCase
 		$doc_id = 1;
 
 		$response->assertStatus(201); // created
-		$response->assertJSONExact(['id' => $doc_id]);
+		$response->assertJSONExact(['status' => 'ok', 'id' => $doc_id]);
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
 		$response->assertHeader('Location', "http://localhost/document/$doc_id");
 

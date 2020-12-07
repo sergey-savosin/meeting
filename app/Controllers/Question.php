@@ -48,7 +48,10 @@ class Question extends BaseController {
 			return $this->response
 				->setStatusCode(400)
 				->removeHeader('Location')
-				->setJSON(['error'=>$msg]);
+				->setJSON([
+					'status' => 'error',
+					'error' => $msg
+				]);
 		}
 
 		// 4. get projectId
@@ -64,7 +67,10 @@ class Question extends BaseController {
 			return $this->response
 				->setStatusCode(400)
 				->removeHeader('Location')
-				->setJSON(['error'=>$msg]);
+				->setJSON([
+					'status' => 'error',
+					'error' => $msg
+				]);
 		}
 
 		$projectId = $project->project_id;
@@ -89,7 +95,10 @@ class Question extends BaseController {
 					return $this->response
 						->setStatusCode(400)
 						->removeHeader("Location")
-						->setJSON($body);
+						->setJSON([
+							'status' => 'error',
+							'error' => $msg
+						]);
 				}
 			
 			// 2. save document
@@ -99,17 +108,20 @@ class Question extends BaseController {
 
 				if (!$doc_id) {
 					$msg = " Can't load file or save document to db: $filename from URL: $correctedUrl.";
-					$body = ['error' => $msg];
 					log_message('info', "Question::save_one_document - error:$msg");
 
 					return $this->response
 						->setStatusCode(400)
 						->removeHeader("Location")
-						->setJSON($body);
+						->setJSON([
+							'status' => 'error',
+							'error' => $msg
+						]);
 				}
 
 				// 3. link document and question
-				$qd_id = $this->link_question_and_document($questions_model, $new_id, $doc_id);
+				$qd_id = $this->link_question_and_document($questions_model,
+					$new_id, $doc_id);
 			}
 		
 			// 4. ToDo: commit tran
@@ -132,7 +144,10 @@ class Question extends BaseController {
 			// Если вызов в режиме одной вставки, то возвращаем ссылку на новый ресурс
 			$resource = $this->request->uri->getSegment(1);
 			$newUri = base_url("$resource/$new_id");
-			$body = array('id' => $new_id);
+			$body = array(
+				'status' => 'ok',
+				'id' => $new_id
+			);
 
 			log_message('info', "[question insert] result ok: ". json_encode($body));
 
@@ -142,7 +157,10 @@ class Question extends BaseController {
 				->setJSON($body);
 		} else {
 			// добавлено несколько строк
-			$body = array('id' => $new_ids);
+			$body = array(
+				'status' => 'ok',
+				'id' => $new_ids
+			);
 			return $this->response
 				->setStatusCode(201) // 201: resourse created
 				->removeHeader('Location')

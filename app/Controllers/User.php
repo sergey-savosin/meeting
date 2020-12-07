@@ -2,11 +2,8 @@
 
 class User extends BaseController {
 	public function insert() {
-		// $wrid = $this->log_webrequest();
-		// $this->set_webrequest_id($wrid);
-
 		$data = $this->getPostData();
-		// $this->log_debug("User insert", json_encode($data));
+		log_message('info', '[user::insert] '.json_encode($data));
 
 		$isRequestValid = true;
 		$validationErrorText = "";
@@ -93,7 +90,10 @@ class User extends BaseController {
 			return $this->response
 				->setStatusCode(400)
 				->removeHeader('Location')
-				->setJSON(['error'=>$msg]);
+				->setJSON([
+					'status' => 'error',
+					'error' => $msg
+				]);
 		}
 
 		// User Insert
@@ -104,10 +104,14 @@ class User extends BaseController {
 		helper('url');
 
 		// Return result from service
+		log_message('info', "[user::insert] user added. UserId: $new_id.");
 
 		$resource = $this->request->uri->getSegment(1);
 		$newuri = base_url("$resource/$new_id");
-		$body = array("id" => $new_id);
+		$body = array(
+			'status' => 'ok',
+			'id' => $new_id
+		);
 		return $this->response
 			->setStatusCode(201) // 201: resourse created
 			->setHeader("Location", $newuri)
@@ -143,7 +147,7 @@ class User extends BaseController {
 			$users_model = model('Users_model');
 			$user = $users_model->get_user_by_logincode($usr_code);
 			if (!$user) {
-				//$this->log_debug("User login", "login failed: $usr_code");
+				log_message('info', "[user::login] Login failed for code: $usr_code");
 
 				echo view('common/login_header');
 				echo view('nav/top_nav', $top_nav_data);

@@ -155,7 +155,7 @@ class ProjectTest extends FeatureTestCase
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
 		
 		$msg = 'Invalid Project POST request: '.$expectedErrorMessage;
-		$response->assertJSONExact(['error' => $msg]);
+		$response->assertJSONExact(['status' => 'error', 'error' => $msg]);
 
 		$newId = 2;
 		$criteria = [
@@ -189,7 +189,7 @@ class ProjectTest extends FeatureTestCase
 		// Assert
 		$id = 2;
 		$response->assertStatus(201); // created
-		$response->assertJSONExact(['id'=>$id]);
+		$response->assertJSONExact(['status' => 'ok', 'id' => $id]);
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
 		$response->assertHeader('Location', "http://localhost/project/$id");
 

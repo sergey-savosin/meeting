@@ -41,24 +41,9 @@ class Project extends BaseController {
 		}
 
 		// if (!$acquaintanceStartDate) {
-		// 	$validationErrorText .= " Empty AcquaintanceStartDate value in request.";
-		// 	$isRequestValid = false;
-		// }
-
 		// if (!$mainAgendaStartDate) {
-		// 	$validationErrorText .= " Empty MainAgendaStartDate value in request.";
-		// 	$isRequestValid = false;
-		// }
-
 		// if (!$additionalAgendaStartDate) {
-		// 	$validationErrorText .= " Empty AdditionalAgendaStartDate value in request.";
-		// 	$isRequestValid = false;
-		// }
-
 		// if (!$meetingFinishDate) {
-		// 	$validationErrorText .= " Empty MeetingFinishDate value in request.";
-		// 	$isRequestValid = false;
-		// }
 
 		// Converting to DateTime
 		// форматы дд.мм.гг (гггг) и чч:мм
@@ -111,15 +96,16 @@ class Project extends BaseController {
 		}
 
 		if (!$isRequestValid) {
-			// $this->log_debug("project insert", $validationErrorText);
-
 			$msg = "Invalid Project POST request:$validationErrorText";
-			log_message('info', "[project insert] validation error:$msg");
+			log_message('info', "[project insert] validation error: $msg");
 
 			return $this->response
 				->setStatusCode(400)
 				->removeHeader('Location')
-				->setJSON(['error'=>$msg]);
+				->setJSON([
+					'status' => 'error',
+					'error' => $msg
+				]);
 		}
 
 		// save to database
@@ -133,7 +119,10 @@ class Project extends BaseController {
 		// Result
 		$resource = $this->request->uri->getSegment(1);
 		$newuri = base_url("$resource/$new_id");
-		$body = array("id"=>$new_id);
+		$body = array(
+			'status' => 'ok',
+			'id' => $new_id
+		);
 
 		log_message('info', "[project insert] result ok: ". json_encode($body));
 		return $this->response
@@ -241,7 +230,7 @@ class Project extends BaseController {
 		log_message('info', "[project-delete] projectCode: $projectCode");
 		
 		if (!$projectCode) {
-			$validationErrorText .= "Empty ProjectCode value in request. ";
+			$validationErrorText .= " Empty ProjectCode value in request.";
 			$isRequestValid = false;
 		}
 
@@ -249,22 +238,36 @@ class Project extends BaseController {
 
 		// business logic validation
 		if ($projectCode && !$projectsModel->check_project_code_exists($projectCode)) {
-			$validationErrorText .= "Project code does not exists: $projectCode. ";
+			$validationErrorText .= " Project code does not exists: $projectCode.";
 			$isRequestValid = false;
 		}
 
 		if (!$isRequestValid) {
-			// $this->log_debug("project insert", $validationErrorText);
+			$msg = "Invalid Project DELETE request:$validationErrorText";
+			log_message('info', "[project delete] validation error:$msg");
 
-			echo "Invalid Project POST request: $validationErrorText";
-			http_response_code(400);
-			exit();
+			return $this->response
+				->setStatusCode(400)
+				->removeHeader('Location')
+				->setJSON([
+					'status' => 'error',
+					'error' => $msg
+				]);
 		}
 
 		$res = $projectsModel->delete_project($projectCode);
 
 		// Result
-		http_response_code(204); // 204: no content
+		$resource = $this->request->uri->getSegment(1);
+		$body = array(
+			'status' => 'ok'
+		);
+
+		log_message('info', "[project delete] result ok: ". json_encode($body));
+		return $this->response
+			->setStatusCode(200) // 200: ok
+			->setContentType("application/json")
+			->setJSON($body);
 	}
 
 	/**

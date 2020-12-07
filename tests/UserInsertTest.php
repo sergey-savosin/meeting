@@ -60,7 +60,7 @@ class UserInsertTest extends FeatureTestCase
 		// Assert
 		$id = $this->defaultUserId + 1;
 		$response->assertStatus(201); // created
-		$response->assertJSONExact(['id'=>$id]);
+		$response->assertJSONExact(['status' => 'ok', 'id' => $id]);
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
 		$response->assertHeader('Location', "http://localhost/user/$id");
 
@@ -107,7 +107,7 @@ class UserInsertTest extends FeatureTestCase
 		$id = $this->defaultUserId + 1;
 		$error_msg = "Invalid User POST request: User login code already exists: $loginCode.";
 		$response->assertStatus(400); // error
-		$response->assertJSONExact(['error' => $error_msg]);
+		$response->assertJSONExact(['status' => 'error', 'error' => $error_msg]);
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
 		$response->assertHeaderMissing('Location');
 
@@ -148,7 +148,7 @@ class UserInsertTest extends FeatureTestCase
 		$id = $this->defaultUserId + 1;
 		$error_msg = "Invalid User POST request: Project not found: $projectId.";
 		$response->assertStatus(400); // error
-		$response->assertJSONExact(['error' => $error_msg]);
+		$response->assertJSONExact(['status' => 'error', 'error' => $error_msg]);
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
 		$response->assertHeaderMissing('Location');
 
@@ -193,7 +193,7 @@ class UserInsertTest extends FeatureTestCase
 		$response->assertHeaderMissing('Location');
 
 		$error_msg = "Invalid User POST request: $errorMessage";
-		$response->assertJSONExact(['error' => $error_msg]);
+		$response->assertJSONExact(['status' => 'error', 'error' => $error_msg]);
 
 		$criteria = [
 			'user_member_name' => $userMemberName
@@ -233,7 +233,7 @@ class UserInsertTest extends FeatureTestCase
 		$response->assertHeaderMissing('Location');
 
 		$error_msg = "Invalid User POST request: $errorMessage $userVotesNumber.";
-		$response->assertJSONExact(['error' => $error_msg]);
+		$response->assertJSONExact(['status' => 'error', 'error' => $error_msg]);
 
 		$criteria = [
 			'user_member_name' => $userMemberName
@@ -270,7 +270,7 @@ class UserInsertTest extends FeatureTestCase
 		$id = $this->defaultUserId + 1;
 		$response->assertStatus(201); // created
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$response->assertJSONExact(['id' => $id]);
+		$response->assertJSONExact(['status' => 'ok', 'id' => $id]);
 
 		$criteria = [
 			'user_member_name' => $userMemberName,
@@ -307,7 +307,7 @@ class UserInsertTest extends FeatureTestCase
 		$response->assertHeader('Content-Type', 'application/json; charset=UTF-8');
 		$response->assertHeaderMissing('Location');
 		$error_msg = "Invalid User POST request: $errorMessage.";
-		$response->assertJSONExact(['error' => $error_msg]);
+		$response->assertJSONExact(['status' => 'error', 'error' => $error_msg]);
 
 		$criteria = [
 			'user_member_name' => $userMemberName
