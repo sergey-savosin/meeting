@@ -22,7 +22,8 @@ class Question extends BaseController {
 		// 1. Get request params
 		$title = isset($data->Title) ? $data->Title : false;
 		$projectname = isset($data->ProjectName) ? $data->ProjectName : false;
-		$hasCsvContent = isset($data->HasCsvContent) && ($data->HasCsvContent === "true") ? true : false;
+		$hasCsvContent = isset($data->HasCsvContent) && 
+			(strtolower($data->HasCsvContent) === "true") ? true : false;
 		$comment = isset($data->Comment) ? $data->Comment : false;
 		$fileUrl = isset($data->FileUrl) ? $data->FileUrl : false;
 		$defaultFileName = isset($data->DefaultFileName) ? $data->DefaultFileName : false;
