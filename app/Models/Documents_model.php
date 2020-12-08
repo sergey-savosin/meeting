@@ -181,7 +181,9 @@ class Documents_model extends Model {
 	 ************/
 	function new_document_with_body($url, $filename,
 				$isforcreditor, $isfordebtor, $isformanager) {
-		$ua = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13';
+    	$ua = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13';
+
+	    $ck = 'NID=197=fOSKSSxLFKeCpm7hlXff0qJ_HBd-wLDFgGH7mj37pPvivWyYVG7HqhZrKWIN_9g3jxy1fLr-dcQaqlrBeMxoOd3CugsR0bl00cU6coMstYaukQvCCqDwkSIUVfZNserollFirVBkMrqpmEvoEbrvXOqUbqDuLE5yqpLV69kmvtc; expires=Sun, 02-Aug-2020 15:48:51 GMT; path=/; domain=.google.com; HttpOnly';
 
 		$options = [
 			'timeout'  => 600 // 10 minutes
@@ -189,9 +191,9 @@ class Documents_model extends Model {
 		$client = \Config\Services::curlrequest($options);
 		$options = [
 				'timeout' => 600, // 10 minutes
-				'cookie' => '',
 				'debug' => false,
 				'useragent' => $ua,
+				'cookiesimple' => $ck,
 				'allow_redirects' => [
 					'max' => 20,
 				]

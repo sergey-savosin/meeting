@@ -804,10 +804,15 @@ class CURLRequest extends Request
 			$curl_options[CURLOPT_COOKIEFILE] = $config['cookie'];
 		}
 
+		if (isset($config['cookiesimple']))
+		{
+			$curl_options[CURLOPT_COOKIE] = $config['cookiesimple'];
+		}
+
 		// useragent
 		if (isset($config['useragent']))
 		{
-			log_message('info', '[CURLRequest] useragent: '.$config['useragent']);
+			//log_message('info', '[CURLRequest] useragent: '.$config['useragent']);
 			$curl_options[CURLOPT_USERAGENT] = $config['useragent'];
 		}
 
