@@ -181,6 +181,8 @@ class Documents_model extends Model {
 	 ************/
 	function new_document_with_body($url, $filename,
 				$isforcreditor, $isfordebtor, $isformanager) {
+		$ua = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13';
+
 		$options = [
 			'timeout'  => 600 // 10 minutes
 		];
@@ -189,6 +191,7 @@ class Documents_model extends Model {
 				'timeout' => 600, // 10 minutes
 				'cookie' => '',
 				'debug' => false,
+				'useragent' => $ua,
 				'allow_redirects' => [
 					'max' => 20,
 				]
