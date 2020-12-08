@@ -801,7 +801,7 @@ class CURLRequest extends Request
 		if (isset($config['cookie']))
 		{
 			$curl_options[CURLOPT_COOKIEJAR]  = $config['cookie'];
-			$curl_options[CURLOPT_COOKIEFILE] = $config['cookie'];
+			//$curl_options[CURLOPT_COOKIEFILE] = $config['cookie'];
 		}
 
 		if (isset($config['cookiesimple']))

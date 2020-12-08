@@ -185,6 +185,7 @@ class Documents_model extends Model {
 
 	    $ck = 'NID=197=fOSKSSxLFKeCpm7hlXff0qJ_HBd-wLDFgGH7mj37pPvivWyYVG7HqhZrKWIN_9g3jxy1fLr-dcQaqlrBeMxoOd3CugsR0bl00cU6coMstYaukQvCCqDwkSIUVfZNserollFirVBkMrqpmEvoEbrvXOqUbqDuLE5yqpLV69kmvtc; expires=Sun, 02-Aug-2020 15:48:51 GMT; path=/; domain=.google.com; HttpOnly';
 
+
 		$options = [
 			'timeout'  => 600 // 10 minutes
 		];
@@ -192,8 +193,9 @@ class Documents_model extends Model {
 		$options = [
 				'timeout' => 600, // 10 minutes
 				'debug' => false,
-				'useragent' => $ua,
+				//'useragent' => $ua,
 				'cookiesimple' => $ck,
+				'cookie' => '',
 				'allow_redirects' => [
 					'max' => 20,
 				]
