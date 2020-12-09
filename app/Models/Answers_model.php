@@ -266,6 +266,22 @@ class Answers_model extends Model {
 		$result = [];
 		$iter = 1;
 		foreach ($answers->getResult() as $a) {
+			if ($total_voices_sum == 0) {
+				$correctedVoicesSum = 100;
+			} else {
+				$correctedVoicesSum = $total_voices_sum;
+			}
+
+			if ($a->YesVotesNumber == 0
+					&& $a->NoVotesNumber == 0 
+					&& $a->AbstainVotesNumber == 0) {
+				$voicesYesResult = '';
+			} else {
+				$voicesYesResult = 
+					($a->YesVotesNumber / $correctedVoicesSum >0.5 ?
+							'Принят' : 'Отклонён');
+			}
+
 			$result[$iter] = array('qs_id' => $a->qs_id,
 							'qs_title' => $a->qs_title,
 							'AnsweredVotesNumber' => $a->AnsweredVotesNumber,
@@ -273,10 +289,13 @@ class Answers_model extends Model {
 							'NoVotesNumber' => $a->NoVotesNumber,
 							'AbstainVotesNumber' => $a->AbstainVotesNumber,
 							'MissedVotesNumber' => $a->MissedVotesNumber,
-							'YesVotesPercent' => round(100.0 * $a->YesVotesNumber / $total_voices_sum, 2),
-							'NoVotesPercent' => round(100.0 * $a->NoVotesNumber / $total_voices_sum, 2),
-							'AbstainVotesPercent' => round(100.0 * $a->AbstainVotesNumber / $total_voices_sum, 2),
-							'QuestionVotingResult' => ($a->YesVotesNumber / $total_voices_sum >0.5 ? 'Принят' : 'Отклонён')
+							'YesVotesPercent' => round(100.0 * $a->YesVotesNumber / 
+								$correctedVoicesSum, 2),
+							'NoVotesPercent' => round(100.0 * $a->NoVotesNumber / 
+								$correctedVoicesSum, 2),
+							'AbstainVotesPercent' => round(100.0 * $a->AbstainVotesNumber / 
+								$correctedVoicesSum, 2),
+							'QuestionVotingResult' => $voicesYesResult
 						);
 			$iter++;
 		}

@@ -53,8 +53,11 @@ class Documents extends BaseController {
 		$page_data['documents_query'] = 
 		 	$docs_model->fetch_documents($project_id);
 
-		$page_data['general_questions'] = 
-			$general_documents;
+		if (isset($general_documents)) {
+			$page_data['general_questions'] = $general_documents;
+		} else {
+			$page_data['general_questions'] = [];
+		}
 		$page_data['additional_questions_query'] =
 			$questions_model->fetch_additional_questions_for_project($project_id);
 		$page_data['acquaintance_stage_state'] = $stage_state;
