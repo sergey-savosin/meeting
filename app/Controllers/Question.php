@@ -81,67 +81,67 @@ class Question extends BaseController {
 		$new_ids = array();
 		$new_id = false;
 		if (!$hasCsvContent) {
-		
-			// 0. ToDo: begin tran
-
-			// 1. save question
-			log_message('info', "Question::insert. Title: $title");
-			$new_id = $this->save_one_question($questions_model, $projectId, $title,
-				$comment);
-			if (!$new_id)
-				{
-					$msg = " Can't save question to db: $title.";
-					log_message('info', "Question::save_one_document - error:$msg");
-					
-					return $this->response
-						->setStatusCode(400)
-						->removeHeader("Location")
-						->setJSON([
-							'status' => 'error',
-							'error' => $msg
-						]);
-				}
+			$result = $this->save_one_question_and_document(
+				$questions_model, $documents_model,
+				$projectId, $title, $comment, $fileUrl, $defaultFileName);
 			
-			// 2. save document
-			if (!empty($fileUrl)) {
-				$doc_id = $this->save_one_document($documents_model, 
-					$fileUrl, $defaultFileName);
+			if ($result['status'] == 'error') {
+				$msg = $result['message'];
+				log_message('info', 'Question::Insert error: '.$msg);
 
-				if (!$doc_id) {
-					$msg = " Can't load file or save document to db: $filename from URL: $correctedUrl.";
-					log_message('info', "Question::save_one_document - error:$msg");
-
-					return $this->response
-						->setStatusCode(400)
-						->removeHeader("Location")
-						->setJSON([
-							'status' => 'error',
-							'error' => $msg
-						]);
-				}
-
-				// 3. link document and question
-				$qd_id = $this->link_question_and_document($questions_model,
-					$new_id, $doc_id);
+				return $this->response
+					->setStatusCode(400)
+					->removeHeader("Location")
+					->setJSON([
+						'status' => 'error',
+						'error' => $msg
+					]);
+			} else {
+				$new_id = $result['id'];
 			}
-		
-			// 4. ToDo: commit tran
 
 		} else {
 			log_message('info', "Question::insert. Title with csv: $title");
 			$titles = explode(';', $title);
 			$comments = explode(';', $comment);
 			$fileUrls = explode(';', $fileUrl);
-			foreach ($titles as $titlePart) {
-				// todo: get comment, title from array
-				$temp_id = $this->save_one_question($questions_model, $projectId, $titlePart, '');
-				$new_ids[] = $temp_id;
+			foreach ($titles as $key=>$titlePart) {
+				
+				$commentPart = !empty($comment) 
+					&& isset($comments[$key]) && !empty($comments[$key])
+					? $comments[$key]
+					: null;
+				
+				$fileUrlPart = !empty($fileUrls) && isset($fileUrls[$key])
+					? $fileUrls[$key]
+					: null;
+
+				$result = $this->save_one_question_and_document(
+					$questions_model, $documents_model,
+					$projectId, $titlePart, $commentPart, $fileUrlPart, 'MyFileName');
+				
+				if ($result['status'] == 'error') {
+					$msg = $result['message'];
+					log_message('info', 'Question::Insert error: '.$msg);
+
+					return $this->response
+						->setStatusCode(400)
+						->removeHeader("Location")
+						->setJSON([
+							'status' => 'error',
+							'error' => $msg
+						]);
+				} else {
+					$temp_id = $result['id'];
+					$new_ids[] = $temp_id;
+				}
+
 			}
 		}
 
 		// 6. Return result from service
 
-		if ($new_id) {
+		if (!$hasCsvContent) {
 			// Если вызов в режиме одной вставки, то возвращаем ссылку на новый ресурс
 			$resource = $this->request->uri->getSegment(1);
 			$newUri = base_url("$resource/$new_id");
@@ -168,6 +168,48 @@ class Question extends BaseController {
 				->setJSON($body);
 		}
 		
+	}
+
+	/**
+	* Сохранение информации о вопросе с документов
+	*/
+	function save_one_question_and_document(
+		$questions_model, $documents_model,
+		$projectId, $title, $comment, $fileUrl, $defaultFileName) {
+
+		// 0. ToDo: begin tran
+
+		// 1. save question
+		log_message('info', "Question::save_one. Title: $title");
+		$new_id = $this->save_one_question($questions_model, $projectId, $title,
+			$comment);
+		if (!$new_id) {
+			$msg = "Can't save question to db: $title.";
+			return ['status' => 'error', 'message' => $msg, 'id' => false];
+		}
+		
+		// 2. save document
+		if (!empty($fileUrl)) {
+			$doc_id = $this->save_one_document($documents_model, 
+				$fileUrl, $defaultFileName);
+
+			if (!$doc_id) {
+				$msg = "Can't load file or save document to db: $filename from URL: $correctedUrl.";
+				return ['status' => 'error', 'message' => $msg, 'id' => false];
+			}
+
+			// 3. link document and question
+			$qd_id = $this->link_question_and_document($questions_model,
+				$new_id, $doc_id);
+			if (!$qd_id) {
+				$msg = "Can't link document and question: $title.";
+				return ['status' => 'error', 'message' => $msg, 'id' => false];
+			}
+		}
+	
+		// 4. ToDo: commit tran
+
+		return ['status' => 'ok', 'message' => '', 'id' => $new_id];
 	}
 
 	/**

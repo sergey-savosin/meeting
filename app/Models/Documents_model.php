@@ -202,7 +202,6 @@ class Documents_model extends Model {
 			];
 
 		$response = $client->request('GET', $url, $options, true);
-		//var_dump($response);
 
 		$ctype = $response->getHeaderLine("content-type");
 		$location = $response->getHeaderLine("location");
@@ -213,23 +212,24 @@ class Documents_model extends Model {
 		}
 
 		$body = $response->getBody();
+		$fileSize = strlen($body);
 		if (isset($newFileName) && ($newFileName) && !empty($newFileName))
 		{
 			$outFileName = $newFileName;
-			$msg = 'using external filename: '.$outFileName;
+			$msg = "using external filename: $outFileName, size: $fileSize.";
 
 		} else {
 			$outFileName = $filename;
-			$msg = 'using provided filename: '.$outFileName;
+			$msg = "using provided filename: $outFileName, size: $fileSize.";
 		}
-
+		log_message('info', '[*] '.$msg);
 		$url_status = $response->getStatusCode();
 
 		// Validate url_status
 		if (empty($url_status))
 		{
 			$msg = "No HTTP code was returned. URL: ".$url;
-			// $this->log_debug('new_document_with_body', $msg);
+			log_message('info', 'DocModel::new_document_with_body. Error: '.$msg);
 
 			throw new \Exception($msg."\r\n");
 		}
@@ -237,7 +237,7 @@ class Documents_model extends Model {
 		if ($url_status<>200)
 		{
 			$msg = "Can not download file from URL. Response code: ".$url_status.". URL: ".$url;
-			// $this->log_debug('new_document_with_body', $msg."\r\n");
+			log_message('info', 'DocModel::new_document_with_body. Error: '.$msg);
 
 			throw new \Exception($msg);
 		}
