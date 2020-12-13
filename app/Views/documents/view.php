@@ -28,16 +28,18 @@
 				<li class="list-group-item list-group-item-info">
 					<label>Вопрос:</label> <?php echo $question['qs_title']; ?>
 				</li>
-				<li class="list-group-item">
-					<label>Описание:</label> <?php echo $question['qs_comment']; ?>
-				</li>
-			<?php foreach($question['documents'] as $doc_id=>$qd) : ?>
-				<li class="list-group-item">
-					<label>Документ:</label> <?php echo $qd['doc_filename'] ?>
-				<?php echo anchor(base_url('document/download/' . $doc_id),
-					lang('app.document_download')) ;?>
-				</li>
-			<?php endforeach ; ?>
+				<?php if(!empty($question['qs_comment'])): ?>
+					<li class="list-group-item">
+						<label>Описание:</label> <?php echo $question['qs_comment']; ?>
+					</li>
+				<?php endif; ?>
+				<?php foreach($question['documents'] as $doc_id=>$qd) : ?>
+					<li class="list-group-item">
+						<label>Документ:</label> <?php echo $qd['doc_filename'] ?>
+					<?php echo anchor(base_url('document/download/' . $doc_id),
+						lang('app.document_download')) ;?>
+					</li>
+				<?php endforeach ; ?>
 			</ul>
 		<?php endforeach ; ?>
 	</div>
@@ -48,11 +50,22 @@
 		<?php echo lang('app.documents_additional_questions_list_title');?>
 	</div>
 	<div class="panel-body">
-		<?php foreach($additional_questions_query->getResult() as $result) : ?>
+		<?php foreach($additional_questions as $question) : ?>
 		<ul>
 			<li class="list-group-item list-group-item-info">
-				<label>Вопрос:</label> <?php echo $result->qs_title; ?>
+				<label>Вопрос:</label> <?php echo $question['qs_title']; ?>
 			</li>
+			<?php $comment = $question['qs_comment']; if(!empty($comment)): ?>
+				<li class="list-group-item">
+					<label>Описание:</label><?php echo $comment; ?></li>
+			<?php endif; ?>
+			<?php foreach($question['documents'] as $doc_id=>$qd) : ?>
+				<li class="list-group-item">
+					<label>Документ:</label> <?php echo $qd['doc_filename'] ?>
+				<?php echo anchor(base_url('document/download/' . $doc_id),
+					lang('app.document_download')) ;?>
+				</li>
+			<?php endforeach ; ?>
 		</ul>
 		<?php endforeach ; ?>
 	</div>

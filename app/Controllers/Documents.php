@@ -43,6 +43,20 @@ class Documents extends BaseController {
 			];
 		}
 
+		// Подготовка массива дополнительный вопросов и их документов
+		$additional_questions = 
+			$questions_model->fetch_additional_questions_for_project($project_id);
+
+		foreach ($additional_questions->getResult() as $addQuestion) {
+			$addDocuments = 
+				$questions_model->fetch_documents_for_questionid($addQuestion->qs_id);
+			$additional_documents[$addQuestion->qs_id] = [
+				'qs_title' => $addQuestion->qs_title,
+				'qs_comment' => $addQuestion->qs_comment,
+				'documents' => $this->make_documents_array($addDocuments->getResult())
+			];
+		}
+
 		$time = Time::now('Europe/Moscow');
 		$current_date = $time->toDateTimeString();
 		$stage_state = $projects_model->getStageStatus($project_id, $current_date, 'acquaintance');
@@ -58,8 +72,12 @@ class Documents extends BaseController {
 		} else {
 			$page_data['general_questions'] = [];
 		}
-		$page_data['additional_questions_query'] =
-			$questions_model->fetch_additional_questions_for_project($project_id);
+
+		if (isset($additional_documents)) {
+			$page_data['additional_questions'] = $additional_documents;
+		} else {
+			$page_data['additional_questions'] = [];
+		}
 		$page_data['acquaintance_stage_state'] = $stage_state;
 		$page_data['current_date'] = $current_date;
 		$page_data['project'] = $project;
@@ -73,7 +91,7 @@ class Documents extends BaseController {
 	}
 
 	/**
-	* Составление массива участников и ответов по одному вопросу
+	* Составление массива документов по одному вопросу
 	*
 	* @param $question - запрос вопросов и документов
 	* @return array

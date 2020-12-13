@@ -1,33 +1,25 @@
-<!-- <table class="table table-hover">
-	<thead>
-		<tr>
-			<th class="h4"><?php echo lang('app.additional_questions_list_header') ?></th>
-		</tr>
-	</thead>
-	<tbody>
-		<?php foreach ($additional_questions_query->getResult() as $question_result) : ?>
-		<tr>
-			<td>
-				<?php echo $question_result->qs_title; ?>
-			</td>
-		</tr>
-		<?php endforeach ; ?>
-	</tbody>
-</table> -->
-
 <div class="panel panel-default panel-success">
 	<div class="panel-heading">
 		<?php echo lang('app.additional_questions_list_header') ?>
 	</div>
 	<div class="panel-body">
-		<?php foreach ($additional_questions_query->getResult() as $question_result) : ?>
+		<?php foreach ($additional_questions as $question) : ?>
 		<ul>
 			<li class="list-group-item list-group-item-info">
-				<?php echo $question_result->qs_title; ?>
+				<label>Вопрос: </label> <?php echo $question['qs_title']; ?>
 			</li>
-			<li class="list-group-item">
-				<?php echo $question_result->qs_comment; ?>
-			</li>
+			<?php $comment = $question['qs_comment']; if(!empty($comment)) : ?>
+				<li class="list-group-item">
+					<label>Описание: </label> <?php echo $comment; ?>
+				</li>
+			<?php endif; ?>
+			<?php foreach($question['documents'] as $doc_id => $qd) : ?>
+				<li class="list-group-item">
+					<label>Документ:</label> <?php echo $qd['doc_filename'] ?>
+				<?php echo anchor(base_url('document/download/' . $doc_id),
+					lang('app.document_download')) ;?>
+				</li>
+			<?php endforeach ; ?>
 		</ul>
 		<?php endforeach ; ?>
 	</div>

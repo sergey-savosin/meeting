@@ -34,8 +34,25 @@ class AdditionalQuestions extends BaseController {
 		$questions_model = model('Questions_model');
 		$documents_model = model('Documents_model');
 
-		$page_data['additional_questions_query'] = 
+		// Подготовка массива вопросов и вложенных документов
+		$additional_questions = 
 			$questions_model->fetch_additional_questions_for_user($user_id);
+
+		foreach ($additional_questions->getResult() as $question) {
+			$documents = 
+				$questions_model->fetch_documents_for_questionid($question->qs_id);
+			$additional_documents[$question->qs_id] = [
+				'qs_title' => $question->qs_title,
+				'qs_comment' => $question->qs_comment,
+				'documents' => $this->make_documents_array($documents->getResult())
+			];
+		}
+
+		if (isset($additional_documents)) {
+			$page_data['additional_questions'] = $additional_documents;
+		} else {
+			$page_data['additional_questions'] = [];
+		}
 
 		// setup form validation
 		$val_rules['qs_title'] = [
@@ -75,6 +92,8 @@ class AdditionalQuestions extends BaseController {
 			}
 
 			// save Documents and link them to new Question
+			$doc_id = -1;
+			
 			if ($qs_id && $files = $this->request->getFiles())
 			{
 				log_message('info', 'AQ::index - uploaded files! '.json_encode($files));
@@ -104,8 +123,6 @@ class AdditionalQuestions extends BaseController {
 						fclose($fp);
 					}
 				}
-			} else {
-				$doc_id = -1;
 			}
 
 			if ($qs_id && $doc_id) {
@@ -159,4 +176,18 @@ class AdditionalQuestions extends BaseController {
 		return $doc_id;
 	}
 
+	/**
+	* Составление массива документов по одному вопросу
+	*
+	* @param $question - запрос вопросов и документов
+	* @return array
+	*/
+	function make_documents_array($documents) {
+		$qa = array();
+		foreach ($documents as $document) {
+			$qa[$document->doc_id] =
+				array('doc_filename' => $document->doc_filename);
+		}
+		return $qa;
+	}
 }

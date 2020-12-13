@@ -81,7 +81,7 @@ class UserLoginTest extends FeatureTestCase
 
 		$this->assertEquals(1, $result->isRedirect());
 		$redirectUrl = $result->getRedirectUrl();
-		$this->assertEquals('http://localhost', $redirectUrl);
+		$this->assertEquals('http://localhost/Documents', $redirectUrl);
 
 		$result->assertSessionHas('user_login_code', '123');
 		$result->assertSessionHas('user_project_id', '1');
