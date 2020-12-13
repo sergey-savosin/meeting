@@ -175,7 +175,7 @@ class User extends BaseController {
 
 				return redirect()->to(base_url($redirect_from));
 			} else {
-				return redirect()->to(base_url('/'));
+				return redirect()->to(base_url('Documents'));
 			}
 
 

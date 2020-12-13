@@ -23,7 +23,9 @@ class Documents_model extends Model {
 		}
 	}
 
-	/* obsolete */
+	/**
+	* obsolete
+	*/
 	function new_document($filename, $projectId, $isforcreditor, $isfordebtor, $isformanager) {
 		$data = array ('doc_filename' => $filename,
 					'doc_body' => 'empty',
@@ -37,11 +39,11 @@ class Documents_model extends Model {
 		}
 	}
 
-	/************
-	 v4
-
-	 UnitTest
-	 ************/
+	/**
+	* v4
+	*
+	* UnitTest
+	*/
 	function new_document_with_body_old($url, $filename, $projectId, $isforcreditor, $isfordebtor, $isformanager) {
 		$ua = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13';
 		$ck = 'NID=197=fOSKSSxLFKeCpm7hlXff0qJ_HBd-wLDFgGH7mj37pPvivWyYVG7HqhZrKWIN_9g3jxy1fLr-dcQaqlrBeMxoOd3CugsR0bl00cU6coMstYaukQvCCqDwkSIUVfZNserollFirVBkMrqpmEvoEbrvXOqUbqDuLE5yqpLV69kmvtc; expires=Sun, 02-Aug-2020 15:48:51 GMT; path=/; domain=.google.com; HttpOnly';
@@ -174,13 +176,14 @@ class Documents_model extends Model {
 		return $doc_id;
 	}
 
-	/************
-	 v4
-
-	 UnitTest
-	 ************/
+	/**
+	* v4
+	*
+	* UnitTest
+	*/
 	function new_document_with_body($url, $filename,
-				$isforcreditor, $isfordebtor, $isformanager) {
+		$isforcreditor, $isfordebtor, $isformanager) {
+
     	$ua = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13';
 
 	    $ck = 'NID=197=fOSKSSxLFKeCpm7hlXff0qJ_HBd-wLDFgGH7mj37pPvivWyYVG7HqhZrKWIN_9g3jxy1fLr-dcQaqlrBeMxoOd3CugsR0bl00cU6coMstYaukQvCCqDwkSIUVfZNserollFirVBkMrqpmEvoEbrvXOqUbqDuLE5yqpLV69kmvtc; expires=Sun, 02-Aug-2020 15:48:51 GMT; path=/; domain=.google.com; HttpOnly';
@@ -275,6 +278,48 @@ class Documents_model extends Model {
 
 		log_message('info', '[*] ok.');
 		// log_message('info', '[*] body: '.$body);
+
+		return $doc_id;
+	}
+
+	/**
+	* Save file to database
+	*
+	* @param fileName
+	* @param fileContent
+	*
+	* @return document_id
+	*/
+	function newDocumentWithContent($fileName, $fileContent) {
+		//ToDo: add transaction
+
+		$data = array ('doc_filename' => $fileName,
+					'doc_is_for_creditor' => true,
+					'doc_is_for_debtor' => true,
+					'doc_is_for_manager' => true);
+		$db = $this->db;
+		
+		if ($db->table('document')->insert($data)) {
+			log_message('info',
+				'DocModel::newDocumentWithContent. Doc rec inserted. FileName: $fileName.');
+			$doc_id = $db->insertID();
+		} else {
+			$doc_id = false;
+		}
+		log_message('info', "DocModel::newDocumentWithContent - doc_id: $doc_id");
+
+		//ToDo: if $doc_id = false => Exception + log_message
+
+		$data = array ('docfile_doc_id' => $doc_id,
+						'docfile_body' => $fileContent);
+
+		if ($db->table('docfile')->insert($data)) {
+			log_message('info', 'DocModel::newDocumentWithContent. docfile rec inserted.');
+		} else {
+			log_message('info', 'DocModel::newDocumentWithContent. error');
+		}
+
+		log_message('info', 'DocModel::newDocumentWithContent. ok.');
 
 		return $doc_id;
 	}
