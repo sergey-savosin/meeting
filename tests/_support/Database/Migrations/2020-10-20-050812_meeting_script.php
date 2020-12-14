@@ -221,6 +221,10 @@ class MeetingScript extends Migration
 			],
 			'ans_answer_type_id' => [
 				'type' => 'int'
+			],
+			'ans_comment' => [
+				'type' => 'text',
+				'null' => true
 			]
 		]);
 		$this->forge->addKey('ans_id', true);

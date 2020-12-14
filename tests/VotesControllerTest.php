@@ -78,7 +78,11 @@ class VotesControllerTest extends FeatureTestCase
 		// Arrange
 		$questionId = $this->defaultQuestionId;
 		$ans_number = 1;
-		$data = ["optradio" => [$questionId => $ans_number]];
+		$ans_comment = 'a comment';
+		$data = [
+			"optradio" => [$questionId => $ans_number],
+			"comment" => [$questionId => $ans_comment]
+		];
 		
 		$request = \Config\Services::request();
 		$request->setGlobal('request', $data);
@@ -91,7 +95,11 @@ class VotesControllerTest extends FeatureTestCase
 		 		->execute("index");
 
 		// Assert
-		$data = ['ans_question_id' => $questionId, 'ans_number' => $ans_number];
+		$data = [
+			'ans_question_id' => $questionId,
+			'ans_number' => $ans_number,
+			'ans_comment' => $ans_comment
+		];
 		$this->seeInDatabase('answer', $data);
 	}
 
@@ -108,7 +116,9 @@ class VotesControllerTest extends FeatureTestCase
 		$firstQuestionId = $this->defaultQuestionId;
 		$newQuestionId = $firstQuestionId + 1;
 		$first_ans_number = 2;
+		$first_ans_comment = 'comment - 222';
 		$ans_number = 1;
+		$ans_comment = 'comment - 111';
 
 		// add new question
 		$title = "Test question - 456";
@@ -124,11 +134,18 @@ class VotesControllerTest extends FeatureTestCase
 				]);
 
 		// prepare request
-		$data = ["optradio" =>
+		$data = [
+			"optradio" =>
 			[
 				$firstQuestionId => $first_ans_number,
 				$newQuestionId => $ans_number,
-			]];
+			],
+			'comment' =>
+			[
+				$firstQuestionId => $first_ans_comment,
+				$newQuestionId => $ans_comment
+			]
+		];
 		
 		$request = \Config\Services::request();
 		$request->setGlobal('request', $data);
@@ -141,10 +158,18 @@ class VotesControllerTest extends FeatureTestCase
 		 		->execute("index");
 
 		// Assert
-		$data = ['ans_question_id' => $firstQuestionId, 'ans_number' => $first_ans_number];
+		$data = [
+			'ans_question_id' => $firstQuestionId,
+			'ans_number' => $first_ans_number,
+			'ans_comment' => $first_ans_comment
+		];
 		$this->seeInDatabase('answer', $data);
 
-		$data = ['ans_question_id' => $newQuestionId, 'ans_number' => $ans_number];
+		$data = [
+			'ans_question_id' => $newQuestionId,
+			'ans_number' => $ans_number,
+			'ans_comment' => $ans_comment
+		];
 		$this->seeInDatabase('answer', $data);
 	}
 
