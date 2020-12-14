@@ -81,19 +81,23 @@ class Answers_model extends Model {
 		}
 	}
 
-	/******
-	Добавление нового ответа на вопрос основной повестки.
-	
-	Параметры.
-	Returns new id.
+	/**
+	* Добавление нового ответа на вопрос основной повестки.
+	* 
+	* @param question_id
+	* ...
+	* @return new id.
 	*/
-	function new_general_answer($question_id, $user_id, $ans_number, $ans_string, $answer_type_id) {
+	function new_general_answer($question_id, $user_id, 
+		$ans_number, $ans_string, $answer_type_id, $ans_comment) {
 
 		$data = array ('ans_question_id' => $question_id,
 				'ans_user_id' => $user_id,
 				'ans_number' => $ans_number,
 				'ans_string' => $ans_string,
-				'ans_answer_type_id' => $answer_type_id);
+				'ans_answer_type_id' => $answer_type_id,
+				'ans_comment' => $ans_comment
+			);
 
 		$db = \Config\Database::connect();
 		if ($db->table('answer')->insert($data)) {
@@ -151,15 +155,21 @@ class Answers_model extends Model {
 		}
 	}
 
-	/************************
-	 Список доп вопросов с результатом голосования:
-	 - кол-во ЗА
-	 - кол-во ПРОТИВ
-	 - всего дано голосов
-	 - ID доп вопроса
-
-	 returns resultset
-	 ************************/
+	/**
+	* Список доп вопросов с результатом голосования:
+	* - кол-во За
+	* - кол-во Против
+	* - кол-во Воздержался
+	* - всего дано голосов
+	* - ID доп вопроса
+	* - Наименование
+	* - Голос
+	* - Комментарий
+	*
+	* Кол-во голосов нужно для того, чтобы понять, принят ли доп вопрос.
+	*
+	* @return resultset
+	*/
 	function fetch_additional_answers_with_votes($user_id) {
 		$query = "SELECT
 			SUM(CASE WHEN a_acc.ans_number = 0 THEN 1 ELSE 0 END) ans_yes, 
@@ -168,7 +178,8 @@ class Answers_model extends Model {
 			COUNT(1) ans_total,
 			q_base.qs_id,
 			q_base.qs_title,
-			a_base.ans_number
+			a_base.ans_number,
+			a_base.ans_comment
 		FROM user u
 		INNER JOIN question q_acc
 			ON q_acc.qs_project_id = u.user_project_id
@@ -193,14 +204,18 @@ class Answers_model extends Model {
 		}
 	}
 
-	/***********************
-	 Returns boolean
-	 ***********************/
-	function update_general_answer($ans_id, $ans_number, $ans_string, $answer_type_id) {
+	/**
+	* Update answer
+	*
+	* @return boolean
+	*/
+	function update_general_answer($ans_id,
+		$ans_number, $ans_string, $answer_type_id, $ans_comment) {
 		$data = [
 			'ans_number' => $ans_number,
 			'ans_string' => $ans_string,
-			'ans_answer_type_id' => $answer_type_id
+			'ans_answer_type_id' => $answer_type_id,
+			'ans_comment' => $ans_comment
 		];
 
 		$db = \Config\Database::connect();
@@ -315,7 +330,8 @@ class Answers_model extends Model {
 		$query = "SELECT q.qs_title,
 			u.user_member_name,
 			u.user_votes_number,
-			a.ans_number
+			a.ans_number,
+			a.ans_comment
 
 			FROM question q
 			INNER JOIN user u ON u.user_project_id = q.qs_project_id

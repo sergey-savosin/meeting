@@ -92,21 +92,28 @@ class Votes extends BaseController {
 				view('common/footer');
 		} else {
 			log_message('info', "Votes::index posted optradio");
+
 			// save data to DB
+
+			$ans_comments = [];
+			foreach ($this->request->getVar('comment') as $key => $value) {
+				$ans_comments[$key] = $value;
+			}
+
 			foreach ($this->request->getVar('optradio') as $key => $value) {
 				$qs_id = $key;
 				$ans_num = $value;
 				$ans_string = $value;
 				$answer_type_id = 1; // yes, no, abstain
+				$ans_comment = $ans_comments[$key] ?? null;
 				$answer = $answers_model->get_answer($qs_id, $user_id);
-				// log_message('info', "Votes::index key-value: $key, $value");
 
 				if ($answer) {
-					// log_message('info', "Votes::index updating answer: $key = $value.");
-					$res = $answers_model->update_general_answer($answer->ans_id, $ans_num, $ans_string, $answer_type_id);
+					$res = $answers_model->update_general_answer($answer->ans_id,
+						$ans_num, $ans_string, $answer_type_id, $ans_comment);
 				} else {
-					// log_message('info', "Votes::index inserting answer: $key = $value.");
-					$res = $answers_model->new_general_answer($qs_id, $user_id, $ans_num, $ans_string, $answer_type_id);
+					$res = $answers_model->new_general_answer($qs_id, $user_id,
+						$ans_num, $ans_string, $answer_type_id, $ans_comment);
 				}
 				if (!$res) {
 					break;

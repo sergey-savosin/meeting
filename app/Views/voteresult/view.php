@@ -120,6 +120,9 @@
 					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
 					<li class="list-group-item">Кол-во госолов: <?php echo $ans['user_voices'] ?></li>
 					<li class="list-group-item">Ответ: <?php echo $ans['ans_value'] ?></li>
+					<?php if (!empty($ans['ans_comment'])): ?><li class="list-group-item">
+						Комментарий: <?php echo $ans['ans_comment']
+						?></li><?php endif; ?>
 				</ul>
 				<?php endforeach; ?>
 			</div>
@@ -139,6 +142,9 @@
 					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
 					<li class="list-group-item">Кол-во госолов: <?php echo $ans['user_voices'] ?></li>
 					<li class="list-group-item">Ответ: <?php echo $ans['ans_value'] ?></li>
+					<?php if (!empty($ans['ans_comment'])): ?><li class="list-group-item">
+						Комментарий: <?php echo $ans['ans_comment']
+						?></li><?php endif; ?>
 				</ul>
 				<?php endforeach; ?>
 			</div>
@@ -158,6 +164,9 @@
 					<li class="list-group-item list-group-item-info">Участник: <?php echo $user_member_name ?></li>
 					<li class="list-group-item">Кол-во госолов: <?php echo $ans['user_voices'] ?></li>
 					<li class="list-group-item">Ответ: <?php echo $ans['ans_value'] ?></li>
+					<?php if (!empty($ans['ans_comment'])): ?><li class="list-group-item">
+						Комментарий: <?php echo $ans['ans_comment']
+						?></li><?php endif; ?>
 				</ul>
 				<?php endforeach; ?>
 			</div>

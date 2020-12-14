@@ -34,6 +34,14 @@
 							<?php if (set_value("optradio[$question_result->qs_id]", "$question_result->ans_number") === "2") {echo 'checked';}?>
 							>Воздержался</label>
 					</div>
+					<label>Комментарий:</label>
+					<textarea
+						class="form-control" rows="1" 
+						id="comment"
+						name="comment[<?php echo $question_result->qs_id; ?>]" 
+						><?php 
+							echo set_value("comment[$question_result->qs_id]",
+							"$question_result->ans_comment"); ?></textarea>
 				</div>
 
 			</div>
@@ -73,6 +81,13 @@
 							<?php if (set_value("optradio[$accept_result->qs_id]", "$accept_result->ans_number") === "2") {echo 'checked';}?>
 							>Воздержался</label>
 					</div>
+					<textarea
+						class="form-control" rows="1" 
+						id="comment"
+						name="comment[<?php echo $accept_result->qs_id; ?>]" 
+						><?php 
+							echo set_value("comment[$accept_result->qs_id]",
+							"$accept_result->ans_comment"); ?></textarea>
 				</div>
 
 			</div>

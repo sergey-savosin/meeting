@@ -79,18 +79,25 @@ class Additionalagendavotes extends BaseController {
 		} else {
 			// save data to DB
 
+			$ans_comments = [];
+			foreach ($this->request->getVar('comment') as $key => $value) {
+				$ans_comments[$key] = $value;
+			}
+
 			foreach ($this->request->getPost('optradio') as $key => $value) {
 				$qs_id = $key;
 				$ans_num = $value;
 				$ans_string = $value;
 				$answer_type_id = 1; // yes, no, abstain
+				$ans_comment = $ans_comments[$key] ?? null;
 				$answer = $answers_model->get_answer($qs_id, $user_id);
+
 				if ($answer) {
-					// $this->log_debug('Additionalagendavotes/index', "updating answer: ans_id = $answer->ans_id");
-					$res = $answers_model->update_general_answer($answer->ans_id, $ans_num, $ans_string, $answer_type_id);
+					$res = $answers_model->update_general_answer($answer->ans_id,
+						$ans_num, $ans_string, $answer_type_id, $ans_comment);
 				} else {
-					// $this->log_debug('Additionalagendavotes/index', "inserting answer...");
-					$res = $answers_model->new_general_answer($qs_id, $user_id, $ans_num, $ans_string, $answer_type_id);
+					$res = $answers_model->new_general_answer($qs_id, $user_id,
+						$ans_num, $ans_string, $answer_type_id, $ans_comment);
 				}
 				if (!$res) {
 					break;
