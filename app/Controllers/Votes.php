@@ -121,7 +121,7 @@ class Votes extends BaseController {
 			}
 			// go to default page
 			if ($res) {
-				return redirect()->to(base_url('/'));
+				return redirect()->to(base_url('/Documents'));
 			}
 		}
 	}
