@@ -33,14 +33,15 @@
 							name="optradio[<?php echo $question_result->qs_id; ?>]"
 							<?php if (set_value("optradio[$question_result->qs_id]", "$question_result->ans_number") === "2") {echo 'checked';}?>
 							>Воздержался</label>
-						<textarea
-							class="form-control" rows="1" 
-							id="comment"
-							name="comment[<?php echo $question_result->qs_id; ?>]" 
-							><?php 
-								echo set_value("comment[$question_result->qs_id]",
-								"$question_result->ans_comment"); ?></textarea>
 					</div>
+					<label>Комментарий:</label>
+					<textarea
+						class="form-control" rows="1" 
+						id="comment"
+						name="comment[<?php echo $question_result->qs_id; ?>]" 
+						><?php 
+							echo set_value("comment[$question_result->qs_id]",
+							"$question_result->ans_comment"); ?></textarea>
 				</div>
 
 			</div>

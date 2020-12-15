@@ -81,6 +81,7 @@
 							<?php if (set_value("optradio[$accept_result->qs_id]", "$accept_result->ans_number") === "2") {echo 'checked';}?>
 							>Воздержался</label>
 					</div>
+					<label>Комментарий:</label>
 					<textarea
 						class="form-control" rows="1" 
 						id="comment"
