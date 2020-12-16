@@ -32,7 +32,7 @@
 							id="yes-<?php echo $qs_id; ?>"
 							name="optradio[<?php echo $qs_id; ?>]"
 							<?php if (set_value("optradio[$qs_id]",
-								$question['ans_number']) === "0") {echo 'checked';}?>
+								strval($question['ans_number'])) === "0") {echo 'checked';}?>
 							>Да</label>
 						<label class="radio-inline"><input 
 							type="radio" 
@@ -40,7 +40,7 @@
 							id="no"
 							name="optradio[<?php echo $qs_id; ?>]"
 							<?php if (set_value("optradio[$qs_id]",
-								$question['ans_number']) === "1") {echo 'checked';}?>
+								strval($question['ans_number'])) === "1") {echo 'checked';}?>
 							>Нет</label>
 						<label class="radio-inline"><input 
 							type="radio" 
@@ -48,7 +48,7 @@
 							id="abstain"
 							name="optradio[<?php echo $qs_id; ?>]"
 							<?php if (set_value("optradio[$qs_id]",
-								$question['ans_number']) === "2") {echo 'checked';}?>
+								strval($question['ans_number'])) === "2") {echo 'checked';}?>
 							>Воздержался</label>
 					</div>
 					<label>Комментарий:</label>
@@ -58,7 +58,7 @@
 						name="comment[<?php echo $qs_id; ?>]" 
 						><?php 
 							echo set_value("comment[$qs_id]",
-							$question['ans_comment']); ?></textarea>
+							strval($question['ans_comment'])); ?></textarea>
 				</div>
 
 			</div>
