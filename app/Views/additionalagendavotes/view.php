@@ -2,46 +2,63 @@
 
 <?php echo form_open('additionalagendavotes/index', 'role="form"') ; ?>
 	<div class="h3">Вопросы дополнительной повестки</div>
-	<?php foreach ($questions_query->getResult() as $question_result) : ?>
+	<?php foreach ($questions as $question) : ?>
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<label>Вопрос:</label> <?php echo $question_result->qs_title ?> 
+				<label>Вопрос:</label> <?php $qs_id = $question['qs_id']; echo $question['qs_title'] ?>
+				<?php if (!empty($question['qs_comment'])): ?>
+					<br>
+					<label>Описание:</label> <?php echo $question['qs_comment'];?>
+				<?php endif; ?>
+				<?php if (!empty($question['documents'])): ?>
+					<br>
+					<label>Документы:</label>
+					<?php foreach ($question['documents'] as $doc_id => $doc): ?>
+						<?php echo '['.anchor(base_url('document/download/' . $doc_id),
+							$doc['doc_filename']).']' ;?>
+					<?php endforeach; ?>
+
+				<?php endif ?>
 			</div>
 			<div class="panel-body">
 				<div class="form-group">
 					<label>Ответ:</label>
 					<div class="radio">
-						<label class="radio-inline" for="yes-<?php echo $question_result->qs_id; ?>">
+						<label class="radio-inline" 
+							for="yes-<?php echo $qs_id; ?>">
 						<input
 							type="radio" 
 							value="0"
-							id="yes-<?php echo $question_result->qs_id; ?>"
-							name="optradio[<?php echo $question_result->qs_id; ?>]"
-							<?php if (set_value("optradio[$question_result->qs_id]", "$question_result->ans_number") === "0") {echo 'checked';}?>
+							id="yes-<?php echo $qs_id; ?>"
+							name="optradio[<?php echo $qs_id; ?>]"
+							<?php if (set_value("optradio[$qs_id]",
+								$question['ans_number']) === "0") {echo 'checked';}?>
 							>Да</label>
 						<label class="radio-inline"><input 
 							type="radio" 
 							value="1"
 							id="no"
-							name="optradio[<?php echo $question_result->qs_id; ?>]"
-							<?php if (set_value("optradio[$question_result->qs_id]", "$question_result->ans_number") === "1") {echo 'checked';}?>
+							name="optradio[<?php echo $qs_id; ?>]"
+							<?php if (set_value("optradio[$qs_id]",
+								$question['ans_number']) === "1") {echo 'checked';}?>
 							>Нет</label>
 						<label class="radio-inline"><input 
 							type="radio" 
 							value="2"
 							id="abstain"
-							name="optradio[<?php echo $question_result->qs_id; ?>]"
-							<?php if (set_value("optradio[$question_result->qs_id]", "$question_result->ans_number") === "2") {echo 'checked';}?>
+							name="optradio[<?php echo $qs_id; ?>]"
+							<?php if (set_value("optradio[$qs_id]",
+								$question['ans_number']) === "2") {echo 'checked';}?>
 							>Воздержался</label>
 					</div>
 					<label>Комментарий:</label>
 					<textarea
 						class="form-control" rows="1" 
 						id="comment"
-						name="comment[<?php echo $question_result->qs_id; ?>]" 
+						name="comment[<?php echo $qs_id; ?>]" 
 						><?php 
-							echo set_value("comment[$question_result->qs_id]",
-							"$question_result->ans_comment"); ?></textarea>
+							echo set_value("comment[$qs_id]",
+							$question['ans_comment']); ?></textarea>
 				</div>
 
 			</div>

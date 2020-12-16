@@ -28,14 +28,35 @@ class Additionalagendavotes extends BaseController {
 
 		$projects_model = model('Projects_model');
 		$answers_model = model('Answers_model');
+		$questions_model = model('Questions_model');
 
 		$time = Time::now('Europe/Moscow');
 		$current_date = $time->toDateTimeString();
 		$stage_state = $projects_model->getStageStatus($project_id, $current_date, 'additional_agenda');
 
 		// data for view
-		$page_data['questions_query'] = 
+		$additional_questions_query = 
 			$answers_model->fetch_additional_answers_with_votes($user_id);
+
+		foreach ($additional_questions_query->getResult() as $question) {
+			$documents = 
+				$questions_model->fetch_documents_for_questionid($question->qs_id);
+			$additional_questions[$question->qs_id] = [
+				'ans_yes' => $question->ans_yes,
+				'ans_no' => $question->ans_no,
+				'and_doubt' => $question->and_doubt,
+				'ans_total' => $question->ans_total,
+				'qs_id' => $question->qs_id,
+				'qs_title' => $question->qs_title,
+				'qs_comment' => $question->qs_comment,
+				'ans_number' => $question->ans_number,
+				'ans_comment' => $question->ans_comment,
+				'documents' => $this->make_documents_array($documents->getResult())
+			];
+		}
+
+		$page_data['questions'] = $additional_questions;
+
 		$page_data['opened_questions_count'] =
 			$answers_model->get_opened_user_questions_count($user_id, 2)->cnt; // additional questions
 		$page_data['additional_agenda_stage_state'] = $stage_state;
@@ -48,10 +69,10 @@ class Additionalagendavotes extends BaseController {
 		// 		'Вопрос "'.$qs->qs_title.'"',
 		// 		'required');
 		// }
-		foreach ($page_data['questions_query']->getResult() as $qs) {
-			$qs_id = $qs->qs_id;
+		foreach ($additional_questions as $qs) {
+			$qs_id = $qs['qs_id'];
 			$val_rules["optradio.$qs_id"] = [
-				'label' => "$qs->qs_title",
+				'label' => $qs['qs_title'],
 				'rules' => 'required',
 				'errors' => [
 					'required' => 'Выберите ответ на вопрос "{field}".'
@@ -110,6 +131,22 @@ class Additionalagendavotes extends BaseController {
 		}
 	}
 
+	/**
+	* Составление массива документов по одному вопросу
+	*
+	* @param $question - запрос вопросов и документов
+	* @return array
+	*/
+	private function make_documents_array($documents) {
+		$qa = array();
+		foreach ($documents as $document) {
+			$qa[$document->doc_id] =
+				[
+					'doc_filename' => $document->doc_filename
+				];
+		}
+		return $qa;
+	}
 
 
 }

@@ -178,6 +178,7 @@ class Answers_model extends Model {
 			COUNT(1) ans_total,
 			q_base.qs_id,
 			q_base.qs_title,
+			q_base.qs_comment,
 			a_base.ans_number,
 			a_base.ans_comment
 		FROM user u
