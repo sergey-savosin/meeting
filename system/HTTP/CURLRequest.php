@@ -132,6 +132,7 @@ class CURLRequest extends Request
 		$this->response = $response;
 		$this->baseURI  = $uri;
 
+		log_message('info', 'CURLRequest::_ctor - options: '.json_encode($options));
 		$this->parseOptions($options);
 	}
 
@@ -337,6 +338,8 @@ class CURLRequest extends Request
 	 */
 	protected function parseOptions(array $options)
 	{
+		log_message('info', 'CURLRequest::parseOptions'.json_encode($options));
+
 		if (array_key_exists('baseURI', $options))
 		{
 			$this->baseURI = $this->baseURI->setURI($options['baseURI']);
@@ -345,6 +348,7 @@ class CURLRequest extends Request
 
 		if (array_key_exists('headers', $options) && is_array($options['headers']))
 		{
+			log_message('info', 'CURLRequest::parseOptions - headers found');
 			foreach ($options['headers'] as $name => $value)
 			{
 				$this->setHeader($name, $value);
@@ -877,4 +881,20 @@ class CURLRequest extends Request
 	}
 
 	//--------------------------------------------------------------------
+// 	private $nativeheaders
+// ...
+
+// in function sendRequest
+//   $nativeheaders[] = [name=>value];
+
+// public function getNativeHeaders
+//   return $nativeheaders
+
+// in function send
+// ..if ($useNativeHeaders) {
+//    foreach(getNativeHeaders as key=>value) {
+//      $this->response->setHeader(key, value);
+//    }
+//   }
+
 }

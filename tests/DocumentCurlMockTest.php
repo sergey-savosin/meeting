@@ -3,11 +3,11 @@
 use CodeIgniter\Test\FeatureTestCase;
 use App\Database\Seeds;
 use CodeIgniter\Config\Services;
-use CodeIgniter\Test\Mock\MockCURLRequest;
 use CodeIgniter\HTTP\Response;
 use CodeIgniter\HTTP\ResponseInterface;
+use CodeIgniter\Test\Mock\MockCURLRequest;
 
-class DocumentTest extends FeatureTestCase
+class DocumentCurlMockTest extends FeatureTestCase
 {
 
 	protected $refresh  = true;
@@ -27,43 +27,50 @@ class DocumentTest extends FeatureTestCase
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 		$str = \Config\Services::request()->config->baseURL;
+
+		$config = new \Config\App;
+		$uri = new \CodeIgniter\HTTP\URI();
+		$response = new Response($config);
+		$options = [];
+
+		$curlrequest = new MockCURLRequest(
+			$config,
+			$uri,
+			$response,
+			$options);
+		$curlrequest->setOutput("124");
+		Services::injectMock('curlrequest', $curlrequest);
 	}
 
 	public function tearDown(): void
 	{
 		parent::tearDown();
+
+		// clear mock
+		Services::injectMock('curlrequest', null);
 	}
 
-	/**
-	* POST document с указанием существующего ProjectName добавляет документ
-	*
-	* - POST document
-	* neg: ["https://aubot.azurewebsites.net/api/download/1pvOz47s671c1OJb5c_hwI2Woo7EJQosLIXHyv5TWdxU", "test"]
-	* big: ["https://docs.google.com/document/d/1bVxQsgvBLoGJtfJL6gUsm6zzFOaC_KIc65ntsHShcpU", "Арантас ФА часть 1.docx"]
-	* norm: ["https://docs.google.com/spreadsheets/d/1-vTMclGuOJeaw4yqm3AWvg04q-C4sHyQ0zmKiQTY9aY/export?format=xlsx", "Автобанкротство - тайм шит.xlsx"]
-	* @testWith 
-	* ["https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB", "Untitled.jpg"]
+	/****
+	Mock CurlRequest
+	
 	*****/
-	public function mute_InsertDocumentWithExistingProjectNameWorks($url, $filename)
+	public function test_InsertDocumentWithExistingProjectNameWorksCurlMock()
 	{
-		// clear mock
-		//Services::injectMock('curlrequest', null);
-
 		// Arrange
+		$url = "https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB";
+		$filename =  "Untitled.jpg";
+
 		$params = [
 			'ProjectName'=>$this->defaultProjectName,
-			'FileName'=>'test.xlsx',
+			'FileName'=>$filename,
 			'FileUrl'=>$url,
 			'IsForCreditor'=>'true'
-
 		];
 
 		$_SERVER['CONTENT_TYPE'] = "application/json";
 		
 		// Act
 		$response = $this->post("document/insert", $params);
-
-		//$content = $response->getJSON();
 
 		// Assert
 		$doc_id = 1;
@@ -92,8 +99,6 @@ class DocumentTest extends FeatureTestCase
 			'pd_doc_id' => $doc_id,
 		];
 		$this->seeInDatabase('project_document', $criteria);
+
 	}
-
-
-
 }

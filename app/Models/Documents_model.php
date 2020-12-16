@@ -209,6 +209,7 @@ class Documents_model extends Model {
 		$ctype = $response->getHeaderLine("content-type");
 		$location = $response->getHeaderLine("location");
 		$disposition = $response->getHeaderLine("content-disposition");
+		log_message('info', "new_document_with_body: content-disposition=$disposition");
 
 		if (!empty($disposition)) {
 			$newFileName = $this->extractFileName($disposition);

@@ -1,9 +1,13 @@
 <?php namespace QuestionTest\Controller;
 
+use CodeIgniter\Config\Services;
+use CodeIgniter\HTTP\Response;
+use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\Test\FeatureTestCase;
+use CodeIgniter\Test\Mock\MockCURLRequest;
 use App\Database\Seeds;
 
-class QuestionWebApiTest extends FeatureTestCase
+class QuestionWebApiCurlMockTest extends FeatureTestCase
 {
 
 	protected $refresh  = true;
@@ -24,213 +28,34 @@ class QuestionWebApiTest extends FeatureTestCase
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 		$str = \Config\Services::request()->config->baseURL;
 
+		$config = new \Config\App;
+		$uri = new \CodeIgniter\HTTP\URI();
+		$response = new Response($config);
+		$options = [
+			'headers' => [
+				'content-disposition' => 'file1.jpg'
+			]
+		];
+
+		$curlrequest = new MockCURLRequest(
+			$config,
+			$uri,
+			$response,
+			$options);
+		$curlrequest->setOutput("124");
+		Services::injectMock('curlrequest', $curlrequest);
+
 		$this->questions_model = model('Questions_model');
 	}
 
 	public function tearDown(): void
 	{
 		parent::tearDown();
+
+		// clear mock
+		Services::injectMock('curlrequest', null);
 	}
 
-	/**
-	* POST question со значениями параметров, приводящих к ошибке
-	*
-	* - POST question
-	*
-	* @testWith ["", "ProjectName", "Invalid Question POST request: Empty Title value in request."]
- 	*			["TestTitle", "", "Invalid Question POST request: Empty ProjectName value in request."]
- 	*			["", "", "Invalid Question POST request: Empty Title value in request.Empty ProjectName value in request."]
- 	*			["TestTitle", "ProjectName-444", "Can't find project by projectName: ProjectName-444"]
-	*/
-	public function test_InsertQuestionValidationCases(string $title, string $projectName, string $errorMessage) : void
-	{
-		// Arrange
-		$params = [
-			'Title'=>$title,
-			'ProjectName'=>$projectName
-		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
-
-		// Act
-		$result = null;
-		$result = $this->post('question', $params);
-
-		// Assert
-		$this->assertNotNull($result);
-		$this->assertFalse($result->isRedirect());
-
-		$result->assertStatus(400);
-		$result->assertHeaderMissing('Location');
-		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$result->assertJSONExact(['status' => 'error', 'error' => $errorMessage]);
-	}
-
-	// ToDo: test when fileUrl is set, but defaultFileName is absent
-
-	/****
-	POST question с указанием существующего ProjectName добавляет вопрос
-	
-	- POST question
-	*****/
-	public function test_InsertQuestionWithExistingProjectNameWorks()
-	{
-		// Arrange
-		$projectName = $this->defaultProjectName;
-		$title = 'Question title - 123;Question title = 555';
-		$comment = 'Question comment - 444';
-
-		$params = [
-			'Title' => $title,
-			'ProjectName' => $projectName,
-			'Comment' => $comment,
-		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
-
-		// Act
-		$result = $this->post('question', $params);
-
-		// Assert
-		$expectedId = 2;
-		$this->assertNotNull($result);
-		$this->assertFalse($result->isRedirect());
-		$result->assertStatus(201);
-		$result->assertHeader('Location', "http://localhost/question/$expectedId");
-		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$result->assertJSONExact(['status' => 'ok', 'id' => $expectedId]);
-
-		$criteria = [
-			'qs_title'=>$title,
-			'qs_id'=>$expectedId,
-			'qs_project_id'=>$this->defaultProjectId,
-			'qs_comment' => $comment
-		];
-		$this->seeInDatabase('question', $criteria);
-	}
-
-	/**
-	* POST question с указанием существующего ProjectName и режима HasCsvContent.
-	* Результат: добавлено 2 вопроса.
-	* 
-	* - POST question
-	* @testWith ["Question title - 123;Question title = 555","Question title - 123", "Question title = 555", "true"]
-	* ["Question title - 123;Question title = 555","Question title - 123", "Question title = 555", "True"]
-	* ["Question title - 123;Question title = 555","Question title - 123", "Question title = 555", "TRUE"]
-	*/
-	public function test_InsertTwoQuestionsWithExistingProjectNameWorks($title,
-		$exp1, $exp2, $hasCsvContent)
-	{
-		// Arrange
-		$projectName = $this->defaultProjectName;
-		
-		$params = [
-			'Title' => $title,
-			'ProjectName' => $projectName,
-			'HasCsvContent' => $hasCsvContent
-		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
-
-		// Act
-		$result = $this->post('question', $params);
-
-		// Assert
-		$expectedId = 2;
-
-		$this->assertNotNull($result);
-		$this->assertFalse($result->isRedirect());
-		$result->assertStatus(201);
-		$result->assertHeaderMissing('Location');
-		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-		$result->assertJSONExact([
-			'status' => 'ok',
-			'id' => [$expectedId, $expectedId + 1]
-			]);
-
-		$criteria = [
-			'qs_title' => $exp1,
-			'qs_id' => $expectedId,
-			'qs_project_id' => $this->defaultProjectId
-		];
-		$this->seeInDatabase('question', $criteria);
-
-		$criteria = [
-			'qs_title' => $exp2,
-			'qs_id' => $expectedId + 1,
-			'qs_project_id' => $this->defaultProjectId
-		];
-		$this->seeInDatabase('question', $criteria);
-
-	}
-
-	/**
-	* POST question с указанием существующего ProjectName и режима HasCsvContent.
-	* Результат: добавлено 3 вопроса.
-	* 
-	* - POST question
-	* @testWith ["1. \u041e\u0442\u0447\u0451\u0442 \u0444\u0438\u043d\u0430\u043d\u0441\u043e\u0432\u043e\u0433\u043e \u0443\u043f\u0440\u0430\u0432\u043b\u044f\u044e\u0449\u0435\u0433\u043e; 2. \u041f\u0440\u043e\u0434\u043b\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0446\u0435\u0434\u0443\u0440\u044b \u0440\u0435\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u0438 \u0438\u043c\u0443\u0449\u0435\u0441\u0442\u0432\u0430; 3. \u0423\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0436\u0438\u0442\u043e\u0447\u043d\u043e\u0433\u043e \u043c\u0438\u043d\u0438\u043c\u0443\u043c\u0430 \u0434\u043e\u043b\u0436\u043d\u0438\u043a\u0430.", "1. Отчёт финансового управляющего", " 2. Продление процедуры реализации имущества", " 3. Утверждение прожиточного минимума должника."]
-	*/
-	public function test_InsertThreeQuestionsWithExistingProjectNameWorks($title,
-		$exp1, $exp2, $exp3)
-	{
-		// Arrange
-		$projectName = $this->defaultProjectName;
-		
-		$params = [
-			'Title'=>$title,
-			'ProjectName'=>$projectName,
-			'HasCsvContent'=>'True'
-		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
-
-		// Act
-		$result = $this->post('question', $params);
-
-		// Assert
-		$expectedId = 2;
-
-		$this->assertNotNull($result);
-		$this->assertFalse($result->isRedirect());
-		$result->assertStatus(201);
-		$result->assertJSONExact([
-			'status' => 'ok',
-			'id' => [$expectedId, $expectedId+1, $expectedId+2]
-			]);
-
-		$result->assertHeaderMissing('Location');
-		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
-
-		$criteria = [
-			'qs_title'=>$exp1,
-			'qs_id'=>$expectedId,
-			'qs_project_id'=>$this->defaultProjectId
-		];
-		$this->seeInDatabase('question', $criteria);
-
-		$criteria = [
-			'qs_title'=>$exp2,
-			'qs_id'=>$expectedId + 1,
-			'qs_project_id'=>$this->defaultProjectId
-		];
-		$this->seeInDatabase('question', $criteria);
-
-		$criteria = [
-			'qs_title'=>$exp3,
-			'qs_id'=>$expectedId + 2,
-			'qs_project_id'=>$this->defaultProjectId
-		];
-		$this->seeInDatabase('question', $criteria);
-
-		$criteria = [
-			'qs_id'=>$expectedId + 2,
-			'qs_project_id'=>$this->defaultProjectId
-		];
-		
-		//$res = $this->grabFromDatabase('question', 'qs_title', $criteria);
-		//var_dump($res);
-	}
 
 	/**
 	* POST question с указанием существующего ProjectName и с FileUrl добавляет вопрос
@@ -239,17 +64,17 @@ class QuestionWebApiTest extends FeatureTestCase
 	* @testWith 
 	* ["https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB", "Untitled.jpg"]
 	*/
-	public function mute_InsertQuestionWithFileUrlWorks($url, $filename)
+	public function test_InsertQuestionWithFileUrlWorksCurlMock($url, $filename)
 	{
 		// Arrange
 		$projectName = $this->defaultProjectName;
 		$title = 'Question title - 123;Question title = 555';
 
 		$params = [
-			'Title'=>$title,
-			'ProjectName'=>$projectName,
-			'FileName'=>'test.xlsx',
-			'FileUrl'=>$url,
+			'Title' => $title,
+			'ProjectName' => $projectName,
+			'DefaultFileName' => $filename,
+			'FileUrl' => $url,
 		];
 
 		$_SERVER['CONTENT_TYPE'] = "application/json";
@@ -282,6 +107,8 @@ class QuestionWebApiTest extends FeatureTestCase
 			'doc_is_for_debtor' => 1,
 			'doc_is_for_manager' => 1
 		];
+		//echo $this->grabFromDatabase('document', 'doc_filename', $criteria);
+
 		$this->seeInDatabase('document', $criteria);
 
 		$criteria = [
@@ -306,7 +133,7 @@ class QuestionWebApiTest extends FeatureTestCase
 	* ["t1;t5","https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB","t1","t5","Untitled.jpg",""]
 	* ["t1;t5",";https://docs.google.com/document/d/1KSROwOW-Q43AEW2Rh0iKHE0pV134dImAHmg1tb3Ofdg","t1","t5","","Собрание и голосование.docx"]
 	*/
-	public function mute_InsertTwoQuestionsWithFileUrlsNameWorks(
+	public function test_InsertTwoQuestionsWithFileUrlsNameWorksCurlMock(
 		$title, $fileUrl,
 		$expTitle1, $expTitle2,
 		$expFileName1, $expFileName2)
@@ -379,7 +206,7 @@ class QuestionWebApiTest extends FeatureTestCase
 	* ["t1;t5",";c2","t1","t5",null,"c2"]
 	* ["t1;t5","","t1","t5",null,null]
 	*/
-	public function mute_InsertTwoQuestionsWithCommentWorks(
+	public function test_InsertTwoQuestionsWithCommentWorksCurlMock(
 		$title, $comment,
 		$expTitle1, $expTitle2,
 		$expComment1, $expComment2)
