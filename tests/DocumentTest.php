@@ -41,14 +41,12 @@ class DocumentTest extends FeatureTestCase
 	* neg: ["https://aubot.azurewebsites.net/api/download/1pvOz47s671c1OJb5c_hwI2Woo7EJQosLIXHyv5TWdxU", "test"]
 	* big: ["https://docs.google.com/document/d/1bVxQsgvBLoGJtfJL6gUsm6zzFOaC_KIc65ntsHShcpU", "Арантас ФА часть 1.docx"]
 	* norm: ["https://docs.google.com/spreadsheets/d/1-vTMclGuOJeaw4yqm3AWvg04q-C4sHyQ0zmKiQTY9aY/export?format=xlsx", "Автобанкротство - тайм шит.xlsx"]
+	* @group Curl
 	* @testWith 
 	* ["https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB", "Untitled.jpg"]
 	*****/
-	public function mute_InsertDocumentWithExistingProjectNameWorks($url, $filename)
+	public function test_Curl_InsertDocumentWithExistingProjectNameWorks($url, $filename)
 	{
-		// clear mock
-		//Services::injectMock('curlrequest', null);
-
 		// Arrange
 		$params = [
 			'ProjectName'=>$this->defaultProjectName,

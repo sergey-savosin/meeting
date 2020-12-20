@@ -21,6 +21,8 @@ class DocumentCurlMockTest extends FeatureTestCase
 	protected $defaultProjectName = 'ProjectName-123';
 	protected $defaultUserId = 1;
 
+	protected $curlrequest;
+
 	public function setUp(): void
 	{
 		parent::setUp();
@@ -28,18 +30,19 @@ class DocumentCurlMockTest extends FeatureTestCase
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 		$str = \Config\Services::request()->config->baseURL;
 
+		//----------------------
 		$config = new \Config\App;
 		$uri = new \CodeIgniter\HTTP\URI();
 		$response = new Response($config);
-		$options = [];
 
-		$curlrequest = new MockCURLRequest(
+		$this->curlrequest = new MockCURLRequest(
 			$config,
 			$uri,
-			$response,
-			$options);
-		$curlrequest->setOutput("124");
-		Services::injectMock('curlrequest', $curlrequest);
+			$response);
+		$this->curlrequest->setOutput("124");
+
+		Services::injectMock('curlrequest', $this->curlrequest);
+		//----------------------
 	}
 
 	public function tearDown(): void
@@ -50,19 +53,21 @@ class DocumentCurlMockTest extends FeatureTestCase
 		Services::injectMock('curlrequest', null);
 	}
 
-	/****
-	Mock CurlRequest
-	
-	*****/
+	/**
+	 * Mock CurlRequest
+	 * @group CurlMock
+	 */
 	public function test_InsertDocumentWithExistingProjectNameWorksCurlMock()
 	{
 		// Arrange
 		$url = "https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB";
 		$filename =  "Untitled.jpg";
 
+		$this->setHeaderFileNames([$filename]);
+
 		$params = [
 			'ProjectName'=>$this->defaultProjectName,
-			'FileName'=>$filename,
+			'FileName'=>'defaultfilename.jpg',
 			'FileUrl'=>$url,
 			'IsForCreditor'=>'true'
 		];
@@ -99,6 +104,10 @@ class DocumentCurlMockTest extends FeatureTestCase
 			'pd_doc_id' => $doc_id,
 		];
 		$this->seeInDatabase('project_document', $criteria);
-
 	}
+
+	protected function setHeaderFileNames($filenames) {
+		$this->curlrequest->setFileNames($filenames);
+	}
+
 }

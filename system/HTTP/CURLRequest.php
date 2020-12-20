@@ -103,6 +103,12 @@ class CURLRequest extends Request
 	 */
 	protected $delay = 0.0;
 
+	/**
+	 * Headers for unit testing
+	 * @var array
+	 */
+	protected $nativeheaders;
+
 	//--------------------------------------------------------------------
 
 	/**
@@ -134,6 +140,7 @@ class CURLRequest extends Request
 
 		log_message('info', 'CURLRequest::_ctor - options: '.json_encode($options));
 		$this->parseOptions($options);
+		//$this->nativeheaders = array();
 	}
 
 	//--------------------------------------------------------------------
@@ -145,10 +152,12 @@ class CURLRequest extends Request
 	 * @param $method
 	 * @param string $url
 	 * @param array  $options
+	 * @param bool   $use_nativeheaders
 	 *
 	 * @return \CodeIgniter\HTTP\ResponseInterface
 	 */
-	public function request($method, string $url, array $options = [], bool $nativeheaders = null): ResponseInterface
+	public function request($method, string $url, array $options = [],
+		bool $use_nativeheaders = null): ResponseInterface
 	{
 		$this->parseOptions($options);
 
@@ -156,7 +165,7 @@ class CURLRequest extends Request
 
 		$method = filter_var($method, FILTER_SANITIZE_STRING);
 
-		$this->send($method, $url, $nativeheaders);
+		$this->send($method, $url, $use_nativeheaders);
 
 		return $this->response;
 	}
@@ -419,13 +428,11 @@ class CURLRequest extends Request
 	 *
 	 * @return \CodeIgniter\HTTP\ResponseInterface
 	 */
-	public function send(string $method, string $url, bool $nativeheaders = null)
+	public function send(string $method, string $url, bool $use_nativeheaders = null)
 	{
-		if (null === $nativeheaders) {
-			$nativeheaders = false;
+		if (null === $use_nativeheaders) {
+			$use_nativeheaders = false;
 		}
-		// $str_nh = ($nativeheaders === true ? 'true' : 'false');
-		// log_message('info', "nativeheaders = $str_nh");
 
 		// Reset our curl options so we're on a fresh slate.
 		$curl_options = [];
@@ -442,8 +449,8 @@ class CURLRequest extends Request
 		$curl_options[CURLOPT_URL]            = $url;
 		$curl_options[CURLOPT_RETURNTRANSFER] = true;
 		
-		// hide headers from output for $nativeheaders option
-		if ($nativeheaders === false) {
+		// hide headers from output for $use_nativeheaders option
+		if ($use_nativeheaders === false) {
 			$curl_options[CURLOPT_HEADER]     = true;
 		}
 		
@@ -461,7 +468,7 @@ class CURLRequest extends Request
 			sleep($this->delay);
 		}
 
-		$output = $this->sendRequest($curl_options, $nativeheaders);
+		$output = $this->sendRequest($curl_options, $use_nativeheaders);
 		// log_message('info', 'curl: '.$output);
 
 		if (strpos($output, 'HTTP/1.1 100 Continue') === 0)
@@ -469,23 +476,31 @@ class CURLRequest extends Request
 			$output = substr($output, strpos($output, "\r\n\r\n") + 4);
 		}
 
-		// Split out our headers and body
-		$break = strpos($output, "\r\n\r\n");
-
-		if ($break !== false && $nativeheaders === false)
-		{
-			// Our headers
-			$headers = explode("\n", substr($output, 0, $break));
-
-			$this->setResponseHeaders($headers);
-
-			// Our body
-			$body = substr($output, $break + 4);
-			$this->response->setBody($body);
-		}
-		else
-		{
+		if ($use_nativeheaders) {
+			// copy headers from array
+			if (isset($this->nativeheaders)) {
+				$this->setResponseHeaders($this->nativeheaders);
+			}
 			$this->response->setBody($output);
+		} else {
+			// Split out our headers and body
+			$break = strpos($output, "\r\n\r\n");
+
+			if ($break !== false)
+			{
+				// Our headers
+				$headers = explode("\n", substr($output, 0, $break));
+
+				$this->setResponseHeaders($headers);
+
+				// Our body
+				$body = substr($output, $break + 4);
+				$this->response->setBody($body);
+			}
+			else
+			{
+				$this->response->setBody($output);
+			}
 		}
 
 		return $this->response;
@@ -605,7 +620,7 @@ class CURLRequest extends Request
 			if (($pos = strpos($header, ':')) !== false)
 			{
 				$title = substr($header, 0, $pos);
-				$value = substr($header, $pos + 1);
+				$value = trim(substr($header, $pos + 1));
 
 				$this->response->setHeader($title, $value);
 			}
@@ -835,13 +850,13 @@ class CURLRequest extends Request
 	 *
 	 * @return string
 	 */
-	protected function sendRequest(array $curl_options = [], $nativeheaders): string
+	protected function sendRequest(array $curl_options = [], $use_nativeheaders): string
 	{
 		$ch = curl_init();
 
 		curl_setopt_array($ch, $curl_options);
 
-		if ($nativeheaders === true) {
+		if ($use_nativeheaders === true) {
 			// this function is called by curl for each header received
 			curl_setopt($ch, CURLOPT_HEADERFUNCTION,
 				function($curl, $header) //use (&$headers)
@@ -849,15 +864,15 @@ class CURLRequest extends Request
 					// log_message('info', 'CR::sendRequest headerfunc. Header: '.$header);
 
 					$len = strlen($header);
-					$header = explode(':', $header, 2);
-					if (count($header) < 2) // ignore invalid headers
-					    return $len;
+					// $header = explode(':', $header, 2);
+					// if (count($header) < 2) // ignore invalid headers
+					//     return $len;
 
-					$title = strtolower(trim($header[0]));
-					$value = trim($header[1]);
-					//$headers[strtolower(trim($header[0]))][] = trim($header[1]);
-					$this->response->setHeader($title, $value);
+					// $title = strtolower(trim($header[0]));
+					// $value = trim($header[1]);
+					//$this->response->setHeader($title, $value);
 
+					$this->nativeheaders[] = $header;
 					return $len;
 				}
 			);

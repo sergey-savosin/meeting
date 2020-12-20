@@ -209,7 +209,7 @@ class Documents_model extends Model {
 		$ctype = $response->getHeaderLine("content-type");
 		$location = $response->getHeaderLine("location");
 		$disposition = $response->getHeaderLine("content-disposition");
-		log_message('info', "new_document_with_body: content-disposition=$disposition");
+		log_message('info', "[DocModel::new_document_with_body] content-disposition: $disposition");
 
 		if (!empty($disposition)) {
 			$newFileName = $this->extractFileName($disposition);
@@ -732,7 +732,7 @@ header('Content-Type: image/png');
 		if (!empty($output[0]))
 		{
 			$msg = "Extracted UTF filename: ".$output[0];
-			// $this->log_debug('extractFileName', $msg);
+			//log_message('info', '[extractFileName] '.$msg);
 
 			return $output[0];
 		}
@@ -745,13 +745,13 @@ header('Content-Type: image/png');
 		if (!empty($output[0]))
 		{
 			$msg = "Extracted plain filename: ".$output[0];
-			// $this->log_debug('extractFileName', $msg);
+			//log_message('info', '[extractFileName] '.$msg);
 
 			return $output[0];
 		}
 
 		$msg = "No filename extracted from header!";
-		// $this->log_debug('extractFileName', $msg);
+		//log_message('info', '[extractFileName] '.$msg);
 
 		return false;
 	}

@@ -24,6 +24,8 @@ class QuestionWebApiTest extends FeatureTestCase
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 		$str = \Config\Services::request()->config->baseURL;
 
+		$_SERVER['CONTENT_TYPE'] = "application/json";
+
 		$this->questions_model = model('Questions_model');
 	}
 
@@ -49,8 +51,6 @@ class QuestionWebApiTest extends FeatureTestCase
 			'Title'=>$title,
 			'ProjectName'=>$projectName
 		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
 
 		// Act
 		$result = null;
@@ -85,8 +85,6 @@ class QuestionWebApiTest extends FeatureTestCase
 			'ProjectName' => $projectName,
 			'Comment' => $comment,
 		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
 
 		// Act
 		$result = $this->post('question', $params);
@@ -129,8 +127,6 @@ class QuestionWebApiTest extends FeatureTestCase
 			'ProjectName' => $projectName,
 			'HasCsvContent' => $hasCsvContent
 		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
 
 		// Act
 		$result = $this->post('question', $params);
@@ -183,8 +179,6 @@ class QuestionWebApiTest extends FeatureTestCase
 			'HasCsvContent'=>'True'
 		];
 
-		$_SERVER['CONTENT_TYPE'] = "application/json";
-
 		// Act
 		$result = $this->post('question', $params);
 
@@ -227,19 +221,17 @@ class QuestionWebApiTest extends FeatureTestCase
 			'qs_id'=>$expectedId + 2,
 			'qs_project_id'=>$this->defaultProjectId
 		];
-		
-		//$res = $this->grabFromDatabase('question', 'qs_title', $criteria);
-		//var_dump($res);
 	}
 
 	/**
 	* POST question с указанием существующего ProjectName и с FileUrl добавляет вопрос
 	*
 	* - POST question
+	* @group Curl
 	* @testWith 
 	* ["https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB", "Untitled.jpg"]
 	*/
-	public function mute_InsertQuestionWithFileUrlWorks($url, $filename)
+	public function test_Curl_InsertQuestionWithFileUrlWorks($url, $filename)
 	{
 		// Arrange
 		$projectName = $this->defaultProjectName;
@@ -251,8 +243,6 @@ class QuestionWebApiTest extends FeatureTestCase
 			'FileName'=>'test.xlsx',
 			'FileUrl'=>$url,
 		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
 
 		// Act
 		$result = $this->post('question', $params);
@@ -302,11 +292,11 @@ class QuestionWebApiTest extends FeatureTestCase
 	* Результат: добавлено 2 вопроса.
 	* 
 	* - POST question
+	* @group Curl
 	* @testWith ["t1;t5","https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB;https://docs.google.com/document/d/1KSROwOW-Q43AEW2Rh0iKHE0pV134dImAHmg1tb3Ofdg","t1","t5","Untitled.jpg","Собрание и голосование.docx"]
 	* ["t1;t5","https://drive.google.com/file/d/1wREX77j3brL8U8uXzbg5R9rJtlPP27xB","t1","t5","Untitled.jpg",""]
-	* ["t1;t5",";https://docs.google.com/document/d/1KSROwOW-Q43AEW2Rh0iKHE0pV134dImAHmg1tb3Ofdg","t1","t5","","Собрание и голосование.docx"]
 	*/
-	public function mute_InsertTwoQuestionsWithFileUrlsNameWorks(
+	public function test_Curl_InsertTwoQuestionsWithFileUrlsNameWorks(
 		$title, $fileUrl,
 		$expTitle1, $expTitle2,
 		$expFileName1, $expFileName2)
@@ -321,8 +311,6 @@ class QuestionWebApiTest extends FeatureTestCase
 			'FileUrl' => $fileUrl,
 			'HasCsvContent' => 'True'
 		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
 
 		// Act
 		$result = $this->post('question', $params);
@@ -346,19 +334,9 @@ class QuestionWebApiTest extends FeatureTestCase
 
 		$this->seeQuestion($expTitle2, null, $expQuestionId + 1, $this->defaultProjectId);
 
-		// No documents
-		if ($expFileName1 == '' && $expFileName2 == '') {
-			$this->dontSeeQuestionDocument($expQuestionId, $expDocId, $expFileName1);
-		}
-
 		// Only First document
 		if ($expFileName1 <> '' && $expFileName2 == '') {
 			$this->seeQuestionDocument($expQuestionId, $expDocId, $expFileName1);
-		}
-
-		// Only Second document
-		if ($expFileName1 == '' && $expFileName2 <> '') {
-			$this->seeQuestionDocument($expQuestionId + 1, $expDocId, $expFileName2);
 		}
 
 		// First and Second document
@@ -374,12 +352,63 @@ class QuestionWebApiTest extends FeatureTestCase
 	* Результат: добавлено 2 вопроса.
 	* 
 	* - POST question
+	* @group Curl
+	* @testWith ["t1;t5",";https://docs.google.com/document/d/1KSROwOW-Q43AEW2Rh0iKHE0pV134dImAHmg1tb3Ofdg","t1","t5","Собрание и голосование.docx"]
+	*/
+	public function test_Curl_InsertTwoQuestionsWithSecondFileUrlNameWorks(
+		$title, $fileUrl,
+		$expTitle1, $expTitle2,
+		$expFileName2)
+	{
+		// Arrange
+		$projectName = $this->defaultProjectName;
+		
+		$params = [
+			'Title' => $title,
+			'ProjectName' => $projectName,
+			'Comment' => null,
+			'FileUrl' => $fileUrl,
+			'HasCsvContent' => 'True'
+		];
+
+		// Act
+		$result = $this->post('question', $params);
+
+		// Assert
+		$expQuestionId = 2;
+		$expDocId = 1;
+
+		$this->assertNotNull($result);
+		$this->assertFalse($result->isRedirect());
+		$result->assertStatus(201);
+		$result->assertHeaderMissing('Location');
+		$result->assertHeader('Content-Type', 'application/json; charset=UTF-8');
+		$result->assertJSONExact([
+			'status' => 'ok',
+			'id' => [$expQuestionId, $expQuestionId + 1]
+			]);
+
+		// test Question data
+		$this->seeQuestion($expTitle1, null, $expQuestionId, $this->defaultProjectId);
+
+		$this->seeQuestion($expTitle2, null, $expQuestionId + 1, $this->defaultProjectId);
+
+		// Only Second document
+		$this->seeQuestionDocument($expQuestionId + 1, $expDocId, $expFileName2);
+		// ToDo: dontsee first document
+	}
+
+	/**
+	* POST question с указанием существующего ProjectName и режима HasCsvContent.
+	* Результат: добавлено 2 вопроса.
+	* 
+	* - POST question
 	* @testWith ["t1;t5","c1;c2","t1","t5","c1","c2"]
 	* ["t1;t5","c1","t1","t5","c1",null]
 	* ["t1;t5",";c2","t1","t5",null,"c2"]
 	* ["t1;t5","","t1","t5",null,null]
 	*/
-	public function mute_InsertTwoQuestionsWithCommentWorks(
+	public function test_InsertTwoQuestionsWithCommentWorks(
 		$title, $comment,
 		$expTitle1, $expTitle2,
 		$expComment1, $expComment2)
@@ -394,8 +423,6 @@ class QuestionWebApiTest extends FeatureTestCase
 			'FileUrl' => null,
 			'HasCsvContent' => 'True'
 		];
-
-		$_SERVER['CONTENT_TYPE'] = "application/json";
 
 		// Act
 		$result = $this->post('question', $params);
