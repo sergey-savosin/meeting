@@ -394,8 +394,8 @@ class QuestionWebApiTest extends FeatureTestCase
 		$this->seeQuestion($expTitle2, null, $expQuestionId + 1, $this->defaultProjectId);
 
 		// Only Second document
+		$this->dontSeeQuestionDocument($expQuestionId);
 		$this->seeQuestionDocument($expQuestionId + 1, $expDocId, $expFileName2);
-		// ToDo: dontsee first document
 	}
 
 	/**
@@ -447,7 +447,8 @@ class QuestionWebApiTest extends FeatureTestCase
 		$this->seeQuestion($expTitle2, $expComment2, $expQuestionId + 1, $this->defaultProjectId);
 
 		// No documents
-		$this->dontSeeQuestionDocument($expQuestionId, $expDocId, null);
+		$this->dontSeeQuestionDocument($expQuestionId);
+		$this->dontSeeQuestionDocument($expQuestionId+1);
 	}
 
 	protected function seeQuestion($title, $comment, $questionId, $projectId) {
@@ -474,22 +475,11 @@ class QuestionWebApiTest extends FeatureTestCase
 		$this->seeInDatabase('document', $criteriaD);
 	}
 
-	protected function dontSeeQuestionDocument($questionId, $documentId, $fileName) {
-		$criteriaQD = [
-			'qd_question_id' => $questionId,
-			'qd_doc_id' => $documentId
+	protected function dontSeeQuestionDocument($questionId) {
+		$criteria = [
+			'qd_question_id' => $questionId
 		];
-		
-		$criteriaD = [
-			'doc_id' => $documentId,
-			'doc_filename' => $fileName
-		];
-		
-		$this->dontSeeInDatabase('question_document', $criteriaQD);
-		
-		if (!empty($fileName)) {
-			$this->dontSeeInDatabase('document', $criteriaD);
-		}
+		$this->dontSeeInDatabase('question_document', $criteria);
 	}
 
 }

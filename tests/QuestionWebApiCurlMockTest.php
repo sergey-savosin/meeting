@@ -237,9 +237,8 @@ class QuestionWebApiCurlMockTest extends FeatureTestCase
 		$this->seeQuestion($expTitle2, null, $expQuestionId + 1, $this->defaultProjectId);
 
 		// Only Second document
+		$this->dontSeeQuestionDocument($expQuestionId);
 		$this->seeQuestionDocument($expQuestionId + 1, $expDocId, $expFileName2);
-
-		//ToDo: dontsee first document
 
 	}
 
@@ -267,22 +266,12 @@ class QuestionWebApiCurlMockTest extends FeatureTestCase
 		$this->seeInDatabase('document', $criteriaD);
 	}
 
-	protected function dontSeeQuestionDocument($questionId, $documentId, $fileName) {
-		$criteriaQD = [
+	protected function dontSeeQuestionDocument($questionId) {
+		$criteria = [
 			'qd_question_id' => $questionId,
-			'qd_doc_id' => $documentId
 		];
 		
-		$criteriaD = [
-			'doc_id' => $documentId,
-			'doc_filename' => $fileName
-		];
-		
-		$this->dontSeeInDatabase('question_document', $criteriaQD);
-		
-		if (!empty($fileName)) {
-			$this->dontSeeInDatabase('document', $criteriaD);
-		}
+		$this->dontSeeInDatabase('question_document', $criteria);
 	}
 
 	protected function setHeaderFileNames($filenames) {
