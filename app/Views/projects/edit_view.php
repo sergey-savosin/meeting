@@ -12,7 +12,7 @@
 
 		<label for="project_code">Название проекта
 		</label>
-		<textarea class="form-control" rows="3" name="project_name" id="project_name"><?php
+		<textarea class="form-control" rows="1" name="project_name" id="project_name"><?php
 			echo set_value('project_name', $project_query->project_name); ?></textarea>
 	</div>
 	<div class="form-group">
@@ -38,6 +38,8 @@
 
 				<?php echo anchor(base_url('document/download/' . $result->doc_id),
 				lang('app.document_download')) ;?>
+				<?php echo anchor(base_url('project/delete_document/' . $result->doc_id),
+					'Удалить'); ?>
 			</td>
 		</tr>
 		<?php endforeach ; ?>
@@ -58,7 +60,7 @@
 
 		<label for="doc_comment">Комментарий
 		</label>
-		<textarea class="form-control" rows="3" name="doc_comment" id="doc_comment"><?php
+		<textarea class="form-control" rows="1" name="doc_comment" id="doc_comment"><?php
 			echo set_value('doc_comment'); ?></textarea>
 		
 		<?php $data = [

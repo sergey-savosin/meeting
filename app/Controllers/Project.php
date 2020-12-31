@@ -206,12 +206,10 @@ class Project extends BaseController {
 
 		// show view
 		if ($this->request->getMethod() === 'get' ) {
-
-			echo view('common/header');
-			echo view('nav/top_nav', $top_nav_data);
-			echo view('projects/edit_view', $page_data);
-			echo view('common/footer');
-
+			return view('common/header').
+				view('nav/top_nav', $top_nav_data).
+				view('projects/edit_view', $page_data).
+				view('common/footer');
 		}
 	}
 
@@ -293,6 +291,56 @@ class Project extends BaseController {
 			$dt_str = $date. ' 00:00 +0300';
 		}
 		return Time::createFromFormat($dt_format, $dt_str);
+	}
+
+	/**
+	* Удаление документа.
+	* doc_id должен находиться в get-параметре:
+	* http://localhost:8080/meeting/document/delete/<doc_id>
+	*/
+	public function delete_document() {
+		// 1. get session data
+		$session = session();
+		$userLoginCode = $session->get('user_login_code');
+		if (!$userLoginCode) {
+			throw new \Exception("User not logged in.");
+		}
+
+		// 2. Check user access
+		$users_model = model('Users_model');
+		$user = $users_model->get_user_by_logincode($userLoginCode);
+		if (!$user)
+		{
+			throw new \Exception("Access denied. Usercode: $userlogin");
+		}
+
+		helper('url');
+
+		$uri = $this->request->uri;
+
+		// 3. Check url params
+		$doc_id = $uri->getSegment(3);
+		log_message('info', 'uri: 3: '.$uri->getSegment(3));
+
+		if (!$doc_id) {
+			throw new \Exception('Empty doc_id');
+		}
+
+		$document_model = model('Documents_model');
+		$project_model = model('Projects_model');
+		
+		// 4. validate document and project
+		$project = $project_model->get_project_by_document_id($doc_id);
+		if (!$project) {
+			throw new \Exception("Can't find project by doc_id: $doc_id");
+		}
+		$project_code = $project->project_code;
+
+		// 5. delete document from tables
+		$project_model->delete_project_document($doc_id);
+
+		// 6. go to project edit page
+		return redirect()->to(base_url("/Project/Edit/$project_code"));
 	}
 
 }

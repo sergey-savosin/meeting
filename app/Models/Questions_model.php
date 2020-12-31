@@ -162,7 +162,7 @@ class Questions_model extends Model {
 
 		$db = $this->db;
 
-		$db->transStart();
+		$db->transBegin();
 		if ($db->table('question')->insert($question_data)) {
 			$base_id = $db->insertID();
 		} else {

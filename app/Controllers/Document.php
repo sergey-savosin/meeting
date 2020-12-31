@@ -238,28 +238,37 @@ class Document extends BaseController {
 		return redirect()->to(base_url("Project/edit/$project_code"));
 	}
 
-	/*************
-	 V4
-	**************/
+	/**
+	* Скачивание документа.
+	* doc_id должен находиться в get-параметре:
+	* http://localhost:8080/meeting/document/download/<doc_id>
+	*/
 	public function download() {
+		// 1. get session data
+		$session = session();
+		$userLoginCode = $session->get('user_login_code');
+		if (!$userLoginCode) {
+			throw new \Exception("User not logged in.");
+		}
+
+		// 2. Check user access
+		$users_model = model('Users_model');
+		$user = $users_model->get_user_by_logincode($userLoginCode);
+		if (!$user)
+		{
+			throw new \Exception("Access denied. Usercode: $userlogin");
+		}
 
 		helper('url');
 
 		$uri = $this->request->uri;
 
+		// 3. Check url params
 		$doc_id = $uri->getSegment(3);
 		if (!$doc_id) {
-			// $this->log_debug('Document/download', 'Empty doc_id');
 			throw new \Exception('Empty doc_id');
-			// show_error('Empty doc_id', 500);
 		}
-	// 2. Check user access
-	// $val = dbIsUserExistsByLoginCode($userlogin);
-	// if (!$val)
-	// {
-	// 	printf("Access denied. Usercode: $s", $userlogin);
-	// 	exit();
-	// }
+
 		$doc_model = model('Documents_model');
 		$doc_query = $doc_model->get_document($doc_id);
 		if (!$doc_query) {
@@ -274,25 +283,13 @@ class Document extends BaseController {
 		$calc_length = strlen($doc_query->doc_body);
 		log_message('info', "download filename: $filename, content-type: $content_type, length: $length / $calc_length.");
 
-		// $this->response->setHeader('Content-Description', 'File Transfer')
-		// ->setHeader('Content-Type', 'application/octet-stream')
-		// ->setHeader('Content-Disposition', 'attachment; filename="'.basename($filename).'"'
-		// 		."; filename*=UTF-8''".rawurlencode($filename))
-		// ->setHeader('Content-Transfer-Encoding', 'binary')
-		// ->setHeader('Expires', '0')
-		// ->setHeader('Cache-Control', 'must-revalidate')
-		// ->setHeader('Pragma', 'public')
-		// ->setHeader('Content-Length', $length);
-		// // читаем файл и отправляем его пользователю
-		// echo $doc_query->doc_body;
-
-		// return $this->response;
 		log_message('info', '[*] memory: '.ini_get('memory_limit'));
 		ini_set('memory_limit', '255M');
 		log_message('info', '[*] memory: '.ini_get('memory_limit'));
 
 		return $this->response->download($filename, $doc_query->doc_body);
 	}
+
 
 	/**
      * Tries to detect MIME type of content.
@@ -301,7 +298,7 @@ class Document extends BaseController {
      *
      * @return string
      */
-    public function mime_detect(&$test)
+    protected function mime_detect(&$test)
     {
         $len = mb_strlen($test);
         if ($len >= 2 && $test[0] == chr(0xff) && $test[1] == chr(0xd8)) {

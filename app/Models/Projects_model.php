@@ -47,6 +47,47 @@ class Projects_model extends Model {
 		}
 	}
 
+	function get_project_by_document_id($docId) {
+		$query = "SELECT pd.pd_project_id, p.project_code
+		FROM project_document pd
+		INNER JOIN project p ON p.project_id = pd_project_id
+		WHERE pd.pd_doc_id = ?";
+		$result = $this->db->query($query, array($docId));
+		
+		if (!$result) {
+			return false;
+		}
+
+		$row = $result->getRow();
+		if (!$row) {
+			return false;
+		} else {
+			return $row;
+		}
+	}
+
+	/**
+	* Удалить запись в таблице project_document
+	*/
+	function delete_project_document($docId) {
+		$db = \Config\Database::connect();
+
+		$db->transBegin();
+
+		$builder = $db->table('project_document');
+		$builder->where('pd_doc_id', $docId)
+			->delete();
+
+		$builder = $db->table('docfile');
+		$builder->where('docfile_doc_id', $docId)
+			->delete();
+		$builder = $db->table('document');
+		$builder->where('doc_id', $docId)
+			->delete();
+
+		$db->transComplete();
+	}
+
 	/*********************
 	 Удаление проекта
 	 V4
@@ -57,7 +98,7 @@ class Projects_model extends Model {
 	function delete_project($projectCode) {
 		$db = \Config\Database::connect();
 
-		$db->transStart(); // test mode with rollback
+		$db->transBegin(); // test mode with rollback
 
 		// 1. delete document
 		$this->delete_project_child_entity($db, $projectCode, 'document', 'doc_project_id');
