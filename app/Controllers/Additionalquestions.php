@@ -82,6 +82,7 @@ class AdditionalQuestions extends BaseController {
 		} else {
 			// save data to DB
 
+			//ToDo: add transaction
 			// save Question
 			$qs_id = $this->saveOneQuestion($questions_model,
 				$project_id, $user_id, $qs_title_value, $qs_comment_value
@@ -104,23 +105,18 @@ class AdditionalQuestions extends BaseController {
 						$fileMime = $file->getClientMimeType();
 						$fileSize = $file->getSize();
 						$fileName = $file->getName();
-						$fileClientName = $file->getClientName();
+						//$fileClientName = $file->getClientName();
 						$tmpName = $file->getTempName();
 
 						log_message('info', 
 							"AQ::index - file name: $fileName, size: $fileSize, MIME: $fileMime, tmpName: $tmpName");
 
-						$fp = fopen($tmpName, 'r'); 
-						$fileContent = fread($fp, filesize($tmpName)); 
-						//$content = addslashes($content);
-						//$esc= mysql_real_escape_string(file_get_contents($fp));
+						$fileContent = file_get_contents($file->getTempName());
 						
 						$doc_id = $this->saveOneDocumentAndLinkToQuestion(
 							$documents_model,
 							$questions_model,
 							$qs_id, $fileName, $fileContent);
-						
-						fclose($fp);
 					}
 				}
 			}

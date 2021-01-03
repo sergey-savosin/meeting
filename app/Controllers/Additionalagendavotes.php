@@ -38,6 +38,7 @@ class Additionalagendavotes extends BaseController {
 		$additional_questions_query = 
 			$answers_model->fetch_additional_answers_with_votes($user_id);
 
+		$additional_questions = [];
 		foreach ($additional_questions_query->getResult() as $question) {
 			$documents = 
 				$questions_model->fetch_documents_for_questionid($question->qs_id);

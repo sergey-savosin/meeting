@@ -8,7 +8,9 @@
 		<?php foreach($documents_query->getResult() as $result) : ?>
 			<ul>
 				<li class="list-group-item">
-				<label>Документ:</label> <?php echo $result->doc_filename; ?>
+				<label>Документ:</label> <?php
+					$cpt = $result->doc_caption ?? $result->doc_filename;
+					echo $cpt; ?>
 
 				<?php echo anchor(base_url('document/download/' . $result->doc_id),
 					lang('app.document_download')) ;?>

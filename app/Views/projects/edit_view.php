@@ -34,7 +34,8 @@
 		<?php foreach($documents_query->getResult() as $result) : ?>
 		<tr>
 			<td>
-				<?php echo $result->doc_filename; ?>
+				<?php $cpt = $result->doc_caption ?? $result->doc_filename;
+					echo $cpt; ?>
 
 				<?php echo anchor(base_url('document/download/' . $result->doc_id),
 				lang('app.document_download')) ;?>
@@ -48,25 +49,21 @@
 <?php if (isset($validation)) {echo $validation->listErrors('my_list');} ?>
 
 <!--?php echo form_open('document/edit', 'role="form"') ; ?-->
-<?php echo form_open('document/edit', 'role="form", enctype="multipart/form-data"'); ?>
+<?php echo form_open('project/add_document', 'role="form", enctype="multipart/form-data"'); ?>
 	<div class="form-group">
 		<?php echo form_hidden('ProjectId', $project_query->project_id) ?>
 		<?php echo form_hidden('ProjectCode', $project_query->project_code) ?>
 
-		<label for="FileName">Название документа (файла)
+		<label for="docCaption">Название документа (файла)
 		</label>
-		<textarea class="form-control" rows="1" name="FileName" id="FileName"><?php
-			echo set_value('FileName'); ?></textarea>
+		<textarea class="form-control" rows="1" name="docCaption" id="docCaption"><?php
+			echo set_value('docCaption'); ?></textarea>
 
-		<label for="doc_comment">Комментарий
-		</label>
-		<textarea class="form-control" rows="1" name="doc_comment" id="doc_comment"><?php
-			echo set_value('doc_comment'); ?></textarea>
-		
+
 		<?php $data = [
-			'name' => 'fileToUpload',
-			'id'=>'fileToUpload',
-			'accept'=>'image/png, image/jpeg']; 
+			'name' => 'documentFile[]',
+			'id' => 'documentFile',
+			'accept' => 'image/png, image/jpeg']; 
 		echo form_upload($data); ?>
 	</div>
 	<div class="form-group">

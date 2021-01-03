@@ -288,21 +288,27 @@ class Documents_model extends Model {
 	*
 	* @param fileName
 	* @param fileContent
+	* @param docCaption
 	*
 	* @return document_id
 	*/
-	function newDocumentWithContent($fileName, $fileContent) {
+	function newDocumentWithContent($fileName, $fileContent, $docCaption) {
 		//ToDo: add transaction
+
+		if (empty($docCaption) || trim($docCaption == '')) {
+			$docCaption = null;
+		}
 
 		$data = array ('doc_filename' => $fileName,
 					'doc_is_for_creditor' => true,
 					'doc_is_for_debtor' => true,
-					'doc_is_for_manager' => true);
+					'doc_is_for_manager' => true,
+					'doc_caption' => $docCaption);
 		$db = $this->db;
 		
 		if ($db->table('document')->insert($data)) {
 			log_message('info',
-				'DocModel::newDocumentWithContent. Doc rec inserted. FileName: $fileName.');
+				'DocModel::newDocumentWithContent. Document inserted ($docCaption). FileName: $fileName.');
 			$doc_id = $db->insertID();
 		} else {
 			$doc_id = false;

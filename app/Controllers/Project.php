@@ -343,4 +343,113 @@ class Project extends BaseController {
 		return redirect()->to(base_url("/Project/Edit/$project_code"));
 	}
 
+	/**
+	* WebUI - редактирование одного документа
+	* Принимает POST-запрос из представления
+	*/
+	public function add_document() {
+		// get session data
+		$session = session();
+		$user = $session->get('user_login_code');
+		if ($user == FALSE) {
+			redirect()->to(base_url('user/login'));
+		}
+
+		$isRequestValid = true;
+		$validationErrorText = "";
+
+		// 1. Get request params
+		$project_id = $this->request->getPost('ProjectId');
+		$project_code = $this->request->getPost('ProjectCode');
+		$isforcreditor = true; //$this->request->getPost('IsForCreditor');
+		$isfordebtor = true; //$this->request->getPost('IsForDebtor');
+		$isformanager = true; //$this->request->getPost('IsForManager');
+		$docCaption = trim($this->request->getPost('docCaption'));
+
+		// 2. Validate request attributes
+		if (!isset($project_id) || empty($project_id))
+		{
+			$isRequestValid = false;
+			$validationErrorText = "Parameter ProjectId is empty.";
+		}
+
+		if (!isset($project_code) || empty($project_code))
+		{
+			$isRequestValid = false;
+			$validationErrorText = "Parameter ProjectCode is empty.";
+		}
+
+		if (!$isRequestValid)
+		{
+			$msg = "Invalid Document POST request: $validationErrorText";
+			printf($msg);
+			http_response_code(400);
+			exit();
+		}
+
+		$projects_model = model('Projects_model');
+		$documents_model = model('Documents_model');
+
+		// Работа с переданным файлом
+		$files = $this->request->getFiles();
+		if ($files) {
+			log_message('info', 'project::edit_document - saving files');
+			foreach ($files['documentFile'] as $file) {
+				log_message('info', 'found file');
+				if ($file->isValid() && ! $file->hasMoved()) {
+						$fileMime = $file->getClientMimeType();
+						$fileSize = $file->getSize();
+						$fileName = $file->getName(); //ToDo: заменить на ручное название из представления
+						$tmpName = $file->getTempName();
+
+						log_message('info', 
+							"Proj::edit_doc - file name: $fileName, size: $fileSize, MIME: $fileMime, tmpName: $tmpName");
+
+						$fileContent = file_get_contents($file->getTempName());
+
+						$doc_id = $this->saveOneDocumentAndLinkToProject(
+							$documents_model,
+							$projects_model,
+							$project_id, $fileName, $fileContent, $docCaption);
+						
+				} else {
+					throw new 
+					\RuntimeException($file->getErrorString().'('.$file->getError().')');
+				}
+			}
+		}
+
+		return redirect()->to(base_url("Project/edit/$project_code"));
+	}
+
+	/**
+	* Сохранить документ и связать его с проектом
+	*/
+	private function saveOneDocumentAndLinkToProject($documents_model,
+		$projects_model,
+		$projectId, $fileName, $fileContent,
+		$docCaption) {
+
+		// save document
+		log_message('info', 'project:: save doc to DB');
+		$doc_id = $documents_model->newDocumentWithContent($fileName, $fileContent, $docCaption);
+
+		if (!$doc_id) {
+			return false;
+		}
+
+		// link project and document
+		log_message('info', "project:: link doc [$doc_id] to project [$projectId]");
+		$pd_id = $projects_model->link_project_and_document($projectId, $doc_id);
+
+		if (!$pd_id) {
+			return false;
+		}
+
+		log_message('info', "project:: new project_document ID: $pd_id");
+		return $doc_id;
+	}
+
+
+
 }
