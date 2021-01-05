@@ -54,10 +54,10 @@
 		<?php echo form_hidden('ProjectId', $project_query->project_id) ?>
 		<?php echo form_hidden('ProjectCode', $project_query->project_code) ?>
 
-		<label for="docCaption">Название документа (файла)
+		<label for="DocCaption">Название документа (файла)
 		</label>
-		<textarea class="form-control" rows="1" name="docCaption" id="docCaption"><?php
-			echo set_value('docCaption'); ?></textarea>
+		<textarea class="form-control" rows="1" name="DocCaption" id="DocCaption"><?php
+			echo set_value('DocCaption'); ?></textarea>
 
 
 		<?php $data = [

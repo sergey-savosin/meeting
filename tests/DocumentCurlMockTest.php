@@ -28,7 +28,6 @@ class DocumentCurlMockTest extends FeatureTestCase
 		parent::setUp();
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
-		$str = \Config\Services::request()->config->baseURL;
 
 		//----------------------
 		$config = new \Config\App;

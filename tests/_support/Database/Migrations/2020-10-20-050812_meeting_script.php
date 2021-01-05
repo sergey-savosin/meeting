@@ -118,6 +118,11 @@ class MeetingScript extends Migration
 			],
 			'doc_is_for_manager'	=> [
 				'type'		=> 'BIT'
+			],
+			'doc_caption' => [
+				'type'       => 'VARCHAR',
+				'constraint' => '255',
+				'null'       => true
 			]
 		]);
 		$this->forge->addKey('doc_id', true);

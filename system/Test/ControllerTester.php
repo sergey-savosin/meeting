@@ -187,6 +187,7 @@ trait ControllerTester
 		}
 		catch (Throwable $e)
 		{
+			// log_message('info', 'ControllerTester::execute. catch: '.$e->getMessage());
 			$result->response()
 					->setStatusCode($e->getCode());
 		}

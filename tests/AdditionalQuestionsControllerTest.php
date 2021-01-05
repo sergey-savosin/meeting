@@ -26,7 +26,6 @@ class AdditionalQuestionsControllerTest extends FeatureTestCase
 		parent::setUp();
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
-		$str = \Config\Services::request()->config->baseURL;
 
 		$_SESSION['user_login_code'] = $this->defaultUserCode;
 		$_SESSION['user_project_id'] = $this->defaultProjectId;

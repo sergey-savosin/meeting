@@ -364,7 +364,7 @@ class Project extends BaseController {
 		$isforcreditor = true; //$this->request->getPost('IsForCreditor');
 		$isfordebtor = true; //$this->request->getPost('IsForDebtor');
 		$isformanager = true; //$this->request->getPost('IsForManager');
-		$docCaption = trim($this->request->getPost('docCaption'));
+		$docCaption = trim($this->request->getPost('DocCaption'));
 
 		// 2. Validate request attributes
 		if (!isset($project_id) || empty($project_id))
@@ -393,17 +393,13 @@ class Project extends BaseController {
 		// Работа с переданным файлом
 		$files = $this->request->getFiles();
 		if ($files) {
-			log_message('info', 'project::edit_document - saving files');
 			foreach ($files['documentFile'] as $file) {
-				log_message('info', 'found file');
+				log_message('info', 'found file: '.$file->getName());
 				if ($file->isValid() && ! $file->hasMoved()) {
 						$fileMime = $file->getClientMimeType();
 						$fileSize = $file->getSize();
 						$fileName = $file->getName(); //ToDo: заменить на ручное название из представления
 						$tmpName = $file->getTempName();
-
-						log_message('info', 
-							"Proj::edit_doc - file name: $fileName, size: $fileSize, MIME: $fileMime, tmpName: $tmpName");
 
 						$fileContent = file_get_contents($file->getTempName());
 
@@ -413,8 +409,9 @@ class Project extends BaseController {
 							$project_id, $fileName, $fileContent, $docCaption);
 						
 				} else {
+					// ToDo: return normal webResult with error text
 					throw new 
-					\RuntimeException($file->getErrorString().'('.$file->getError().')');
+					\Exception($file->getErrorString().'('.$file->getError().')');
 				}
 			}
 		}
@@ -431,7 +428,7 @@ class Project extends BaseController {
 		$docCaption) {
 
 		// save document
-		log_message('info', 'project:: save doc to DB');
+		// log_message('info', 'project:: save doc to DB');
 		$doc_id = $documents_model->newDocumentWithContent($fileName, $fileContent, $docCaption);
 
 		if (!$doc_id) {

@@ -308,12 +308,11 @@ class Documents_model extends Model {
 		
 		if ($db->table('document')->insert($data)) {
 			log_message('info',
-				'DocModel::newDocumentWithContent. Document inserted ($docCaption). FileName: $fileName.');
+				"DocModel::newDocumentWithContent. Document inserted ($docCaption). FileName: $fileName.");
 			$doc_id = $db->insertID();
 		} else {
 			$doc_id = false;
 		}
-		log_message('info', "DocModel::newDocumentWithContent - doc_id: $doc_id");
 
 		//ToDo: if $doc_id = false => Exception + log_message
 
@@ -321,12 +320,11 @@ class Documents_model extends Model {
 						'docfile_body' => $fileContent);
 
 		if ($db->table('docfile')->insert($data)) {
-			log_message('info', 'DocModel::newDocumentWithContent. docfile rec inserted.');
+
 		} else {
 			log_message('info', 'DocModel::newDocumentWithContent. error');
 		}
 
-		log_message('info', 'DocModel::newDocumentWithContent. ok.');
 
 		return $doc_id;
 	}
