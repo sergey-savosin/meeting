@@ -53,9 +53,10 @@ class ProjectControllerTest extends FeatureTestCase
 	*/
 	public function test_AddDocumentControllerPostShowOk()
 	{
+
 		// Arrange
-		$path = 'C:\xampp\htdocs\meeting\tests\Belka2.jpg';
-		// $path = '.\Belka2.jpg';
+		// $path = 'C:\xampp\htdocs\meeting\tests\Belka2.jpg';
+		$path = ROOTPATH.'.\tests\Belka2.jpg';
 		$name = 'Belka';
 		$docCaption = 'Belka-caption';
 		$type = 'image/png';
@@ -72,8 +73,8 @@ class ProjectControllerTest extends FeatureTestCase
 		$incomingRequest = new MockIncomingRequest(
 			$config, $uri, json_encode($data), new UserAgent()
 		);
-		// $incomingRequest = \Config\Services::request();
 		$incomingRequest->config->baseURL = $_SERVER['app.baseURL'];
+
 		// $incomingRequest->setGlobal('request', $data);
 		$incomingRequest->setGlobal('post', $data);
 		$incomingRequest->setMethod('post');

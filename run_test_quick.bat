@@ -1,1 +1,1 @@
-run_tests.bat --exclude-group Curl
+run_tests.bat --exclude-group Curl %1 %2
