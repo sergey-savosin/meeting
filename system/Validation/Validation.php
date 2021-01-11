@@ -587,6 +587,7 @@ class Validation implements ValidationInterface
 			throw ValidationException::forNoRuleSets();
 		}
 
+		$this->ruleSetInstances = [];
 		foreach ($this->ruleSetFiles as $file)
 		{
 			$this->ruleSetInstances[] = new $file();

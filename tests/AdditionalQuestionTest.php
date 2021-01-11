@@ -21,7 +21,6 @@ class AdditionalQuestionTest extends FeatureTestCase
 		parent::setUp();
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
-		$str = \Config\Services::request()->config->baseURL;
 
 		$this->questions_model = model('Questions_model');
 	}

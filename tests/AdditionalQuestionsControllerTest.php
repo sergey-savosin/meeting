@@ -46,9 +46,12 @@ class AdditionalQuestionsControllerTest extends FeatureTestCase
 	* POST AdditionalQuestion показывает ошибку валидации
 	*
 	* - AdditionalQuestion::index
+	* @group mockrequest
 	*/
 	public function test_AdditionalQuestionsControllerPostShowValidationError()
 	{
+		log_message('info', '----------------------------------------------------------');
+		log_message('info', '--- test: test_AdditionalQuestionsControllerPostShowValidationError ---');
 		// Arrange
 		$data = ['qs_title' => null];
 		$request = \Config\Services::request();

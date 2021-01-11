@@ -17,14 +17,13 @@ class ProjectControllerTest extends FeatureTestCase
 
 	protected $projects_model;
 	protected $defaultProjectId = 1;
+	protected $defaultProjectCode = 'ProjectCode-123';
 	protected $generalCategoryId = 1;
 	protected $additionalCategoryId = 2;
 	protected $acceptAdditionalCategoryId = 3;
 	protected $defaultUserId = 1;
 	protected $defaultUserCode = '123';
 	protected $defaultQuestionId = 1;
-
-	//protected $incomingRequest;
 
 	public function setUp(): void
 	{
@@ -44,36 +43,45 @@ class ProjectControllerTest extends FeatureTestCase
 	public function tearDown(): void
 	{
 		parent::tearDown();
+
+		// clear mock
+		\Config\Services::injectMock('request', null);
 	}
 
 	/**
-	* POST project/add_document показывает ошибку валидации
+	* POST project/edit_document успешно добавляет документ
 	*
-	* - Project::add_document
+	* - Project::edit_document
+	* @group mockrequest
 	*/
-	public function test_AddDocumentControllerPostShowOk()
+	public function test_EditDocumentControllerPostFileOk()
 	{
+		log_message('info', '----------------------------------------------------------');
+		log_message('info', '--- test: test_EditDocumentControllerPostFileOk ---');
 
 		// Arrange
-		// $path = 'C:\xampp\htdocs\meeting\tests\Belka2.jpg';
 		$path = ROOTPATH.'.\tests\Belka2.jpg';
 		$name = 'Belka';
-		$docCaption = 'Belka-caption';
+		$docCaption = 'Belka-caption11';
 		$type = 'image/png';
 		$size = 143262;
 		$data = [
-			'ProjectCode' => '123',
+			'ProjectCode' => $this->defaultProjectCode,
 			'ProjectId' => $this->defaultProjectId,
 			'DocCaption' => $docCaption
 		];
 
 		//----------------------------
 		$config = new \Config\App;
-		$uri = new \CodeIgniter\HTTP\URI($_SERVER['app.baseURL']);
+		$baseUrl = $_SERVER['app.baseURL'];
+		$uri = new \CodeIgniter\HTTP\URI(
+			$baseUrl.'/project/edit_document/'.$this->defaultProjectCode
+		);
+
 		$incomingRequest = new MockIncomingRequest(
 			$config, $uri, json_encode($data), new UserAgent()
 		);
-		$incomingRequest->config->baseURL = $_SERVER['app.baseURL'];
+		$incomingRequest->config->baseURL = $baseUrl;
 
 		// $incomingRequest->setGlobal('request', $data);
 		$incomingRequest->setGlobal('post', $data);
@@ -85,29 +93,95 @@ class ProjectControllerTest extends FeatureTestCase
 		$result = $this->withRequest($incomingRequest)
 				->withSession()
 		 		->controller(\App\Controllers\Project::class)
-		 		->execute("add_document");
+		 		->execute("edit_document");
 		
 		// Assert
-		$this->assertTrue($result->isRedirect());
+		// $this->assertTrue($result->isRedirect());
 
+		$docId = 1;
+		// ToDo: проверять DocId, docfile_doc_id, pd_doc_id
+
+		$criteria = [
+			//'doc_id' => $docId,
+			'doc_caption' => $docCaption
+		];
+		$this->seeInDatabase('document', $criteria);
+
+		// $criteria = [
+		// 	'docfile_doc_id' => $docId
+		// ];
+		// $this->seeInDatabase('docfile', $criteria);
+
+		$criteria = [
+			'pd_project_id' => $this->defaultProjectId,
+			//'pd_doc_id' => $docId
+		];
+		$this->seeInDatabase('project_document', $criteria);
+	}
+
+	/**
+	* POST project/edit_document без загруженного файла показывает ошибку валидации
+	*
+	* - Project::edit_document
+	*/
+	public function test_EditDocumentControllerPostEmptyFileShowValidationError()
+	{
+
+		// Arrange
+		$docCaption = 'Belka-caption11';
+		$data = [
+			'ProjectCode' => $this->defaultProjectCode,
+			'ProjectId' => $this->defaultProjectId,
+			'DocCaption' => $docCaption
+		];
+
+		//----------------------------
+		$config = new \Config\App;
+		$baseUrl = $_SERVER['app.baseURL'];
+		$uri = new \CodeIgniter\HTTP\URI(
+			$baseUrl.'/project/edit_document/'.$this->defaultProjectCode
+		);
+
+		$incomingRequest = new MockIncomingRequest(
+			$config, $uri, json_encode($data), new UserAgent()
+		);
+		$incomingRequest->config->baseURL = $baseUrl;
+
+		// $incomingRequest->setGlobal('request', $data);
+		$incomingRequest->setGlobal('post', $data);
+		$incomingRequest->setMethod('post');
+
+		// Act
+		$result = $this->withRequest($incomingRequest)
+				->withSession()
+		 		->controller(\App\Controllers\Project::class)
+		 		->execute("edit_document");
+		
+		// Assert
+		// $this->assertFalse($result->isRedirect());
+
+		// page
+		// echo $result->getBody();
+
+		// ToDo: проверить текст ошибки
+
+		// database
 		$docId = 1;
 
 		$criteria = [
 			'doc_id' => $docId,
 			'doc_caption' => $docCaption
 		];
-		$this->seeInDatabase('document', $criteria);
+		$this->dontSeeInDatabase('document', $criteria);
 
 		$criteria = [
 			'docfile_doc_id' => $docId
 		];
-		$this->seeInDatabase('docfile', $criteria);
+		$this->dontSeeInDatabase('docfile', $criteria);
 
 		$criteria = [
 			'pd_project_id' => $this->defaultProjectId,
-			'pd_doc_id' => $docId
 		];
-		$this->seeInDatabase('project_document', $criteria);
+		$this->dontSeeInDatabase('project_document', $criteria);
 	}
-
 }

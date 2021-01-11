@@ -13,7 +13,6 @@ class Project extends BaseController {
 		$isRequestValid = true;
 		$validationErrorText = "";
 
-		//var_dump($data);
 		$projectName = isset($data->ProjectName) ? $data->ProjectName : false;
 		$projectCode = isset($data->ProjectCode) ? $data->ProjectCode : false;
 		
@@ -296,7 +295,7 @@ class Project extends BaseController {
 	/**
 	* Удаление документа.
 	* doc_id должен находиться в get-параметре:
-	* http://localhost:8080/meeting/document/delete/<doc_id>
+	* http://localhost:8080/meeting/project/delete/<doc_id>
 	*/
 	public function delete_document() {
 		// 1. get session data
@@ -340,83 +339,114 @@ class Project extends BaseController {
 		$project_model->delete_project_document($doc_id);
 
 		// 6. go to project edit page
-		return redirect()->to(base_url("/Project/Edit/$project_code"));
+		return redirect()->to(base_url("/Project/edit_document/$project_code"));
 	}
 
 	/**
 	* WebUI - редактирование одного документа
 	* Принимает POST-запрос из представления
 	*/
-	public function add_document() {
+	public function edit_document() {
+		log_message('info', '[Project::edit_document] Start');
+
 		// get session data
 		$session = session();
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
-			redirect()->to(base_url('user/login'));
+			log_message('info', '[Project::edit_document] User should be logged');
+			return redirect()->to(base_url('user/login'));
 		}
-
-		$isRequestValid = true;
-		$validationErrorText = "";
 
 		// 1. Get request params
-		$project_id = $this->request->getPost('ProjectId');
-		$project_code = $this->request->getPost('ProjectCode');
-		$isforcreditor = true; //$this->request->getPost('IsForCreditor');
-		$isfordebtor = true; //$this->request->getPost('IsForDebtor');
-		$isformanager = true; //$this->request->getPost('IsForManager');
+		$uri = $this->request->uri;
+
+		log_message('info', '[project::edit_document] uri:'.$uri);
+
+		// find ProjectCode in segment (Get) or in request (Post)
+		$project_code = $uri->getSegment(3);
+		if (!$project_code) {
+			$project_code = $this->request->getPost('ProjectCode');
+		}
+
+		if (!$project_code) {
+			throw new \Exception('Empty project_code segment');
+		}
+		$project_code = urldecode($project_code);
+
+		// Form data
 		$docCaption = trim($this->request->getPost('DocCaption'));
 
-		// 2. Validate request attributes
-		if (!isset($project_id) || empty($project_id))
-		{
-			$isRequestValid = false;
-			$validationErrorText = "Parameter ProjectId is empty.";
-		}
-
-		if (!isset($project_code) || empty($project_code))
-		{
-			$isRequestValid = false;
-			$validationErrorText = "Parameter ProjectCode is empty.";
-		}
-
-		if (!$isRequestValid)
-		{
-			$msg = "Invalid Document POST request: $validationErrorText";
-			printf($msg);
-			http_response_code(400);
-			exit();
-		}
-
+		// 2. Prepare data for view
 		$projects_model = model('Projects_model');
 		$documents_model = model('Documents_model');
 
-		// Работа с переданным файлом
-		$files = $this->request->getFiles();
-		if ($files) {
-			foreach ($files['documentFile'] as $file) {
-				log_message('info', 'found file: '.$file->getName());
-				if ($file->isValid() && ! $file->hasMoved()) {
-						$fileMime = $file->getClientMimeType();
-						$fileSize = $file->getSize();
-						$fileName = $file->getName(); //ToDo: заменить на ручное название из представления
-						$tmpName = $file->getTempName();
 
-						$fileContent = file_get_contents($file->getTempName());
+		$project = $projects_model->get_project_by_code($project_code);
+		if (!$project) {
+			throw new \Exception("Empty project row for project_code: $project_code");
+		}
+		$project_id = $project->project_id;
 
-						$doc_id = $this->saveOneDocumentAndLinkToProject(
-							$documents_model,
-							$projects_model,
-							$project_id, $fileName, $fileContent, $docCaption);
-						
-				} else {
-					// ToDo: return normal webResult with error text
-					throw new 
-					\Exception($file->getErrorString().'('.$file->getError().')');
+		$page_data['project_query'] = $project;
+		$page_data['documents_query'] =
+			$documents_model->fetch_documents($project_id);
+
+		// setup form validation
+		$val_rules['documentFile'] = [
+			'label' => 'documentFile',
+			'rules' => 'uploaded[documentFile]',
+			'errors' => [
+				'uploaded' => 'Выберите файл'
+			]
+		];
+		
+		helper(['form', 'url']);
+		$top_nav_data['uri'] = $this->request->uri;
+
+		// show view
+		if ($this->request->getMethod() === 'get' || !$this->validate($val_rules) ) {
+			if ($this->request->getMethod() === 'get') {
+				$validation = null;
+			} else {
+				$validation = $this->validator;
+			}
+
+			$page_data['validation'] = $validation;
+
+			return view('common/header').
+				view('nav/top_nav', $top_nav_data).
+				view('projects/editdocument_view', $page_data).
+				view('common/footer');
+		} else {
+			// save data to DB
+			// Работа с переданным файлом
+			$files = $this->request->getFiles();
+			if ($files) {
+				foreach ($files['documentFile'] as $file) {
+					if ($file->isValid() && ! $file->hasMoved()) {
+							$fileMime = $file->getClientMimeType();
+							$fileSize = $file->getSize();
+							$fileName = $file->getName();
+							$tmpName = $file->getTempName();
+
+							$fileContent = file_get_contents($file->getTempName());
+
+							$doc_id = $this->saveOneDocumentAndLinkToProject(
+								$documents_model,
+								$projects_model,
+								$project_id, $fileName, $fileContent, $docCaption);
+							
+					} else {
+						// ToDo: return normal webResult with error text
+						return('Error adding document. Error message: '.
+							$file->getErrorString().
+							'('.$file->getError().')'
+						);
+					}
 				}
 			}
 		}
-
-		return redirect()->to(base_url("Project/edit/$project_code"));
+		return redirect()->to(base_url("Project/edit_document/$project_code"));
 	}
 
 	/**
@@ -428,7 +458,6 @@ class Project extends BaseController {
 		$docCaption) {
 
 		// save document
-		// log_message('info', 'project:: save doc to DB');
 		$doc_id = $documents_model->newDocumentWithContent($fileName, $fileContent, $docCaption);
 
 		if (!$doc_id) {
@@ -436,14 +465,12 @@ class Project extends BaseController {
 		}
 
 		// link project and document
-		log_message('info', "project:: link doc [$doc_id] to project [$projectId]");
 		$pd_id = $projects_model->link_project_and_document($projectId, $doc_id);
 
 		if (!$pd_id) {
 			return false;
 		}
 
-		log_message('info', "project:: new project_document ID: $pd_id");
 		return $doc_id;
 	}
 

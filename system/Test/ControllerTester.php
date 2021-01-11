@@ -187,9 +187,14 @@ trait ControllerTester
 		}
 		catch (Throwable $e)
 		{
-			// log_message('info', 'ControllerTester::execute. catch: '.$e->getMessage());
+			log_message('info', '[ControllerTester::execute]. Exception str: '.$e);
+
+			$errorCode = $e->getCode();
+			if ($errorCode < 100 || $errorCode > 599) {
+				$errorCode = 500;
+			}
 			$result->response()
-					->setStatusCode($e->getCode());
+					->setStatusCode($errorCode);
 		}
 		finally
 		{

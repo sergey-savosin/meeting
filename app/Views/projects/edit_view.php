@@ -39,35 +39,14 @@
 
 				<?php echo anchor(base_url('document/download/' . $result->doc_id),
 				lang('app.document_download')) ;?>
-				<?php echo anchor(base_url('project/delete_document/' . $result->doc_id),
-					'Удалить'); ?>
 			</td>
 		</tr>
 		<?php endforeach ; ?>
 	</tbody>
 </table>
-<?php if (isset($validation)) {echo $validation->listErrors('my_list');} ?>
 
-<!--?php echo form_open('document/edit', 'role="form"') ; ?-->
-<?php echo form_open('project/add_document', 'role="form", enctype="multipart/form-data"'); ?>
-	<div class="form-group">
-		<?php echo form_hidden('ProjectId', $project_query->project_id) ?>
-		<?php echo form_hidden('ProjectCode', $project_query->project_code) ?>
-
-		<label for="DocCaption">Название документа (файла)
-		</label>
-		<textarea class="form-control" rows="1" name="DocCaption" id="DocCaption"><?php
-			echo set_value('DocCaption'); ?></textarea>
-
-
-		<?php $data = [
-			'name' => 'documentFile[]',
-			'id' => 'documentFile',
-			'accept' => 'image/png, image/jpeg']; 
-		echo form_upload($data); ?>
-	</div>
-	<div class="form-group">
-		<button type="submit" class="btn btn-success">Добавить документ
-		</button>
-	</div>
-<?php echo form_close(); ?>
+<?php echo anchor(base_url('project/edit_document/' . $project_query->project_code), 'Редактировать список документов') ?>
+<hr>
+<p class="h4">Вопросы основной повестки</p>
+<hr>
+<p class="h4">Участники голосования</p>

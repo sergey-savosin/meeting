@@ -17,7 +17,6 @@ class ProjectTest extends FeatureTestCase
 		parent::setUp();
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
-		$str = \Config\Services::request()->config->baseURL;
 
 		$validation = \Config\Services::validation();
 		$validation->reset();
@@ -76,13 +75,17 @@ class ProjectTest extends FeatureTestCase
 		$this->assertEquals($expected, $res);
 	}
 
-	/****
-	GET project приводит к переходу на страницу авторизации
-	
-	- GET project
-	*****/
+	/**
+	* GET project приводит к переходу на страницу авторизации
+	*
+	* - GET project
+	* @group mockrequest
+	*/
 	public function test_GetProjectUnauthorizedSessionStartsRedirect()
 	{
+		log_message('info', '----------------------------------------------------------');
+		log_message('info', '--- test: test_GetProjectUnauthorizedSessionStartsRedirect');
+
 		$result = $this->get('project/index');
 		$this->assertNotNull($result);
 		$this->assertEquals(1, $result->isRedirect());
