@@ -1,10 +1,11 @@
 <?php namespace CodeIgniter\Test\Mock;
 
 use CodeIgniter\HTTP\IncomingRequest;
+use CodeIgniter\HTTP\Files\FileCollection;
 
 class MockIncomingRequest extends IncomingRequest
 {
-	protected $mockFiles;
+	protected $mockFiles = [];
 
 	//    public function populateHeaders()
 	//    {
@@ -19,11 +20,8 @@ class MockIncomingRequest extends IncomingRequest
 	/**
 	* Настройка файлов для эмуляции _FILES
 	*/
-	public function setFile($controlName, $tmpName, $name, $type, $size) {
-		if (empty($this->mockFiles)) {
-			$this->mockFiles = [];
-		}
-
+	public function setFile($controlName, $tmpName, $name, $type, $size)
+	{
 		$this->mockFiles[$controlName] = array(
 			'tmp_name' => $tmpName,
 			'name' => $name,
@@ -38,27 +36,33 @@ class MockIncomingRequest extends IncomingRequest
 	*/
 	public function getFiles(): array
 	{
-		if (!empty($this->mockFiles)) {
-			$res = [];
-			foreach ($this->mockFiles as $controlName => $file) {
-				$res[$controlName] = array(
-						new MockUploadedFile(
-							$file['tmp_name'],
-							$file['name'],
-							$file['type'],
-							$file['size'],
-							$file['error']
-						)
-					);
-			}
-			return $res;
-		} else {
-			return array();
+		// if (empty($this->mockFiles))
+		// {
+		// 	return array();
+		// }
+
+		$res = [];
+		foreach ($this->mockFiles as $controlName => $file) {
+			$res[$controlName] = array(
+					new MockUploadedFile(
+						$file['tmp_name'],
+						$file['name'],
+						$file['type'],
+						$file['size'],
+						$file['error']
+					)
+				);
 		}
+		return $res;
 	}
 
 	public function getFileMultiple(string $fileID)
 	{
+		// if (empty($this->mockFiles))
+		// {
+		// 	$this->mockFiles = new FileCollection();
+		// }
+
 		foreach ($this->mockFiles as $controlName => $file) {
 			if ($controlName == $fileID) {
 				return array(new MockUploadedFile(

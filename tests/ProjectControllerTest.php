@@ -53,16 +53,19 @@ class ProjectControllerTest extends FeatureTestCase
 	*
 	* - Project::edit_document
 	* @group mockrequest
+	* @testWith ["Belka-caption11", "Belka", "Belka-caption11"]
+	* ["", "Belka", "Belka"]
 	*/
-	public function test_EditDocumentControllerPostFileOk()
+	public function test_EditDocumentControllerPostFileOk($docCaption,
+		$fileName, $expectedName)
 	{
 		log_message('info', '----------------------------------------------------------');
 		log_message('info', '--- test: test_EditDocumentControllerPostFileOk ---');
 
 		// Arrange
+		$docCaption = empty($docCaption) ? null : $docCaption;
+
 		$path = ROOTPATH.'.\tests\Belka2.jpg';
-		$name = 'Belka';
-		$docCaption = 'Belka-caption11';
 		$type = 'image/png';
 		$size = 143262;
 		$data = [
@@ -87,7 +90,7 @@ class ProjectControllerTest extends FeatureTestCase
 		$incomingRequest->setGlobal('post', $data);
 		$incomingRequest->setMethod('post');
 
-		$incomingRequest->setFile('documentFile', $path, $name, $type, $size);
+		$incomingRequest->setFile('documentFile', $path, $fileName, $type, $size);
 
 		// Act
 		$result = $this->withRequest($incomingRequest)
@@ -96,25 +99,30 @@ class ProjectControllerTest extends FeatureTestCase
 		 		->execute("edit_document");
 		
 		// Assert
-		// $this->assertTrue($result->isRedirect());
+		$this->assertTrue($result->isRedirect());
 
-		$docId = 1;
-		// ToDo: проверять DocId, docfile_doc_id, pd_doc_id
+		// Сообщение валидации отсутствует
+		$this->assertTrue($result->dontSee('alert-danger'));
 
 		$criteria = [
-			//'doc_id' => $docId,
 			'doc_caption' => $docCaption
 		];
 		$this->seeInDatabase('document', $criteria);
 
-		// $criteria = [
-		// 	'docfile_doc_id' => $docId
-		// ];
-		// $this->seeInDatabase('docfile', $criteria);
+		$criteria = [
+			'doc_filename' => $fileName,
+		];
+		$this->seeInDatabase('document', $criteria);
+		$docId = $this->grabFromDatabase('document', 'doc_id', $criteria);
+
+		$criteria = [
+			'docfile_doc_id' => $docId
+		];
+		$this->seeInDatabase('docfile', $criteria);
 
 		$criteria = [
 			'pd_project_id' => $this->defaultProjectId,
-			//'pd_doc_id' => $docId
+			'pd_doc_id' => $docId
 		];
 		$this->seeInDatabase('project_document', $criteria);
 	}
@@ -158,26 +166,20 @@ class ProjectControllerTest extends FeatureTestCase
 		 		->execute("edit_document");
 		
 		// Assert
-		// $this->assertFalse($result->isRedirect());
+		$this->assertFalse($result->isRedirect());
 
 		// page
 		// echo $result->getBody();
 
-		// ToDo: проверить текст ошибки
+		// Сообщение валидации присутствует
+		$this->assertTrue($result->see('alert-danger'));
+		$this->assertTrue($result->see('Выберите', 'div'));
 
 		// database
-		$docId = 1;
-
 		$criteria = [
-			'doc_id' => $docId,
 			'doc_caption' => $docCaption
 		];
 		$this->dontSeeInDatabase('document', $criteria);
-
-		$criteria = [
-			'docfile_doc_id' => $docId
-		];
-		$this->dontSeeInDatabase('docfile', $criteria);
 
 		$criteria = [
 			'pd_project_id' => $this->defaultProjectId,
