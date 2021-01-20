@@ -3,7 +3,7 @@
 
 <div class="panel panel-default panel-success">
 	<div class="panel-heading">
-		<?php echo lang('app.additional_questions_list_header') ?>
+		Список документов
 	</div>
 	<div class="panel-body">
 		<?php foreach($documents_query->getResult() as $result) : ?>

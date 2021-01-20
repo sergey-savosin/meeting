@@ -32,7 +32,7 @@ class Questions_model extends Model {
 	* Документы вопроса основной повестки.
 	*/
 	function fetch_documents_for_questionid($questionId) {
-		$query = "SELECT d.doc_id, d.doc_filename
+		$query = "SELECT d.doc_id, d.doc_filename, d.doc_caption
 		FROM question_document qd
 		INNER JOIN document d ON d.doc_id = qd.qd_doc_id
 		WHERE qd.qd_question_id = ?

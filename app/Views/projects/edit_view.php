@@ -22,31 +22,92 @@
 <?php echo form_close(); ?>
 <hr>
 
-<p class="h4">Документы</p>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<?php echo lang('app.documents_title');?>
+	</div>
 
-<table class="table table-hover">
-	<thead>
-		<tr>
-			<th><?php echo lang('app.documents_title');?></th>
-		</tr>
-	</thead>
-	<tbody>
-		<?php foreach($documents_query->getResult() as $result) : ?>
-		<tr>
-			<td>
-				<?php $cpt = $result->doc_caption ?? $result->doc_filename;
-					echo $cpt; ?>
-
-				<?php echo anchor(base_url('document/download/' . $result->doc_id),
-				lang('app.document_download')) ;?>
-			</td>
-		</tr>
-		<?php endforeach ; ?>
-	</tbody>
-</table>
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th>Наименование</th>
+				<th>Действие</th>
+			</tr>
+		</thead>
+		<tbody>
+			<?php foreach($documents_query->getResult() as $result) : ?>
+			<tr>
+				<td>
+					<?php $cpt = $result->doc_caption ?? $result->doc_filename;
+						echo $cpt; ?>
+				</td>
+				<td>
+					<?php echo anchor(base_url('document/download/' . $result->doc_id),
+					lang('app.document_download')) ;?>
+				</td>
+			</tr>
+			<?php endforeach ; ?>
+		</tbody>
+	</table>
+</div>
 
 <?php echo anchor(base_url('project/edit_document/' . $project_query->project_code), 'Редактировать список документов') ?>
 <hr>
-<p class="h4">Вопросы основной повестки</p>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		Вопросы основной повестки
+	</div>
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th>Текст</th>
+				<th>Комментарий</th>
+				<th>Документы</th>
+			</tr>			
+		</thead>
+		<?php foreach($base_questions as $qs_id => $question) : ?>
+		<tbody>
+			<tr>
+			<td><?php echo $question['qs_title']; ?></td>
+			<td><?php echo $question['qs_comment']; ?></td>
+			<td>
+				<?php foreach($question['documents'] as $doc_id=>$qd) : ?>
+					<?php echo '['.anchor(base_url('document/download/' . $doc_id),
+						$qd['doc_filename']).']' ;?>
+					</li>
+				<?php endforeach ; ?>			
+			</td>
+			</tr>
+		</tbody>
+		<?php endforeach ; ?>
+	</table>
+</div>
+<?php echo anchor(base_url('project/edit_basequestion/' . $project_query->project_code), 'Редактировать список вопросов основной повестки') ?>
 <hr>
-<p class="h4">Участники голосования</p>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		Участники голосования
+	</div>
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th>Логин</th>
+				<th>Тип</th>
+				<th>Голосует</th>
+				<th>Кол-во голосов</th>
+				<th>Имя</th>
+			</tr>			
+		</thead>
+		<?php foreach($users_query->getResult() as $result) : ?>
+		<tbody>
+			<tr>
+			<td><?php echo $result->user_login_code; ?></td>
+			<td><?php echo $result->user_usertype_id; ?></td>
+			<td><?php echo $result->user_can_vote; ?></td>
+			<td><?php echo $result->user_votes_number; ?></td>
+			<td><?php echo $result->user_member_name; ?></td>
+			</tr>
+		</tbody>
+		<?php endforeach ; ?>
+	</table>
+</div>

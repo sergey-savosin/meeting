@@ -156,7 +156,7 @@ class AdditionalQuestions extends BaseController {
 		$questionId, $fileName, $fileContent) {
 
 		// save document
-		$doc_id = $documents_model->newDocumentWithContent($fileName, $fileContent);
+		$doc_id = $documents_model->newDocumentWithContent($fileName, $fileContent, '');
 
 		if (!$doc_id) {
 			return false;

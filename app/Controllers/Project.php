@@ -180,6 +180,8 @@ class Project extends BaseController {
 		helper(['url', 'form']);
 		$projects_model = model('Projects_model');
 		$documents_model = model('Documents_model');
+		$users_model = model('Users_model');
+		$questions_model = model('questions_model');
 
 		$uri = $this->request->uri;
 
@@ -196,10 +198,31 @@ class Project extends BaseController {
 
 		$project_id = $project->project_id;
 
+		// Подготовка массива вопросов и вложенных документов
+		$base_questions = 
+			$questions_model->fetch_general_questions($project_id);
+
+		foreach ($base_questions->getResult() as $question) {
+			$documents = 
+				$questions_model->fetch_documents_for_questionid($question->qs_id);
+			$base_documents[$question->qs_id] = [
+				'qs_id' => $question->qs_id,
+				'qs_title' => $question->qs_title,
+				'qs_comment' => $question->qs_comment,
+				'documents' => $this->make_documents_array($documents->getResult())
+			];
+		}
+
 		// data for view
 		$page_data['project_query'] = $project;
-		$page_data['documents_query'] =
-			$documents_model->fetch_documents($project_id);
+		$page_data['documents_query'] = $documents_model->fetch_documents($project_id);
+		$page_data['users_query'] = $users_model->get_users_by_projectid($project_id);
+		
+		if (isset($base_documents)) {
+			$page_data['base_questions'] = $base_documents;
+		} else {
+			$page_data['base_questions'] = [];
+		}
 
 		$top_nav_data['uri'] = $this->request->uri;
 
@@ -450,6 +473,170 @@ class Project extends BaseController {
 	}
 
 	/**
+	* WebUI - удаление вопроса основной повестки
+	*/
+	public function delete_basequestion() {
+
+	}
+
+	/**
+	* WebUI - редактирование списка вопросов основной повестки
+	* Принимает POST-запрос из представления
+	*/
+	public function edit_basequestion() {
+		log_message('info', '[Project::edit_basequestion] Start');
+
+		// get session data
+		$session = session();
+		$user = $session->get('user_login_code');
+		if ($user == FALSE) {
+			log_message('info', '[Project::edit_basequestion] User should be logged');
+			return redirect()->to(base_url('user/login'));
+		}
+
+		// 1. Get request params
+		$uri = $this->request->uri;
+
+		log_message('info', '[project::edit_basequestion] uri:'.$uri);
+
+		// find ProjectCode in segment (Get) or in request (Post)
+		$project_code = $uri->getSegment(3);
+		if (!$project_code) {
+			$project_code = $this->request->getPost('ProjectCode');
+		}
+
+		if (!$project_code) {
+			throw new \Exception('Empty project_code segment');
+		}
+		$project_code = urldecode($project_code);
+
+		// Form data
+		$qsTitle = trim($this->request->getPost('QsTitle'));
+		$qsComment = trim($this->request->getPost('QsComment'));
+
+		// prepare data for view
+		$projects_model = model('Projects_model');
+		$questions_model = model('Questions_model');
+		$documents_model = model('Documents_model');
+	
+
+		$project = $projects_model->get_project_by_code($project_code);
+		if (!$project) {
+			throw new \Exception("Empty project row for project_code: $project_code");
+		}
+		$project_id = $project->project_id;
+
+		// Подготовка массива вопросов и вложенных документов
+		$base_questions = 
+			$questions_model->fetch_general_questions($project_id);
+
+		foreach ($base_questions->getResult() as $question) {
+			$documents = 
+				$questions_model->fetch_documents_for_questionid($question->qs_id);
+			$base_documents[$question->qs_id] = [
+				'qs_id' => $question->qs_id,
+				'qs_title' => $question->qs_title,
+				'qs_comment' => $question->qs_comment,
+				'documents' => $this->make_documents_array($documents->getResult())
+			];
+		}
+
+		$page_data['project_query'] = $project;
+		if (isset($base_documents)) {
+			$page_data['base_questions'] = $base_documents;
+		} else {
+			$page_data['base_questions'] = [];
+		}
+
+		// setup form validation
+		$val_rules['QsTitle'] = [
+			'label' => 'QsTitle',
+			'rules' => 'required',
+			'errors' => [
+				'required' => 'Укажите Текст вопроса.'
+			]
+		];
+		helper(['form', 'url']);
+		$top_nav_data['uri'] = $this->request->uri;
+
+		// show view
+		if ($this->request->getMethod() === 'get' || !$this->validate($val_rules) ) {
+			if ($this->request->getMethod() === 'get') {
+				$validation = null;
+			} else {
+				$validation = $this->validator;
+			}
+
+			$page_data['validation'] = $validation;
+
+			return view('common/header').
+				view('nav/top_nav', $top_nav_data).
+				view('projects/editbasequestion_view', $page_data).
+				view('common/footer');
+		} else {
+			// save data to DB
+
+			//ToDo: add transaction
+			// save Question
+			$qs_id = $this->saveOneQuestion($questions_model,
+				$project_id, $qsTitle, $qsComment
+			);
+
+			if (!$qs_id) {
+				log_message('info', '[Project::edit_basequestion] Save question to DB error.');
+			}
+
+			// save Documents and link them to new Question
+			$doc_id = -1;
+			
+			if ($qs_id && $files = $this->request->getFiles())
+			{
+				log_message('info', '[Project::edit_basequestion] - uploaded files! '.json_encode($files));
+
+				foreach ($files['documentFile'] as $file) {
+					if ($file->isValid() && ! $file->hasMoved())
+					{
+						$fileMime = $file->getClientMimeType();
+						$fileSize = $file->getSize();
+						$fileName = $file->getName();
+						//$fileClientName = $file->getClientName();
+						$tmpName = $file->getTempName();
+
+						log_message('info', 
+							"[Project::edit_basequestion] - file name: $fileName, size: $fileSize, MIME: $fileMime, tmpName: $tmpName");
+
+						$fileContent = file_get_contents($file->getTempName());
+						
+						$doc_id = $this->saveOneDocumentAndLinkToQuestion(
+							$documents_model,
+							$questions_model,
+							$qs_id, $fileName, $fileContent);
+					}
+				}
+			}
+
+			if ($qs_id && $doc_id) {
+				// go to project edit page
+				return redirect()->to(base_url("Project/edit_basequestion/$project_code"));
+			} else {
+				$msg = $res['message'];
+				log_message('info', '[Project::edit_basequestion] Save data error: '.$msg);
+				
+				// ToDo: show error
+			}
+		}
+		
+	}
+
+	public function delete_user() {
+
+	}
+
+	public function edit_user() {
+
+	}
+
+	/**
 	* Сохранить документ и связать его с проектом
 	*/
 	private function saveOneDocumentAndLinkToProject($documents_model,
@@ -474,6 +661,63 @@ class Project extends BaseController {
 		return $doc_id;
 	}
 
+	/**
+	* Сохранить один основной вопрос
+	*/
+	private function saveOneQuestion($questions_model,
+		$project_id, $title, $comment) {
 
+		log_message('info', '[Project::saveOneQuestion] - saving question.');
+
+		// save question
+		$qs_id = $questions_model->new_general_question($project_id,
+			$title, $comment);
+
+		return $qs_id;
+	}
+
+	/**
+	* Сохранить документ и связать его с вопросом
+	*/
+	private function saveOneDocumentAndLinkToQuestion($documents_model,
+		$questions_model,
+		$questionId, $fileName, $fileContent) {
+
+		// save document
+		$doc_id = $documents_model->newDocumentWithContent($fileName, $fileContent, '');
+
+		if (!$doc_id) {
+			return false;
+		}
+
+		// link question and document
+		$qd_id = $questions_model->link_question_and_document($questionId, $doc_id);
+
+		if (!$qd_id) {
+			return false;
+		}
+
+		return $doc_id;
+	}
+
+
+	/**
+	* Составление массива документов по одному вопросу
+	*
+	* @param $documents - запрос документов
+	* @return array
+	*/
+	function make_documents_array($documents) {
+		$qa = array();
+		foreach ($documents as $document) {
+			$qa[$document->doc_id] =
+				array(
+					'doc_filename' => $document->doc_filename,
+					'doc_caption' => $document->doc_caption,
+					'doc_id' => $document->doc_id
+				);
+		}
+		return $qa;
+	}
 
 }
