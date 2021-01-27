@@ -120,7 +120,9 @@ class User extends BaseController {
 
 	}
 
-
+	/**
+	* user::login form. Get and Post
+	*/
 	public function login() {
 		helper(['form', 'url']);
 
@@ -168,15 +170,17 @@ class User extends BaseController {
 			$session = session();
 			$session->set($data);
 
-			// 	$this->log_debug("User login", "Succefull loginned: $usr_code");
+			log_message('info', "[User::login] Succefull loginned: $usr_code");
+
 			if ($session->has('redirect_from')) {
 				$redirect_from = $session->get('redirect_from');
+				log_message('info', '[User::login] redirected_from: '.$redirect_from);
 				$session->remove('redirect_from');
 
 				return redirect()->to(base_url($redirect_from));
-			} else {
-				return redirect()->to(base_url('Documents'));
 			}
+
+			return redirect()->to(base_url('Documents'));
 
 
 		}

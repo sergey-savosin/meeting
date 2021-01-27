@@ -212,4 +212,85 @@ class Questions_model extends Model {
 		}
 	}
 
+	/**
+	* Получить ProjectId по qs_id
+	* returns row (object)
+	*/
+	function get_project_by_question_id($qs_id) {
+		$query = "SELECT p.*
+		FROM question q 
+		INNER JOIN project p on p.project_id = q.qs_project_id
+		WHERE q.qs_id = ?";
+		
+		$db = $this->db;;
+		$result = $db->query($query, array($qs_id));
+		
+		if (!$result) {
+			return false;
+		}
+
+		$row = $result->getRow();
+		if (!isset($row)) {
+			return false;
+		} else {
+			return $row;
+		}
+
+	}
+
+	/**
+	* Удаление вопроса Основное повестки и связанного с ним документа
+	*/
+	function delete_general_question($qs_id) {
+		// docfile
+		// document
+		// question_document
+		// base_question?
+		// answer
+		// question
+		$db = \Config\Database::connect();
+
+		// get doc_id
+		$query = "SELECT qd.qd_doc_id
+		FROM question_document qd
+		WHERE qd.qd_question_id = ?
+		";
+		$result = $this->db->query($query, array($qs_id));
+
+		$db->transBegin();
+
+		$row = $result->getRow();
+		
+		// 1. delete document
+		if (isset($row)) {
+			$docId = $row->qd_doc_id;
+
+			$builder = $db->table('question_document');
+			$builder->where('qd_doc_id', $docId)
+				->delete();
+
+			$builder = $db->table('docfile');
+			$builder->where('docfile_doc_id', $docId)
+				->delete();
+			$builder = $db->table('document');
+			$builder->where('doc_id', $docId)
+				->delete();
+			log_message('info', '[question_model::delete_general_question] qd deleted. doc_id:'.$docId);
+		} else {
+			log_message('info', '[question_model::delete_general_question] No qd row.');
+		}
+
+		// delete answers
+		$builder = $db->table('answer');
+		$builder->where('ans_question_id', $qs_id)
+			->delete();
+
+		// delete question
+		$builder = $db->table('question');
+		$builder->where('qs_id', $qs_id)
+			->delete();
+
+		$db->transComplete();
+	}
+
 }

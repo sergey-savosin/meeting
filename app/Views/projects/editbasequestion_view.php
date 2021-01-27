@@ -10,7 +10,8 @@
 			<ul>
 			<li class="list-group-item list-group-item-info">
 				<label>Вопрос:</label> <?php
-					$qs_id = $question['qs_id']; echo $question['qs_title'] ?>
+					$qs_id = $question['qs_id']; echo $question['qs_title'];
+					echo ' '.anchor(base_url('project/delete_basequestion/'.$qs_id), '[Удалить]');?>
 			</li>
 				<?php if(!empty($question['qs_comment'])): ?>
 					<li class="list-group-item">

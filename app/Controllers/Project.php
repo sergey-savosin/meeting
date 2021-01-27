@@ -141,7 +141,7 @@ class Project extends BaseController {
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
 			// store uri to return here after login
-			$session->set('redirect_from', $this->request->uri->getSegment(1));
+			$session->set('redirect_from', uri_string());
 			return redirect()->to(base_url('User/login'));
 		}
 
@@ -174,6 +174,8 @@ class Project extends BaseController {
 		$session = session();
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
 			return redirect()->to(base_url('User/login'));
 		}
 
@@ -318,7 +320,7 @@ class Project extends BaseController {
 	/**
 	* Удаление документа.
 	* doc_id должен находиться в get-параметре:
-	* http://localhost:8080/meeting/project/delete/<doc_id>
+	* http://<site>/meeting/project/delete/<doc_id>
 	*/
 	public function delete_document() {
 		// 1. get session data
@@ -342,13 +344,13 @@ class Project extends BaseController {
 
 		// 3. Check url params
 		$doc_id = $uri->getSegment(3);
-		log_message('info', 'uri: 3: '.$uri->getSegment(3));
+		// log_message('info', '[project::delete_document] uri(3) '.$uri->getSegment(3));
 
 		if (!$doc_id) {
 			throw new \Exception('Empty doc_id');
 		}
 
-		$document_model = model('Documents_model');
+		//$document_model = model('Documents_model');
 		$project_model = model('Projects_model');
 		
 		// 4. validate document and project
@@ -377,6 +379,8 @@ class Project extends BaseController {
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
 			log_message('info', '[Project::edit_document] User should be logged');
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
 			return redirect()->to(base_url('user/login'));
 		}
 
@@ -474,9 +478,51 @@ class Project extends BaseController {
 
 	/**
 	* WebUI - удаление вопроса основной повестки
+	* qs_id должен находиться в get-параметре:
+	* http://<site>/meeting/project/delete_basequestion/<qs_id>
 	*/
 	public function delete_basequestion() {
+		// 1. get session data
+		$session = session();
+		$userLoginCode = $session->get('user_login_code');
+		if (!$userLoginCode) {
+			throw new \Exception("User not logged in.");
+		}
 
+		// 2. Check user access
+		$users_model = model('Users_model');
+		$user = $users_model->get_user_by_logincode($userLoginCode);
+		if (!$user)
+		{
+			throw new \Exception("Access denied. Usercode: $userlogin");
+		}
+
+		helper('url');
+
+		$uri = $this->request->uri;
+
+		// 3. Check url params
+		$qs_id = $uri->getSegment(3);
+		// log_message('info', '[project::delete_basequestion] uri(3): '.$uri->getSegment(3));
+
+		if (!$qs_id) {
+			throw new \Exception('Empty qs_id');
+		}
+
+		$question_model = model('Questions_model');
+		
+		// 4. validate question
+		$project = $question_model->get_project_by_question_id($qs_id);
+		if (!$project) {
+			throw new \Exception("Can't find project by qs_id: $qs_id");
+		}
+		$projectCode = $project->project_code;
+
+		// 5. delete question from tables
+		$question_model->delete_general_question($qs_id);
+
+		// 6. go to project edit page
+		return redirect()->to(base_url("/Project/edit_basequestion/$projectCode"));
 	}
 
 	/**
@@ -491,6 +537,8 @@ class Project extends BaseController {
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
 			log_message('info', '[Project::edit_basequestion] User should be logged');
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
 			return redirect()->to(base_url('user/login'));
 		}
 
