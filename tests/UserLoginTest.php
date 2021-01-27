@@ -41,7 +41,8 @@ class UserLoginTest extends FeatureTestCase
 	*****/
 	public function testGetUserLoginOk()
 	{
-		$result = $this->get('user/login');
+		$result = $this
+			->get('user/login');
 		$this->assertNotNull($result);
 		$this->assertEquals(0, $result->isRedirect());
 		$result->assertOK();
@@ -82,6 +83,43 @@ class UserLoginTest extends FeatureTestCase
 		$this->assertEquals(1, $result->isRedirect());
 		$redirectUrl = $result->getRedirectUrl();
 		$this->assertEquals('http://localhost/Documents', $redirectUrl);
+
+		$result->assertSessionHas('user_login_code', '123');
+		$result->assertSessionHas('user_project_id', '1');
+	}
+
+	/**
+	* POST user/login для существующего пользователя приводит к переходу на страницу,
+	* которая указана в переменной сессии 'redirect_from'
+	*
+	* - login 123 - существующий пользователь
+	* @testWith ["/project"]
+	* 			["/project/edit"]
+	* 			["/project/edit/123"]
+	*/
+	public function testUserLoginForExistingUserWithRedirectValueInSession_MakesRedirect(
+		$sessionValue)
+	{
+		// $sessionValue = '/project/edit/123';
+		log_message('info', 'testUserLoginForExistingUserWithRedirectValueInSession_MakesRedirect: sessionValue = '.$sessionValue);
+		$_SESSION['redirect_from'] = $sessionValue;
+
+		$result = $this
+			->withSession()
+			->post('user/login', [
+			'usr_code' => '123'
+			]);
+		$this->assertNotNull($result);
+
+		$result->assertStatus(302); // redirect
+		$result->assertOK();
+
+		$this->assertEquals(1, $result->isRedirect());
+		$redirectUrl = $result->getRedirectUrl();
+
+		$this->assertNotNull($redirectUrl, 'Value redirectUrl should be generated');
+		$sessionValueReg = str_replace($sessionValue, '/', '\/');
+		$this->assertRegExp("/$sessionValueReg/", $redirectUrl);
 
 		$result->assertSessionHas('user_login_code', '123');
 		$result->assertSessionHas('user_project_id', '1');

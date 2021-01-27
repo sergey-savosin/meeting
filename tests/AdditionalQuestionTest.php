@@ -43,6 +43,8 @@ class AdditionalQuestionTest extends FeatureTestCase
 		$redirectUrl = $result->getRedirectUrl();
 		$this->assertRegExp('/\/User\/login/', $redirectUrl);
 		$result->assertOK();
+
+		$result->assertSessionHas('redirect_from', '/additionalquestions/index');
 	}
 
 	/****

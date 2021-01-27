@@ -10,7 +10,9 @@ class Votes extends BaseController {
 		$session = session();
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
-			log_message('info', 'Votes::index. Empty user_login_code (session variable).');
+			log_message('info', '[Votes::index] User should be logged');
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
 			return redirect()->to(base_url('User/login'));
 		}
 

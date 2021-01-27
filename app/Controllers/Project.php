@@ -381,7 +381,7 @@ class Project extends BaseController {
 			log_message('info', '[Project::edit_document] User should be logged');
 			// store uri to return here after login
 			$session->set('redirect_from', uri_string());
-			return redirect()->to(base_url('user/login'));
+			return redirect()->to(base_url('User/login'));
 		}
 
 		// 1. Get request params

@@ -49,6 +49,24 @@ class ProjectControllerTest extends FeatureTestCase
 	}
 
 	/**
+	* GET project/edit_document приводит к переходу на страницу авторизации
+	*
+	* - GET project/edit_document
+	*/
+	public function test_GetEditDocumentUnauthorizedSessionStartsRedirect()
+	{
+
+		$result = $this->get('project/edit_document');
+		$this->assertNotNull($result);
+		$this->assertEquals(1, $result->isRedirect());
+		$redirectUrl = $result->getRedirectUrl();
+		$this->assertRegExp('/\/User\/login/', $redirectUrl);
+		$result->assertOK();
+
+		$result->assertSessionHas('redirect_from', '/project/edit_document');
+	}
+
+	/**
 	* POST project/edit_document успешно добавляет документ
 	*
 	* - Project::edit_document

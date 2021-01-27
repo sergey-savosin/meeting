@@ -11,6 +11,9 @@ class AdditionalQuestions extends BaseController {
 		$session = session();
 		$user = $session->get('user_login_code');
 		if ($user == FALSE) {
+			log_message('info', '[AdditionalQuestions::index] User should be logged');
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
 			return redirect()->to(base_url('User/login'));
 		}
 
