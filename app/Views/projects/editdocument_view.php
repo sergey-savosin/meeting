@@ -1,5 +1,6 @@
 <!-- Form - begin form section -->
-<p class="h4">Редактирование проекта - {project name}. Документы.</p>
+<p class="h4">Проект "<?php
+	echo $project_query->project_name?>". Редактирование документов.</p>
 
 <div class="panel panel-default panel-success">
 	<div class="panel-heading">

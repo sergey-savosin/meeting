@@ -128,6 +128,28 @@ class Projects_model extends Model {
 		return true;
 	}
 
+	/**
+	* Update project
+	*
+	* @return boolean
+	*/
+	function update_project($project_id,
+		$project_code, $project_name) {
+		$data = [
+			'project_code' => $project_code,
+			'project_name' => $project_name,
+		];
+
+		$db = \Config\Database::connect();
+		$builder = $db->table('project');
+		$builder->where('project_id', $project_id);
+		if ($builder->update($data)){
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/***********************
 	  Удаление из сущностей, связанных с проектом
 	***********************/

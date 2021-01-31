@@ -1,4 +1,4 @@
-<?php namespace ProjectControllerTest\Controller;
+<?php namespace ProjectDocumentControllerTest\Controller;
 
 use CodeIgniter\Test\FeatureTestCase;
 use CodeIgniter\Test\ControllerTester;
@@ -7,7 +7,7 @@ use CodeIgniter\HTTP\Files;
 use CodeIgniter\HTTP\UserAgent;
 use App\Database\Seeds;
 
-class ProjectControllerTest extends FeatureTestCase
+class ProjectDocumentControllerTest extends FeatureTestCase
 {
 
 	use ControllerTester;
@@ -18,6 +18,7 @@ class ProjectControllerTest extends FeatureTestCase
 	protected $projects_model;
 	protected $defaultProjectId = 1;
 	protected $defaultProjectCode = 'ProjectCode-123';
+	protected $defaultProjectName = 'ProjectName-123';
 	protected $generalCategoryId = 1;
 	protected $additionalCategoryId = 2;
 	protected $acceptAdditionalCategoryId = 3;
@@ -64,6 +65,29 @@ class ProjectControllerTest extends FeatureTestCase
 		$result->assertOK();
 
 		$result->assertSessionHas('redirect_from', '/project/edit_document');
+	}
+
+	/**
+	* GET project/edit_document приводит к отображению страницы редактирования документов
+	*
+	* - GET project/edit_document
+	*/
+	public function test_GetEditDocumentAuthorizedSessionShowView()
+	{
+		// Act
+		$result = $this
+			->withSession()
+			->get('project/edit_document/'.$this->defaultProjectCode);
+		
+		// Assert
+		$this->assertNotNull($result);
+		$this->assertEquals(0, $result->isRedirect());
+		$result->assertOK();
+		$result->assertSessionMissing('redirect_from');
+
+		$result->assertSee('Проект "'
+				.$this->defaultProjectName
+				.'". Редактирование документов.');
 	}
 
 	/**
@@ -204,4 +228,5 @@ class ProjectControllerTest extends FeatureTestCase
 		];
 		$this->dontSeeInDatabase('project_document', $criteria);
 	}
+
 }

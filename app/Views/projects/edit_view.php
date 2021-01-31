@@ -3,7 +3,7 @@
 
 <?php if (isset($validation)) {echo $validation->listErrors('my_list');} ?>
 
-<?php echo form_open('project/edit', 'role="form"') ; ?>
+<?php echo form_open('project/edit/'.$project_query->project_code, 'role="form"') ; ?>
 	<div class="form-group">
 		<label for="project_code">Код проекта
 		</label>
