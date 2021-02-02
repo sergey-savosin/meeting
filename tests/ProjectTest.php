@@ -76,61 +76,9 @@ class ProjectTest extends FeatureTestCase
 	}
 
 	/**
-	* GET project приводит к переходу на страницу авторизации
+	* POST project/insert (WebApi) - валидация параметров приводит к ошибке
 	*
-	* - GET project
-	* @group mockrequest
-	*/
-	public function test_GetProjectUnauthorizedSessionStartsRedirect()
-	{
-		log_message('info', '----------------------------------------------------------');
-		log_message('info', '--- test: test_GetProjectUnauthorizedSessionStartsRedirect');
-
-		$result = $this->get('project/index');
-		$this->assertNotNull($result);
-		$this->assertEquals(1, $result->isRedirect());
-		$redirectUrl = $result->getRedirectUrl();
-		$this->assertRegExp('/\/User\/login/', $redirectUrl);
-		$result->assertOK();
-
-		$result->assertSessionHas('redirect_from', '/project/index');
-	}
-
-	/****
-	GET project приводит к переходу на страницу проектов
-	
-	- POST existing user
-	- GET project
-	*****/
-	public function test_GetProjectAuthorizedSessionShowsProjectList()
-	{
-		// Arrange
-		$userResult = $this->post('user/login', [
-			'usr_code' => '123'
-		]);
-		$this->assertNotNull($userResult);
- 
- 		$userResult->assertSessionHas('user_login_code', '123');
-		$userResult->assertSessionHas('user_project_id', '1');
-
- 		// Act
-		$response = $this->withSession()->get('project/index');
-
-		// Assert
-		$response->assertStatus(200);
-		$response->assertOK();
-		// print("--\r\n--");
-		$content = $response->getJSON();
-		// print($content);
-		$response->assertSee('Начало голосования');
-		$response->assertSee('ProjectName-123');
-		$response->assertSee('ProjectCode-123');
-	}
-
-	/**
-	* POST project - валидация параметров приводит к ошибке
-	*
-	* - POST project
+	* - POST project/insert
 	*
 	* @testWith ["", "ProjectCode123", "Empty ProjectName value in request."]
  	*			["ProjectName123", "", "Empty ProjectCode value in request."]
@@ -139,7 +87,7 @@ class ProjectTest extends FeatureTestCase
  	*			["ProjectName-123", "ProjectCode-444", "Project name already exists: ProjectName-123."]
  	*			["ProjectName-444", "ProjectCode-123", "Project code already exists: ProjectCode-123."]
 	*/
-	public function test_PostProjectParametersValidation(string $projectName, string $projectCode, string $expectedErrorMessage)
+	public function test_PostProjectInsert_ParametersValidation(string $projectName, string $projectCode, string $expectedErrorMessage)
 	{
 		// Arrange
 		$params = [
@@ -172,11 +120,11 @@ class ProjectTest extends FeatureTestCase
 	}
 
 	/**
-	* POST project добавляет проект
+	* POST project/insert (WebApi) добавляет проект
 
-	- POST project
+	- POST project/insert
 	*/
-	public function test_PostProjectCreatesNewProject()
+	public function test_PostProjectInsert_CreatesNewProject()
 	{
 		// Arrange
 		$params = [

@@ -41,3 +41,30 @@
 	</tbody>
 </table>
 
+<div class="panel panel-default panel-primary">
+	<div class="panel-heading">
+		Добавьте новый проект
+	</div>
+	<div class="panel-body">
+		<?php if (isset($validation)) {echo $validation->listErrors('my_list');} ?>
+
+		<?php echo form_open('project/index', 'role="form", enctype="multipart/form-data"'); ?>
+			<div class="form-group">
+
+				<label for="projectName">Название проекта
+				</label>
+				<textarea class="form-control" rows="1" name="projectName" id="projectName"><?php
+					echo set_value('projectName'); ?></textarea>
+
+				<label for="projectCode">Код проекта
+				</label>
+				<textarea class="form-control" rows="1" name="projectCode" id="projectCode"><?php
+					echo set_value('projectCode'); ?></textarea>
+			</div>
+			<div class="form-group">
+				<button type="submit" class="btn btn-success">Добавить проект
+				</button>
+			</div>
+		<?php echo form_close(); ?>
+	</div>
+</div>

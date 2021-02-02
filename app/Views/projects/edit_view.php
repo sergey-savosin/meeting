@@ -111,3 +111,7 @@
 		<?php endforeach ; ?>
 	</table>
 </div>
+
+<div class="h4">
+	<?php echo anchor(base_url('/project/index'), '<== Вернуться к списку проектов')?>
+</div>

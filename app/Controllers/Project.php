@@ -145,6 +145,10 @@ class Project extends BaseController {
 			return redirect()->to(base_url('User/login'));
 		}
 
+		// Form data
+		$newProjectCode = trim($this->request->getPost('projectCode'));
+		$newProjectName = trim($this->request->getPost('projectName'));
+
 		$projects_model = model('Projects_model');
 
 		// data for view
@@ -155,14 +159,46 @@ class Project extends BaseController {
 
 		$top_nav_data['uri'] = $this->request->uri;
 
-		// show view
-		if ($this->request->getMethod() === 'get' ) {
-			echo view('common/header');
-			echo view('nav/top_nav', $top_nav_data);
-			echo view('projects/list_view', $page_data);
-			echo view('common/footer');
+		// setup form validation
+		// ToDo: проверка projectCode на уникальность
+		$val_rules['projectCode'] = [
+			'label' => 'Код проекта',
+			'rules' => 'required|is_unique[project.project_code]',
+			'errors' => [
+				'required' => 'Укажите Код проекта',
+				'is_unique' => 'Параметр "{field}" должен быть уникальным'
+			]
+		];
+		$val_rules['projectName'] = [
+			'label' => 'Название проекта',
+			'rules' => 'required|is_unique[project.project_name]',
+			'errors' => [
+				'required' => 'Укажите Название проекта',
+				'is_unique' => 'Параметр "{field}" должен быть уникальным'
+			]
+		];
 
+		// show view
+		if ($this->request->getMethod() === 'get' || !$this->validate($val_rules) ) {
+			if ($this->request->getMethod() === 'get') {
+				$validation = null;
+			} else {
+				$validation = $this->validator;
+			}
+
+			$page_data['validation'] = $validation;
+
+			return view('common/header').
+				view('nav/top_nav', $top_nav_data).
+				view('projects/list_view', $page_data).
+				view('common/footer');
+		} else {
+			// save data to db
+			$projects_model->new_project($newProjectName, $newProjectCode,
+				null, null, null, null);
 		}
+		return redirect()->to(base_url("Project/edit/$newProjectCode"));
+
 	}
 
 	/********************************
@@ -241,6 +277,7 @@ class Project extends BaseController {
 		$top_nav_data['uri'] = $this->request->uri;
 
 		// setup form validation
+		// ToDo: проверка projectCode на уникальность
 		$val_rules['project_code'] = [
 			'label' => 'project_code',
 			'rules' => 'required',
