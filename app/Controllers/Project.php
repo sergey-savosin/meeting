@@ -314,6 +314,57 @@ class Project extends BaseController {
 		return redirect()->to(base_url("Project/edit/$newProjectCode"));
 	}
 
+	/**
+	* Удаление проекта через контроллер.
+	* project_id должен находиться в get-параметре:
+	* http://<site>/meeting/project/delete_project/<project_id>
+	*/
+	public function delete_project() {
+		// 1. get session data
+		$session = session();
+		$userLoginCode = $session->get('user_login_code');
+		if (!$userLoginCode) {
+			return "Error: User not logged in.";
+		}
+
+		// 2. Check user access
+		$users_model = model('Users_model');
+		$user = $users_model->get_user_by_logincode($userLoginCode);
+		if (!$user)
+		{
+			return "Error: Access denied. Usercode: $userLoginCode";
+		}
+
+		helper('url');
+
+		$uri = $this->request->uri;
+
+		// 3. Check url params
+		$projectId = $uri->getSegment(3);
+		log_message('info', '[project::delete_project] uri(3) '.$projectId);
+
+		if (!$projectId) {
+			return 'Error: Empty projectId param.';
+		}
+
+		//$document_model = model('Documents_model');
+		$project_model = model('Projects_model');
+		
+		// 4. validate document and project
+		$project = $project_model->get_project_by_id($projectId);
+		if (!$project) {
+			return "Can't find project by projectId: $projectId";
+		}
+		$projectCode = $project->project_code;
+
+		// 5. delete document from tables
+		$project_model->delete_project($projectCode);
+		log_message('info', "[project::delete_project] Project deleted: $projectId".
+			" for ProjectCode: $projectCode");
+
+		// 6. go to project edit page
+		return redirect()->to(base_url("/Project"));
+	}
 
 	/***********************
 	 V4
@@ -438,7 +489,7 @@ class Project extends BaseController {
 		$project_code = $project->project_code;
 
 		// 5. delete document from tables
-		$project_model->delete_project_document($doc_id);
+		$project_model->delete_project_document_with_tran($doc_id);
 		log_message('info', "[project::delete_document] Document deleted: $doc_id".
 			" for ProjectCode: $project_code");
 

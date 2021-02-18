@@ -111,6 +111,10 @@
 		<?php endforeach ; ?>
 	</table>
 </div>
+<div class="h4">
+	Удалить текущий проект: <?php echo anchor(base_url('/project/delete_project/'
+		.$project_query->project_id), 'да, удалить!') ?>
+</div>
 
 <div class="h4">
 	<?php echo anchor(base_url('/project/index'), '<== Вернуться к списку проектов')?>

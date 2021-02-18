@@ -69,21 +69,14 @@ class Projects_model extends Model {
 	/**
 	* Удалить запись в таблице project_document
 	*/
-	function delete_project_document($docId) {
+	function delete_project_document_with_tran($docId) {
 		$db = \Config\Database::connect();
 
 		$db->transBegin();
 
-		$builder = $db->table('project_document');
-		$builder->where('pd_doc_id', $docId)
-			->delete();
-
-		$builder = $db->table('docfile');
-		$builder->where('docfile_doc_id', $docId)
-			->delete();
-		$builder = $db->table('document');
-		$builder->where('doc_id', $docId)
-			->delete();
+		$this->delete_project_document_db($db, $docId);
+		$this->delete_docfile_db($db, $docId);
+		$this->delete_document_db($db, $docId);
 
 		$db->transComplete();
 	}
@@ -101,22 +94,23 @@ class Projects_model extends Model {
 		$db->transBegin(); // test mode with rollback
 
 		// 1. delete document
-		$this->delete_project_child_entity($db, $projectCode, 'document', 'doc_project_id');
+		$this->delete_project_documents_db($db, $projectCode);
 		
 		// 2. delete answer
-		$this->delete_project_question_child_entity($db, $projectCode, 'answer', 'ans_question_id');
-		$this->delete_answer_for_base_question_project($db, $projectCode);
-		$this->delete_answer_for_user_project($db, $projectCode);
+		$this->delete_project_answer_for_question($db, $projectCode);
+		$this->delete_project_answer_for_base_question($db, $projectCode);
+		$this->delete_project_answer_for_user($db, $projectCode);
 
 		// 3. delete question->base_question
-		$this->delete_base_question_for_project($db, $projectCode);
+		$this->delete_secondary_question_documents_for_project($db, $projectCode);
+		$this->delete_secondary_question_for_project($db, $projectCode);
 		
 		// 4. delete question
-		$this->delete_project_child_entity($db, $projectCode, 'question', 'qs_project_id');
+		$this->delete_question_documents_for_project($db, $projectCode);
+		$this->delete_question_for_project($db, $projectCode);
 		
 		// 5. delete user
-		//$this->get_answers_for_user_project($db, $projectCode);
-		$this->delete_project_child_entity($db, $projectCode, 'user', 'user_project_id');
+		$this->delete_project_user($db, $projectCode);
 
 		// 6. delete project
 		$builder = $db->table('project')
@@ -150,119 +144,244 @@ class Projects_model extends Model {
 		}
 	}
 
-	/***********************
-	  Удаление из сущностей, связанных с проектом
-	***********************/
-	function delete_project_child_entity($db, $projectCode, $tableName, $tablePKField) {
-		$builder = $db
-			->table('project')
-			->join($tableName, $tableName.'.'.$tablePKField.' = project.project_id')
-			->where('project_code', $projectCode)
-			;
+	/**
+	* new
+	*/
+	private function delete_project_documents_db($db, $projectCode) {
+		// get document ids
+		$docs = $this->get_project_document_list_db($db, $projectCode);
 
-		$sql = $builder->getCompiledSelect();
-		$len = strlen("SELECT *");
-		$sql = substr_replace($sql, 'DELETE '.$tableName, 0, $len);
-
-		log_message('info', "[delete_project] sql: $sql");
-
-		$db->query($sql);
+		foreach ($docs as $docId) {
+			$this->delete_docfile_db($db, $docId);
+			$this->delete_project_document_db($db, $docId);
+			$this->delete_document_db($db, $docId);
+		}
 	}
 
-	/****************
-	 Удаление сущностей answer для project->question
-	*****************/
-	function delete_project_question_child_entity($db, $projectCode, $tableName, $tablePKField) {
+	/**
+	* new
+	*/
+	private function delete_secondary_question_documents_for_project($db, $projectCode) {
+		// get document ids
+		$data = $this->get_secondary_question_document_list_db($db, $projectCode);
+		log_message('info', '[delete_secondary_question_for_project] data: '
+			.json_encode($data));
+
+		foreach ($data as $docIdJson) {
+			$docId = $docIdJson['qd_doc_id'];
+			log_message('info', '[delete_question_documents_for_project] docId: '
+				.$docId);
+
+			$this->delete_docfile_db($db, $docId);
+			$this->delete_question_document_db($db, $docId);
+			$this->delete_document_db($db, $docId);
+		}
+	}
+
+	/**
+	* new
+	*/
+	private function delete_question_documents_for_project($db, $projectCode) {
+		// get document ids
+		$data = $this->get_question_document_list_db($db, $projectCode);
+		log_message('info', '[delete_question_documents_for_project] data: '
+			.json_encode($data));
+
+		foreach ($data as $docIdJson) {
+			$docId = $docIdJson['qd_doc_id'];
+			log_message('info', '[delete_question_documents_for_project] docId: '
+				.$docId);
+
+			$this->delete_docfile_db($db, $docId);
+			$this->delete_question_document_db($db, $docId);
+			$this->delete_document_db($db, $docId);
+		}
+	}
+
+	/**
+	* make doc_id list
+	*/
+	private function get_project_document_list_db($db, $projectCode) {
 		$builder = $db
 			->table('project')
-			->join('question', 'question.qs_project_id = project.project_id')
-			->join($tableName, $tableName.'.'.$tablePKField.' = question.qs_id')
+			->join('project_document', 'project_document.pd_project_id = project.project_id')
 			->where('project_code', $projectCode)
 			;
 		$sql = $builder->getCompiledSelect();
-		$len = strlen("SELECT *");
-		$sql = substr_replace($sql, 'DELETE '.$tableName, 0, $len);
+		$query = $db->query($sql);
 
-		log_message('info', "[delete_project] sql: $sql");
+		$docs = [];
+		foreach ($query->getResult() as $row) {
+			$docs[] = $row->pd_doc_id;
+		}
 
-		$db->query($sql);
+		log_message('info', '[get_project_document_list_db] docs: '.json_encode($docs));
+
+		return $docs;
+	}
+
+	private function get_question_document_list_db($db, $projectCode) {
+		$data = $db
+			->table('project p')
+			->join('question q1', 'q1.qs_project_id = p.project_id')
+			->join('question_document qd', 'qd.qd_question_id = q1.qs_id')
+			->where('p.project_code', $projectCode)
+			->select('qd.qd_doc_id')
+			->get()
+			->getResultArray()
+			;
+
+		return $data;
+	}
+
+	private function get_secondary_question_document_list_db($db, $projectCode) {
+		$data = $db
+			->table('project p')
+			->join('question q1', 'q1.qs_project_id = p.project_id')
+			->join('question q2', 'q2.qs_base_question_id = q1.qs_id')
+			->join('question_document qd', 'qd.qd_question_id = q2.qs_id')
+			->select('qd.qd_doc_id')
+			->get()
+			->getResultArray()
+			;
+
+		return $data;
+	}
+
+	/**
+	* delete docfile record
+	*/
+	private function delete_docfile_db($db, $docId) {
+		$db->table('docfile')
+			->where('docfile_doc_id', $docId)
+			->delete();
+	}
+
+	/**
+	* delete project_document record
+	*/
+	private function delete_project_document_db($db, $docId) {
+		$db->table('project_document')
+			->where('pd_doc_id', $docId)
+			->delete();
+	}
+
+	/**
+	* delete question_document record
+	*/
+	private function delete_question_document_db($db, $docId) {
+		$db->table('question_document')
+			->where('qd_doc_id', $docId)
+			->delete();
+	}
+
+	/**
+	* delete document record
+	*/
+	private function delete_document_db($db, $docId) {
+		$db->table('document')
+			->where('doc_id', $docId)
+			->delete();
 	}
 
 	/***********************
 	 delete base_question for project->question
 	************************/
-	function delete_base_question_for_project($db, $projectCode) {
+	private function delete_secondary_question_for_project($db, $projectCode) {
 		$builder = $db
-			->table('project')
-			->join('question q1', 'q1.qs_project_id = project.project_id')
-			->join('question q2', 'q2.qs_base_question_id = q1.qs_id')
-			->where('project_code', $projectCode)
-			;
-		$sql = $builder->getCompiledSelect();
-		$len = strlen("SELECT *");
-		$sql = substr_replace($sql, 'DELETE q2', 0, $len);
+			->table('question')
+			->whereIn('qs_base_question_id', function($builder) use ($projectCode) {
+				return $builder
+					->select('q1.qs_id')
+					->from('project p')
+					->join('question q1', 'q1.qs_project_id = p.project_id')
+					->where('p.project_code', $projectCode)
+				;
+			});
 
-		log_message('info', "[delete_project] sql: $sql");
-		$db->query($sql);
+		$this->build_delete($db, $builder);
 	}
 
-	/***************************
-	 delete answer for project->question->base_question
-	****************************/
-	function delete_answer_for_base_question_project($db, $projectCode) {
+	private function delete_question_for_project($db, $projectCode) {
 		$builder = $db
-			->table('project p')
-			->join('question q1', 'q1.qs_project_id = p.project_id')
-			->join('question q2', 'q2.qs_base_question_id = q1.qs_id')
-			->join('answer a', 'a.ans_question_id = q2.qs_id')
-			->where('project_code', $projectCode)
-			;
-		$sql = $builder->getCompiledSelect();
-		$len = strlen("SELECT *");
-		$sql = substr_replace($sql, 'DELETE a', 0, $len);
-
-		log_message('info', "[delete_project] sql: $sql");
-		$db->query($sql);
+			->table('question')
+			->whereIn('qs_project_id', function($builder) use ($projectCode) {
+				return $builder
+					->select('project_id')
+					->from('project')
+					->where('project_code', $projectCode)
+				;
+			});
+		$this->build_delete($db, $builder);
 	}
 
-
-	/**************************
-	 delete answers for user for project
-	***************************/
-	function delete_answer_for_user_project($db, $projectCode) {
+	private function delete_project_answer_for_question($db, $projectCode) {
 		$builder = $db
-			->table('project p')
-			->join('user u', 'u.user_project_id = p.project_id')
-			->join('answer a', 'ans_user_id = u.user_id')
-			->where('project_code', $projectCode)
-			;
-		$sql = $builder->getCompiledSelect();
-		$len = strlen("SELECT *");
-		$sql = substr_replace($sql, 'DELETE a', 0, $len);
-
-		log_message('info', '[delete_project] sql: $sql');
-		$db->query($sql);
+			->table('answer')
+			->whereIn('ans_question_id', function($builder) use ($projectCode) {
+				return $builder
+					->select('q.qs_id')
+					->from('project p')
+					->join('question q', 'q.qs_project_id = p.project_id')
+					->where('p.project_code', $projectCode)
+				;
+			});
+		$this->build_delete($db, $builder);
 	}
 
-	/****************
-	temp, can be deleted
-	*****************/
-	function get_answers_for_user_project($db, $projectCode) {
+	private function delete_project_answer_for_base_question($db, $projectCode) {
 		$builder = $db
-			->table('project p')
-			->join('user u', 'u.user_project_id = p.project_id')
-			->join('answer a', 'ans_user_id = u.user_id')
-			->where('project_code', $projectCode)
-			;
-		$sql = $builder->getCompiledSelect();
-		log_message('info', '[delete_project] sql: $sql');
-		$query = $db->query($sql);
-		$str = "";
-		foreach ($query->getResult() as $row) {
-			$str = $str ."\r\n".json_encode($row);
-		}
+			->table('answer')
+			->whereIn('ans_question_id', function($builder) use ($projectCode) {
+				return $builder
+					->select('q2.qs_id')
+					->from('project p')
+					->join('question q1', 'q1.qs_project_id = p.project_id')
+					->join('question q2', 'q2.qs_base_question_id = q1.qs_id')
+					->where('p.project_code', $projectCode)
+				;
+			});
+		$this->build_delete($db, $builder);
+	}
 
-		log_message('info', "[delete_project] result: $str");
+	private function delete_project_answer_for_user($db, $projectCode) {
+		$builder = $db
+			->table('answer')
+			->whereIn('ans_user_id', function($builder) use ($projectCode) {
+				return $builder
+					->select('u.user_id')
+					->from('project p')
+					->join('user u', 'u.user_project_id = p.project_id')
+					->where('p.project_code', $projectCode)
+				;
+			});
+		$this->build_delete($db, $builder);
+	}
+
+	private function delete_project_user($db, $projectCode) {
+		$builder = $db
+			->table('user')
+			->whereIn('user_project_id', function($builder) use ($projectCode) {
+				return $builder
+					->select('project_id')
+					->from('project')
+					->where('project_code', $projectCode)
+				;
+			});
+
+		$this->build_delete($db, $builder);
+	}
+
+	/**
+	* Make delete query from select query. And run it.
+	*/
+	private function build_delete($db, $builder) {
+		$sql = $builder->getCompiledSelect();
+		$len = strlen("SELECT *");
+		$sql = substr_replace($sql, 'DELETE', 0, $len);
+
+		//log_message('info', "[build_delete] sql: $sql");
+		$db->query($sql);
 	}
 
 	// returns one row
