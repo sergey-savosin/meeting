@@ -1,13 +1,14 @@
 -- phpMyAdmin SQL Dump
--- version 5.0.2
+-- version 4.9.0.1
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1
--- Время создания: Ноя 20 2020 г., 04:52
--- Версия сервера: 10.4.11-MariaDB
--- Версия PHP: 7.4.3
+-- Время создания: Фев 20 2021 г., 09:49
+-- Версия сервера: 10.3.16-MariaDB
+-- Версия PHP: 7.3.6
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -33,7 +34,8 @@ CREATE TABLE `answer` (
   `ans_user_id` int(11) NOT NULL,
   `ans_number` int(11) NOT NULL,
   `ans_string` int(11) NOT NULL,
-  `ans_answer_type_id` int(11) NOT NULL
+  `ans_answer_type_id` int(11) NOT NULL,
+  `ans_comment` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -92,7 +94,8 @@ CREATE TABLE `document` (
   `doc_created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `doc_is_for_creditor` bit(1) NOT NULL,
   `doc_is_for_debtor` bit(1) NOT NULL,
-  `doc_is_for_manager` bit(1) NOT NULL
+  `doc_is_for_manager` bit(1) NOT NULL,
+  `doc_caption` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -168,7 +171,8 @@ CREATE TABLE `question` (
   `qs_category_id` int(4) NOT NULL,
   `qs_user_id` int(11) DEFAULT NULL,
   `qs_created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `qs_base_question_id` int(11) DEFAULT NULL
+  `qs_base_question_id` int(11) DEFAULT NULL,
+  `qs_comment` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -190,6 +194,18 @@ INSERT INTO `question_category` (`qscat_id`, `qscat_title`) VALUES
 (1, 'General question'),
 (2, 'Additional question'),
 (3, 'Accept additional question');
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `question_document`
+--
+
+CREATE TABLE `question_document` (
+  `qd_id` int(11) NOT NULL,
+  `qd_question_id` int(11) NOT NULL,
+  `qd_doc_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -326,6 +342,14 @@ ALTER TABLE `question_category`
   ADD PRIMARY KEY (`qscat_id`);
 
 --
+-- Индексы таблицы `question_document`
+--
+ALTER TABLE `question_document`
+  ADD PRIMARY KEY (`qd_id`),
+  ADD KEY `FK_question_document_document` (`qd_doc_id`),
+  ADD KEY `FK_question_document_question` (`qd_question_id`);
+
+--
 -- Индексы таблицы `user`
 --
 ALTER TABLE `user`
@@ -393,6 +417,12 @@ ALTER TABLE `question`
   MODIFY `qs_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT для таблицы `question_document`
+--
+ALTER TABLE `question_document`
+  MODIFY `qd_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT для таблицы `user`
 --
 ALTER TABLE `user`
@@ -437,6 +467,13 @@ ALTER TABLE `question`
   ADD CONSTRAINT `FK_question_project` FOREIGN KEY (`qs_project_id`) REFERENCES `project` (`project_id`),
   ADD CONSTRAINT `FK_question_question_category` FOREIGN KEY (`qs_category_id`) REFERENCES `question_category` (`qscat_id`),
   ADD CONSTRAINT `FK_question_user` FOREIGN KEY (`qs_user_id`) REFERENCES `user` (`user_id`);
+
+--
+-- Ограничения внешнего ключа таблицы `question_document`
+--
+ALTER TABLE `question_document`
+  ADD CONSTRAINT `FK_question_document_document` FOREIGN KEY (`qd_doc_id`) REFERENCES `document` (`doc_id`),
+  ADD CONSTRAINT `FK_question_document_question` FOREIGN KEY (`qd_question_id`) REFERENCES `question` (`qs_id`);
 
 --
 -- Ограничения внешнего ключа таблицы `user`
