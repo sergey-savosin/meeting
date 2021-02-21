@@ -219,7 +219,7 @@ class Project extends BaseController {
 		$projects_model = model('Projects_model');
 		$documents_model = model('Documents_model');
 		$users_model = model('Users_model');
-		$questions_model = model('questions_model');
+		$questions_model = model('Questions_model');
 
 		// get request params
 		$uri = $this->request->uri;
