@@ -807,12 +807,132 @@ class Project extends BaseController {
 		
 	}
 
+	/**
+	* WebUI - удаление пользователя
+	* user_id должен находиться в get-параметре:
+	* http://<site>/meeting/project/delete_user/<user_id>
+	*/
 	public function delete_user() {
 
 	}
 
+	/**
+	* WebUI - редактирование списка пользователей
+	* Принимает POST-запрос из представления
+	*/
 	public function edit_user() {
+		log_message('info', '[Project::edit_user] Start');
 
+		// get session data
+		$session = session();
+		$user = $session->get('user_login_code');
+		if ($user == FALSE) {
+			log_message('info', '[Project::edit_user] User should be logged');
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
+			return redirect()->to(base_url('user/login'));
+		}
+
+		// 1. Get request params
+		$uri = $this->request->uri;
+
+		log_message('info', '[project::edit_user] uri:'.$uri);
+
+		// find ProjectCode in segment (Get) or in request (Post)
+		$project_code = $uri->getSegment(3);
+		if (!$project_code) {
+			$project_code = $this->request->getPost('ProjectCode');
+		}
+
+		if (!$project_code) {
+			throw new \Exception('Empty project_code segment');
+		}
+		$project_code = urldecode($project_code);
+
+		// Form data
+		$userLoginCode = trim($this->request->getPost('UserLoginCode'));
+		$userTypeId = trim($this->request->getPost('UserTypeId'));
+		$userCanVote = trim($this->request->getPost('UserCanVote'));
+		$userVotesNumber = trim($this->request->getPost('UserVotesNumber'));
+		$userMemberName = trim($this->request->getPost('UserMemberName'));
+
+		// prepare data for view
+		$projects_model = model('Projects_model');
+		$users_model = model('Users_model');
+
+		$project = $projects_model->get_project_by_code($project_code);
+		if (!$project) {
+			throw new \Exception("Empty project row for project_code: $project_code");
+		}
+		$project_id = $project->project_id;
+
+		// Подготовка массива вопросов и вложенных документов
+		$users = 
+			$users_model->get_users_by_projectid($project_id);
+
+		$page_data['project_query'] = $project;
+		$page_data['users_query'] = $users;
+
+		// setup form validation
+		$val_rules['UserLoginCode'] = [
+			'label' => 'UserLoginCode',
+			'rules' => 'required|is_unique[user.user_login_code]',
+			'errors' => [
+				'required' => 'Укажите Login',
+				'is_unique' => 'Параметр "{field}" должен быть уникальным'
+			]
+		];
+		$val_rules['UserTypeId'] =[
+			'label' => 'UserTypeId',
+			'rules' => 'required|in_list[1,2,3]',
+			'errors' => [
+				'required' => 'Укажите тип участника'
+			]
+		];
+		$val_rules['UserVotesNumber'] =[
+			'label' => 'UserVotesNumber',
+			'rules' => 'required|integer|is_natural_no_zero',
+			'errors' => [
+				'required' => 'Укажите количество голосов',
+				'integer' => 'Количество голосов должно быть целым числом',
+				'is_natural_no_zero' => 'Количество голосов должно быть положительным числом'
+			]
+		];
+
+		helper(['form', 'url']);
+		$top_nav_data['uri'] = $this->request->uri;
+
+		// show view
+		if ($this->request->getMethod() === 'get' || !$this->validate($val_rules) ) {
+			if ($this->request->getMethod() === 'get') {
+				$validation = null;
+			} else {
+				$validation = $this->validator;
+			}
+
+			$page_data['validation'] = $validation;
+
+			return view('common/header').
+				view('nav/top_nav', $top_nav_data).
+				view('projects/edituser_view', $page_data).
+				view('common/footer');
+		} else {
+			// save data to DB
+
+			// save user
+			$user_id = $this->saveUser($users_model,
+				$project_id, $userLoginCode, $userTypeId, $userCanVote, $userVotesNumber, $userMemberName
+				);
+
+			if (!$user_id) {
+				$msg = 'Save user to DB error';
+				log_message('info', '[Project::edit_user] '.$msg);
+				return $msg;
+			}
+
+			// go to project edit page
+			return redirect()->to(base_url("Project/edit_user/$project_code"));
+		}
 	}
 
 	/**
@@ -879,7 +999,20 @@ class Project extends BaseController {
 		return $doc_id;
 	}
 
+	/**
+	* Сохранить одного участника
+	*/
+	private function saveUser($users_model, $project_id, 
+		$userLoginCode, $userTypeId, $userCanVote, $userVotesNumber, $userMemberName) {
 
+		log_message('info', '[Project::saveUser] - saving user.');
+
+		// save user
+		$user_id = $users_model->new_user($project_id, $userLoginCode, 
+			$userTypeId, $userCanVote, $userVotesNumber, $userMemberName);
+
+		return $user_id;
+	}
 	/**
 	* Составление массива документов по одному вопросу
 	*

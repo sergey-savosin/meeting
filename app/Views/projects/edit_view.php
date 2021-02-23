@@ -86,7 +86,7 @@
 <hr>
 <div class="panel panel-default">
 	<div class="panel-heading">
-		Участники голосования
+		Участники собрания
 	</div>
 	<table class="table table-bordered">
 		<thead>
@@ -111,11 +111,13 @@
 		<?php endforeach ; ?>
 	</table>
 </div>
+<?php echo anchor(base_url('project/edit_user/' . $project_query->project_code), 'Редактировать список участников собрания') ?>
+<hr>
 <div class="h4">
 	Удалить текущий проект: <?php echo anchor(base_url('/project/delete_project/'
 		.$project_query->project_id), 'да, удалить!') ?>
 </div>
-
+<hr>
 <div class="h4">
 	<?php echo anchor(base_url('/project/index'), '<== Вернуться к списку проектов')?>
 </div>
