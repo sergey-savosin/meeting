@@ -6,6 +6,35 @@ class MeetingScript extends Migration
 {
 	public function up()
 	{
+		// admin
+		$this->forge->addField([
+			'admin_id' => [
+				'type' => 'INT',
+				'auto_increment' => true,
+			],
+			'admin_login' => [
+				'type' => 'VARCHAR',
+				'constraint' => '250',
+				'unique' => true,
+			],
+			'admin_password' => [
+				'type' => 'VARCHAR',
+				'constraint' => '500'
+			],
+			'admin_email' => [
+				'type' => 'VARCHAR',
+				'constraint' => '500',
+				'null' => true
+			],
+			'admin_phone' => [
+				'type' => 'VARCHAR',
+				'constraint' => '100',
+				'null' => true
+			]
+		]);
+		$this->forge->addKey('admin_id', true);
+		$this->forge->createTable('admin');
+
 		// project
 		$this->forge->addField([
 			'project_id'     => [
@@ -38,6 +67,10 @@ class MeetingScript extends Migration
 			],
 			'project_meeting_finish_date' => [
 				'type'		=> 'datetime',
+				'null'		=> true
+			],
+			'project_admin_id' => [
+				'type'		=> 'INT',
 				'null'		=> true
 			]
 		]);

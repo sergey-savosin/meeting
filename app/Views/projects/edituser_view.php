@@ -79,23 +79,10 @@
 				<label for="UserCanVote">Может ли голосовать
 				</label>
 				<div>
-					<label class="radio-inline"><input 
-						type="radio" 
-						value="1"
-						id="Yes"
-						name="UserCanVote"
-						<?php if (set_value("UserCanVote") === '1') {echo 'checked';}?>
-						>Да</label>
-					<label class="radio-inline"><input 
-						type="radio" 
-						value="0"
-						id="No"
-						name="UserCanVote"
-						<?php if (set_value("UserCanVote") === '0') {echo 'checked';}?>
-						>Нет</label>
+					<input type="checkbox" name="UserCanVote"
+						value="canVote" <?= set_checkbox('UserCanVote', 'canVote') ?>
+						/>
 				</div>
-				<textarea class="form-control" rows="1" name="UserCanVote" id="UserCanVote"><?php
-					echo set_value('UserCanVote'); ?></textarea>
 
 				<label for="UserVotesNumber">Количество голосов
 				</label>

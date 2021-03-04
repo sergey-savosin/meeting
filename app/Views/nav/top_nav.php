@@ -28,6 +28,9 @@
 	<li <?php if($uri->getSegment(1) == 'voteresult') {echo 'class="active"';}; ?>>
 		<?php echo anchor(base_url('voteresult'), lang('app.top_nav_view_voteresult')); ?>
 	</li>
+	<li <?php if($uri->getSegment(1) == 'project') {echo 'class="active"';}; ?>>
+		<?php echo anchor(base_url('project'), lang('app.top_nav_view_project')); ?>
+	</li>
 	
 	</ul>
 	<ul class="nav navbar-nav navbar-right">

@@ -66,6 +66,25 @@ class Projects_model extends Model {
 		}
 	}
 
+	function get_project_by_user_id($userId) {
+		$query = $this->db->table('user u')
+			->join('project p', 'p.project_id = u.user_project_id')
+			->where('u.user_id', $userId)
+			->get();
+		//$result = $query->getResult();
+
+		// if (!$result) {
+		// 	return false;
+		// }
+
+		$row = $query->getRow();
+		if (!$row) {
+			return false;
+		} else {
+			return $row;
+		}
+	}
+
 	/**
 	* Удалить запись в таблице project_document
 	*/

@@ -126,4 +126,14 @@ class Users_model extends Model {
 			return $row->total_sum;
 		}
 	}
+
+	/**
+	* delete user
+	*/
+	function delete_user($userId) {
+		$this->db
+			->table('user')
+			->where('user_id', $userId)
+			->delete();
+	}
 }

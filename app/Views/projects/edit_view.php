@@ -102,8 +102,8 @@
 		<tbody>
 			<tr>
 			<td><?php echo $result->user_login_code; ?></td>
-			<td><?php echo $result->user_usertype_id; ?></td>
-			<td><?php echo $result->user_can_vote; ?></td>
+			<td><?php echo $result->usertype_name; ?></td>
+			<td><?php echo $result->user_can_vote ? 'Да' : 'Нет'; ?></td>
 			<td><?php echo $result->user_votes_number; ?></td>
 			<td><?php echo $result->user_member_name; ?></td>
 			</tr>

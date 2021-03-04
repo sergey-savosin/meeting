@@ -813,7 +813,50 @@ class Project extends BaseController {
 	* http://<site>/meeting/project/delete_user/<user_id>
 	*/
 	public function delete_user() {
+		// 1. get session data
+		$session = session();
+		$userLoginCode = $session->get('user_login_code');
+		if (!$userLoginCode) {
+			throw new \Exception("User not logged in.");
+		}
 
+		// 2. Check user access
+		$users_model = model('Users_model');
+		$user = $users_model->get_user_by_logincode($userLoginCode);
+		if (!$user)
+		{
+			throw new \Exception("Access denied. Usercode: $userlogin");
+		}
+
+		helper('url');
+
+		$uri = $this->request->uri;
+
+		// 3. Check url params
+		$user_id = $uri->getSegment(3);
+		log_message('info', '[project::delete_user] uri(3): '.$uri->getSegment(3));
+
+		if (!$user_id) {
+			throw new \Exception('Empty user_id');
+		}
+
+		$project_model = model('Projects_model');
+
+		// 4. validate question
+		$project = $project_model->get_project_by_user_id($user_id);
+		if (!$project) {
+			throw new \Exception("Can't find project by user_id: $user_id");
+		}
+		$projectCode = $project->project_code;
+
+		// log_message('info', "[delete_user] user_id: $user_id, projectName: "
+		// 	.$project->project_name);
+
+		// 5. delete question from tables
+		$users_model->delete_user($user_id);
+
+		// 6. go to project edit page
+		return redirect()->to(base_url("/Project/edit_user/$projectCode"));
 	}
 
 	/**
@@ -852,7 +895,8 @@ class Project extends BaseController {
 		// Form data
 		$userLoginCode = trim($this->request->getPost('UserLoginCode'));
 		$userTypeId = trim($this->request->getPost('UserTypeId'));
-		$userCanVote = trim($this->request->getPost('UserCanVote'));
+		$userCanVote = trim($this->request->getPost('UserCanVote')) === 'canVote'
+			? True : False;
 		$userVotesNumber = trim($this->request->getPost('UserVotesNumber'));
 		$userMemberName = trim($this->request->getPost('UserMemberName'));
 
@@ -898,6 +942,7 @@ class Project extends BaseController {
 				'is_natural_no_zero' => 'Количество голосов должно быть положительным числом'
 			]
 		];
+		$val_rules['UserCanVote'] = [];
 
 		helper(['form', 'url']);
 		$top_nav_data['uri'] = $this->request->uri;
