@@ -2,7 +2,7 @@
 <p class="h4">Проект "<?php
 	echo $project_query->project_name?>". Редактирование документов.</p>
 
-<div class="panel panel-default panel-success">
+<div class="panel panel-default panel-primary">
 	<div class="panel-heading">
 		Список документов
 	</div>
@@ -30,10 +30,10 @@
 	<div class="panel-body">
 		<?php if (isset($validation)) {echo $validation->listErrors('my_list');} ?>
 
-		<?php echo form_open('project/edit_document', 'role="form", enctype="multipart/form-data"'); ?>
+		<?php echo form_open('project/edit_document/'.$project_query->project_id
+						, 'role="form", enctype="multipart/form-data"'); ?>
 			<div class="form-group">
 				<?php echo form_hidden('ProjectId', $project_query->project_id) ?>
-				<?php echo form_hidden('ProjectCode', $project_query->project_code) ?>
 
 				<label for="DocCaption">Название документа
 				</label>
@@ -55,7 +55,7 @@
 	</div>
 </div>
 
-<div class="h4">
-	<?php echo anchor(base_url('/project/edit/'.$project_query->project_code), 'Вернуться к настройке проекта')?>
+<div class="btn btn-default">
+	<?php echo anchor(base_url('/project/edit/'.$project_query->project_id), '<= Вернуться к настройке проекта')?>
 </div>
 <hr>

@@ -11,7 +11,6 @@ class ProjectListControllerTest extends FeatureTestCase
 
 	protected $projects_model;
 	protected $defaultProjectId = 1;
-	protected $defaultProjectCode = 'ProjectCode-123';
 	protected $defaultProjectName = 'ProjectName-123';
 	protected $defaultUserId = 1;
 	protected $defaultUserCode = '123';
@@ -73,7 +72,7 @@ class ProjectListControllerTest extends FeatureTestCase
 		// print($content);
 		$response->assertSee('Начало голосования');
 		$response->assertSee('ProjectName-123');
-		$response->assertSee('ProjectCode-123');
+		$response->assertDontSee('ProjectCode-123');
 	}
 
 
@@ -84,12 +83,11 @@ class ProjectListControllerTest extends FeatureTestCase
 	*/
 	public function test_PostProjectIndex_AddProject()
 	{
-		$newProjectCode = 'new-Code-456';
 		$newProjectName = 'new Name 456';
+		$newProjectId = 1;
 
 		// Arrange
 		$data = [
-			'projectCode' => $newProjectCode,
 			'projectName' => $newProjectName,
 		];
 
@@ -101,35 +99,36 @@ class ProjectListControllerTest extends FeatureTestCase
 		// Assert
 		$this->assertTrue($result->isRedirect());
 		$redirectUrl = $result->getRedirectUrl();
-		$this->assertRegExp('/\/Project\/edit\/'.$newProjectCode.'/', $redirectUrl);
+		$this->assertRegExp('/\/Project/', $redirectUrl);
 		$result->assertOK();
 
 		$data = [
 			'project_name' => $newProjectName,
-			'project_code' => $newProjectCode
 		];
 		$this->seeInDatabase('project', $data);
+
+		$data = [
+			'project_name' => $newProjectName,
+			'project_code' => null
+		];
+		$this->dontSeeInDatabase('project', $data);
+
 	}
 
 	/**
 	* POST project/index - валидация параметров
 	*
 	* - POST project/index
-	* @testWith ["", "ProjectCode-098", "Укажите Название проекта"]
-	*			["ProjectName-098", "", "Укажите Код проекта"]
-	*			["", "", "Укажите Название проекта"]
-	*			["", "", "Укажите Код проекта"]
+	* @testWith ["", "Укажите Название проекта"]
 	*/
 	public function test_PostProjectIndex_ShowValidationRequiredError(
-		$newProjectName, $newProjectCode, $validationMessage)
+		$newProjectName, $validationMessage)
 	{
 		$newProjectName = empty($newProjectName) ? null : $newProjectName;
-		$newProjectCode = empty($newProjectCode) ? null : $newProjectCode;
 
 		// Arrange
 		$data = [
 			'projectName' => $newProjectName,
-			'projectCode' => $newProjectCode,
 		];
 
  		// Act
@@ -145,7 +144,6 @@ class ProjectListControllerTest extends FeatureTestCase
 
 		$data = [
 			'project_name' => $newProjectName,
-			'project_code' => $newProjectCode
 		];
 		$this->dontSeeInDatabase('project', $data);
 	}
@@ -154,47 +152,14 @@ class ProjectListControllerTest extends FeatureTestCase
 	* POST project/index - валидация параметров
 	*
 	* - POST project/index
-	* @testWith ["newProjectName-456", "ProjectCode-123", "Код проекта"]
-	*/
-	public function test_PostProjectIndex_ShowValidationProjectCodeUniqueError(
-		$newProjectName, $newProjectCode, $validationField)
-	{
-		// Arrange
-		$data = [
-			'projectName' => $newProjectName,
-			'projectCode' => $newProjectCode,
-		];
-
- 		// Act
-		$result = $this
-			->withSession()
-			->post('project/index', $data);
-
-		// Assert
-		$this->assertFalse($result->isRedirect());
-		$result->assertOK();
-
-		$result->assertSee('Параметр "'.$validationField.'" должен быть уникальным');
-
-		$data = [
-			'project_name' => $newProjectName,
-		];
-		$this->dontSeeInDatabase('project', $data);
-	}
-
-	/**
-	* POST project/index - валидация параметров
-	*
-	* - POST project/index
-	* @testWith ["ProjectName-123", "newProjectCode-123", "Название проекта"]
+	* @testWith ["ProjectName-123", "Название проекта"]
 	*/
 	public function test_PostProjectIndex_ShowValidationProjectNameUniqueError(
-		$newProjectName, $newProjectCode, $validationField)
+		$newProjectName, $validationField)
 	{
 		// Arrange
 		$data = [
 			'projectName' => $newProjectName,
-			'projectCode' => $newProjectCode,
 		];
 
  		// Act
@@ -208,10 +173,6 @@ class ProjectListControllerTest extends FeatureTestCase
 
 		$result->assertSee('Параметр "'.$validationField.'" должен быть уникальным');
 
-		$data = [
-			'project_code' => $newProjectCode,
-		];
-		$this->dontSeeInDatabase('project', $data);
 	}
 
 }

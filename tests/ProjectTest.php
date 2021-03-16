@@ -72,6 +72,7 @@ class ProjectTest extends FeatureTestCase
 		$expected->project_additional_agenda_start_date = null;
 		$expected->project_meeting_finish_date = null;
 		$expected->project_created_at = 'current_timestamp()';
+		$expected->project_admin_id = null;
 		$this->assertEquals($expected, $res);
 	}
 

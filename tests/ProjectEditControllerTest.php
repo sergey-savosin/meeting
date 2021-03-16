@@ -19,7 +19,6 @@ class ProjectEditControllerTest extends FeatureTestCase
 
 	protected $projects_model;
 	protected $defaultProjectId = 1;
-	protected $defaultProjectCode = 'ProjectCode-123';
 	protected $defaultProjectName = 'ProjectName-123';
 	protected $generalCategoryId = 1;
 	protected $additionalCategoryId = 2;
@@ -87,7 +86,7 @@ class ProjectEditControllerTest extends FeatureTestCase
 		// Act
 		$result = $this
 			->withSession()
-			->get('project/edit/'.$this->defaultProjectCode);
+			->get('project/edit/'.$this->defaultProjectId);
 		
 		// Assert
 		$this->assertNotNull($result);
@@ -97,7 +96,6 @@ class ProjectEditControllerTest extends FeatureTestCase
 		$result->assertSessionMissing('redirect_from');
 
 		$result->assertSee('Редактирование проекта', 'div');
-		$result->assertSee($this->defaultProjectCode, 'div');
 		$result->assertSee($this->defaultProjectName, 'div');
 	}
 
@@ -105,40 +103,33 @@ class ProjectEditControllerTest extends FeatureTestCase
 	* POST project/edit успешно обновляет проект
 	*
 	* - Project::edit
-	* @testWith ["ProjectCode-098", "ProjectName-098"]
+	* @testWith ["ProjectName-098"]
 	*/
-	public function test_PostEditProjectControllerOk($projectCode, $projectName)
+	public function test_PostEditProjectControllerOk($projectName)
 	{
-		// временно, пока не научусь восстанавливать тестовые данные проекта
-		// или заводить новый проект для теста
-		$projectCode = $this->defaultProjectCode;
+		$projectId = $this->defaultProjectId;
 
 		// Arrange
-		// $userResult = $this->post('user/login', [
-		// 	'usr_code' => '123'
-		// ]);
-		// $this->assertNotNull($userResult);
+		$criteria = [
+			'project_id' => $this->defaultProjectId,
+		];
+		$this->seeInDatabase('project', $criteria);
 
-		// $userResult->assertSessionHas('user_login_code', '123');
-		// $userResult->assertSessionHas('user_project_id', '1');
-
-		$projectCode = empty($projectCode) ? null : $projectCode;
 
 		$data = [
-			'project_code' => $projectCode,
 			'project_name' => $projectName,
 		];
 
 		// Act
 		$result = $this
 			->withSession()
-			->post('project/edit/'.$this->defaultProjectCode, $data);
+			->post('project/edit/'.$projectId, $data);
 		
 		// Assert
 		$result->assertOK();
 		$result->assertRedirect();
 		$redirectUrl = $result->getRedirectUrl();
-		$this->assertRegExp("/\/Project\/edit\/$projectCode/", $redirectUrl);
+		$this->assertRegExp("/\/Project\/edit\/$projectId/", $redirectUrl);
 
 		// Сообщение валидации отсутствует
 		//$result->assertSee('alert-danger');
@@ -146,21 +137,21 @@ class ProjectEditControllerTest extends FeatureTestCase
 		$criteria = [
 			'project_id' => $this->defaultProjectId,
 			'project_name' => $projectName,
-			'project_code' => $projectCode
 		];
 		$this->seeInDatabase('project', $criteria);
 	}
 
 
 	/**
-	* POST project/edit успешно обновляет проект
+	* POST project/edit проверяет входные данные
 	*
 	* - Project::edit
-	* @testWith ["", "ProjectName-098"]
+	* @testWith [""]
 	*/
-	public function test_PostEditProjectControllerValidationMessage($projectCode, $projectName)
+	public function test_PostEditProjectControllerValidationMessage($projectName)
 	{
 		// Arrange
+		$projectId = $this->defaultProjectId;
 		$userResult = $this->post('user/login', [
 			'usr_code' => '123'
 		]);
@@ -169,18 +160,16 @@ class ProjectEditControllerTest extends FeatureTestCase
 		$userResult->assertSessionHas('user_login_code', '123');
 		$userResult->assertSessionHas('user_project_id', '1');
 
-		$projectCode = empty($projectCode) ? null : $projectCode;
 		$projectName = empty($projectName) ? null : $projectName;
 
 		$data = [
-			'project_code' => $projectCode,
 			'project_name' => $projectName,
 		];
 
 		// Act
 		$result = $this
 			->withSession()
-			->post('project/edit/'.$this->defaultProjectCode, $data);
+			->post('project/edit/'.$projectId, $data);
 		
 		// Assert
 		$result->assertOK();
@@ -190,9 +179,8 @@ class ProjectEditControllerTest extends FeatureTestCase
 		$result->assertSee('alert-danger');
 
 		$criteria = [
-			'project_id' => $this->defaultProjectId,
+			'project_id' => $projectId,
 			'project_name' => $projectName,
-			//'project_code' => $projectCode
 		];
 		$this->dontSeeInDatabase('project', $criteria);
 	}

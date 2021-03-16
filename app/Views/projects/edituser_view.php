@@ -1,5 +1,6 @@
 <!-- Form - begin form section -->
-<p class="h4">Редактирование проекта: "<?php echo $project_query->project_name?>"</p>
+<p class="h4">Проект "<?php
+	echo $project_query->project_name?>". Редактирование списка участников.</p>
 
 <div class="panel panel-default panel-primary">
 	<div class="panel-heading">
@@ -41,15 +42,16 @@
 	<div class="panel-body">
 		<?php if (isset($validation)) {echo $validation->listErrors('my_list');} ?>
 
-		<?php echo form_open('project/edit_user', 'role="form", enctype="multipart/form-data"'); ?>
+		<?php echo
+			form_open('project/edit_user/'.$project_query->project_id
+					, 'role="form", enctype="multipart/form-data"'); ?>
 			<div class="form-group">
 				<?php echo form_hidden('ProjectId', $project_query->project_id) ?>
-				<?php echo form_hidden('ProjectCode', $project_query->project_code) ?>
 
-				<label for="UserLoginCode">Логин
+				<label for="UserMemberName">Имя участника
 				</label>
-				<textarea class="form-control" rows="1" name="UserLoginCode" id="UserLoginCode"><?php
-					echo set_value('UserLoginCode'); ?></textarea>
+				<textarea class="form-control" rows="1" name="UserMemberName" id="UserMemberName"><?php
+					echo set_value('UserMemberName'); ?></textarea>
 
 				<label for="UserTypeId">Тип участника
 				</label>
@@ -89,11 +91,6 @@
 				<textarea class="form-control" rows="1" name="UserVotesNumber" id="UserVotesNumber"><?php
 					echo set_value('UserVotesNumber'); ?></textarea>
 
-				<label for="UserMemberName">Имя участника
-				</label>
-				<textarea class="form-control" rows="1" name="UserMemberName" id="UserMemberName"><?php
-					echo set_value('UserMemberName'); ?></textarea>
-
 			</div>
 			<div class="form-group">
 				<button type="submit" class="btn btn-success">Добавить участника
@@ -103,7 +100,7 @@
 	</div>
 </div>
 
-<div class="h4">
-	<?php echo anchor(base_url('/project/edit/'.$project_query->project_code), 'Вернуться к настройке проекта')?>
+<div class="btn btn-default">
+	<?php echo anchor(base_url('/project/edit/'.$project_query->project_id), '<= Вернуться к настройке проекта')?>
 </div>
 <hr>

@@ -6,7 +6,7 @@
 <?php if (isset($validation)) {echo $validation->listErrors('my_list');} ?>
 
 <div class="container">
-	<?php echo form_open('user/login', 'class="form-singin", role="form"'); ?>
+	<?php echo form_open('user/login', 'class="form-singin" role="form"'); ?>
 	<h2 class="form-signin-heading"><?php
 		echo lang('app.user_login_header'); ?>
 	</h2>

@@ -1,15 +1,9 @@
-<?php namespace ProjectDeleteControllerTest\Controller;
+<?php namespace ProjectDeleteUserControllerTest\Controller;
 
 use CodeIgniter\Test\FeatureTestCase;
 use CodeIgniter\Test\ControllerTester;
-use CodeIgniter\Test\Mock\MockIncomingRequest;
-use CodeIgniter\HTTP\Files;
-use CodeIgniter\HTTP\UserAgent;
-use App\Database\Seeds;
-use CodeIgniter\HTTP\URI;
-use CodeIgniter\HTTP\IncomingRequest;
 
-class ProjectDeleteControllerTest extends FeatureTestCase
+class ProjectDeleteUserControllerTest extends FeatureTestCase
 {
 
 	use ControllerTester;
@@ -32,6 +26,8 @@ class ProjectDeleteControllerTest extends FeatureTestCase
 	{
 		parent::setUp();
 
+		ini_set('memory_limit', -1);
+
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 
 		$_SESSION['user_login_code'] = $this->defaultUserCode;
@@ -52,159 +48,101 @@ class ProjectDeleteControllerTest extends FeatureTestCase
 	}
 
 	/**
-	* GET project/delete_project приводит к показу ошибки
+	* GET project/delete_user в случае незалогиненного участника приводит к показу ошибки
 	*
-	* - GET project/delete_project
+	* - GET project/delete_user
 	*/
-	public function test_GetDeleteProjectUnauthorizedSession_ShowErrorText()
+	public function test_GetDeleteUserUnauthorizedSession_ShowErrorText()
 	{
 
-		$result = $this->get('project/delete_project');
+		$result = $this->get('project/delete_user');
 		$this->assertNotNull($result);
 		$this->assertEquals(0, $result->isRedirect());
 		$result->assertOK();
-
-		$result->assertSessionMissing('redirect_from', '/project');
 
 		$result->assertSee('Error: User not logged in.');
 	}
 
 	/**
-	* POST project/delete_project приводит к показу ошибки
+	* GET project/delete_user в случае неверно залогиненного участника
+	* приводит к показу ошибки
 	*
-	* - POST project/delete_project
+	* - GET project/delete_user
 	*/
-	public function test_PostDeleteProjectUnauthorizedSession_ShowErrorText()
+	public function test_GetDeleteUserWrongUserSession_ShowErrorText()
 	{
+		// Arrange
+		$userLoginCode = 'noUser';
+		$userId = $this->defaultUserId;
+		$_SESSION['user_login_code'] = $userLoginCode;
+
 		// Act
-		$result = $this->post('project/delete_project');
+		$result = $this
+			->withSession()
+			->get('project/delete_user/'.$userId);
 
 		// Assert
 		$this->assertNotNull($result);
 		$this->assertEquals(0, $result->isRedirect());
 		$result->assertOK();
 
-		$result->assertSessionMissing('redirect_from', '/project');
-
-		$result->assertSee('Error: User not logged in.');
+		$result->assertSee("Error: Access denied. Usercode: $userLoginCode");
 	}
 
 	/**
-	* GET project/delete_project приводит к показу страницы подтверждения удаления
+	* GET project/delete_user удаляет Участника
 	*
-	* - GET project/delete_project
+	* - GET project/delete_user
 	*/
-	public function test_GetDeleteProject_Ok()
+	public function test_GetDeleteUser_DeleteUserOk()
 	{
 		// Arrange
 		$init = new \stdClass();
 		$init->projectId = $this->defaultProjectId;
-		$projectName = $this->defaultProjectName;
-
-		// Act
-		$result = $this
-			->withSession()
-			->get('project/delete_project/'.$init->projectId);
-		
-		// Assert
-		$this->assertNotNull($result);
-		$this->assertEquals(0, $result->isRedirect());
-		$result->assertOK();
-
-		$result->assertSee('Удаление собрания "'.$projectName.'"');
-		$result->assertSee('Подтверждаю удаление');
-
-		$data = [
-			'project_id' => $init->projectId
-		];
-		$this->seeInDatabase('project', $data);
-
-	}
-
-	/**
-	* POST project/delete_project приводит к удалению проекта
-	*
-	* - POST project/delete_project
-	*/
-	public function test_PostDeleteProject_Ok()
-	{
-		// Arrange
-		$init = new \stdClass();
-		$init->projectId = 101;
-		$init->projectName = 'projectName-101';
 		$init->userId1 = 201;
 		$init->userId2 = 202;
-
-		$init->docId = 1;
-		$init->doc2Id = 2;
 		$init->baseQsId = 10;
-
-		$init->baseQsDocId = 10;
-		$init->baseQs2Id = 11;
-		$init->baseQs2DocId = 11;
-
 		$init->baseQsAnswerId = 10;
-		$init->baseQsAnswerUserId = $init->userId1;
-		$init->baseQs2AnswerId = 11;
-		$init->baseQs2AnswerUserId = $init->userId1;
-
 		$init->addQsId = 20;
-		$init->addQsDocId = 20;
-		$init->addQs2Id = 21;
-		$init->addQs2DocId = 21;
-
 		$init->acptAddQsId = 30;
-		$init->acptAddQsDocId = 30;
-		$init->acptAddQs2Id = 31;
-
 		$init->addQsAnswerId = 20;
-		$init->addQsAnswerUserId = $init->userId1;
-		$init->addQs2AnswerId = 21;
-		$init->addQs2AnswerUserId = $init->userId1;
-
 		$init->acptAddQsAnswerId = 30;
-		$init->acptAddQsAnswer2Id = 31;
 
 		$this->prepareTableForTest($init);
-		
+
+		$userId = $init->userId1;
+
 		// Act
 		$result = $this
 			->withSession()
-			->post('project/delete_project/'.$init->projectId);
-		
+			->get('project/delete_user/'.$userId);
+
 		// Assert
 		$this->assertNotNull($result);
-		$this->assertEquals(1, $result->isRedirect());
 		$result->assertOK();
 
+		$this->assertEquals(1, $result->isRedirect());
+
+		$redirectUrl = $result->getRedirectUrl();
+		$this->assertRegExp('/\/Project\/edit_user/', $redirectUrl);
+
 		$data = [
-			'project_id' => $init->projectId
+			'user_id' => $userId
 		];
-		$this->dontSeeInDatabase('project', $data);
+		$this->dontSeeInDatabase('user', $data);
 
 	}
 
 	private function prepareTableForTest($init) {
-		// add project
-		$this->addTestProject($init->projectId, $init->projectName);
-
-		// add document
-		$this->addTestProjectDocument($init->projectId, $init->docId);
-		$this->addTestProjectDocument($init->projectId, $init->doc2Id);
-
 		// add general question with document and without
-		$this->addTestGeneralQuestion($init->projectId, $init->baseQsId, $init->baseQsDocId);
-		$this->addTestGeneralQuestion($init->projectId, $init->baseQs2Id, null);
+		$this->addTestGeneralQuestion($init->projectId, $init->baseQsId, null);
 
 		// add additional question with documents and without
-		$this->addTestAdditionQuestion($init->projectId, $init->addQsId, $init->addQsDocId);
-		$this->addTestAdditionQuestion($init->projectId, $init->addQs2Id, null);
+		$this->addTestAdditionQuestion($init->projectId, $init->addQsId, null);
 
 		// add accept additional question
 		$this->addTestAcceptAdditionQuestion($init->projectId,
-			$init->acptAddQsId, $init->acptAddQsDocId, $init->addQsId);
-		$this->addTestAcceptAdditionQuestion($init->projectId,
-			$init->acptAddQs2Id, null, $init->addQs2Id);
+			$init->acptAddQsId, null, $init->addQsId);
 
 		// add users
 		$this->addTestUser($init->projectId, $init->userId1);
@@ -219,43 +157,6 @@ class ProjectDeleteControllerTest extends FeatureTestCase
 		// add answer for additional question
 		$this->addTestAnswer($init->acptAddQsAnswerId, $init->acptAddQsId, $init->userId1);
 
-
-	}
-
-	private function addTestProject($projectId, $projectName) {
-		$data = [
-			'project_id' => $projectId,
-			'project_name' => $projectName,
-			'project_code' => $projectName
-		];
-		$this->hasInDatabase('project', $data);
-
-	}
-
-	private function addTestProjectDocument($projectId, $docId) {
-		// document
-		$data = [
-			'doc_id' => $docId,
-			'doc_filename' => 'test',
-			'doc_is_for_creditor' => true,
-			'doc_is_for_debtor' => true,
-			'doc_is_for_manager' => true
-		];
-		$this->hasInDatabase('document', $data);
-
-		// docfile
-		$data = [
-			'docfile_doc_id' => $docId,
-			'docfile_body' => 'abc'
-		];
-		$this->hasInDatabase('docfile', $data);
-
-		// project_document
-		$data = [
-			'pd_doc_id' => $docId,
-			'pd_project_id' => $projectId,
-		];
-		$this->hasInDatabase('project_document', $data);
 	}
 
 	private function addTestQuestion($projectId, $qsId, $docId, $categoryId, $baseQsId) {

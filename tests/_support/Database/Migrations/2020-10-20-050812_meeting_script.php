@@ -75,6 +75,7 @@ class MeetingScript extends Migration
 			]
 		]);
 		$this->forge->addKey('project_id', true);
+		$this->forge->addForeignKey('project_admin_id', 'admin', 'admin_id');
 		$this->forge->createTable('project');
 
 		// usertype
@@ -127,6 +128,8 @@ class MeetingScript extends Migration
 			]
 		]);
 		$this->forge->addKey('user_id', true);
+		$this->forge->addForeignKey('user_project_id', 'project', 'project_id');
+		$this->forge->addForeignKey('user_usertype_id', 'usertype', 'usertype_id');
 		$this->forge->createTable('user');
 
 		// document
@@ -170,6 +173,8 @@ class MeetingScript extends Migration
 				'type'		=> 'LONGBLOB'
 			],
 		]);
+		$this->forge->addKey('docfile_doc_id', true);
+		$this->forge->addForeignKey('docfile_doc_id', 'document', 'doc_id');
 		$this->forge->createTable('docfile');
 
 		// project_document
@@ -186,7 +191,22 @@ class MeetingScript extends Migration
 			]
 		]);
 		$this->forge->addKey('pd_id', true);
+		$this->forge->addForeignKey('pd_project_id', 'project', 'project_id');
+		$this->forge->addForeignKey('pd_doc_id', 'document', 'doc_id');
 		$this->forge->createTable('project_document');
+
+		// question_category
+		$this->forge->addField([
+			'qscat_id' => [
+				'type' => 'INT'
+			],
+			'qscat_title' => [
+				'type' => 'VARCHAR',
+				'constraint' => '200'
+			]
+		]);
+		$this->forge->addKey('qscat_id', true);
+		$this->forge->createTable('question_category');
 
 		// question
 		$this->forge->addField([
@@ -221,6 +241,10 @@ class MeetingScript extends Migration
 			]
 		]);
 		$this->forge->addKey('qs_id', true);
+		$this->forge->addForeignKey('qs_project_id', 'project', 'project_id');
+		$this->forge->addForeignKey('qs_category_id', 'question_category', 'qscat_id');
+		$this->forge->addForeignKey('qs_user_id', 'user', 'user_id');
+		$this->forge->addForeignKey('qs_base_question_id', 'question', 'qs_id');
 		$this->forge->createTable('question');
 
 		// question_document
@@ -237,7 +261,22 @@ class MeetingScript extends Migration
 			]
 		]);
 		$this->forge->addKey('qd_id', true);
+		$this->forge->addForeignKey('qd_question_id', 'question', 'qs_id');
+		$this->forge->addForeignKey('qd_doc_id', 'document', 'doc_id');
 		$this->forge->createTable('question_document');
+
+		// answer_type
+		$this->forge->addField([
+			'answer_type_id' => [
+				'type' => 'INT'
+			],
+			'answer_type_title' => [
+				'type' => 'VARCHAR',
+				'constraint' => '255'
+			]
+		]);
+		$this->forge->addKey('answer_type_id', true);
+		$this->forge->createTable('answer_type');
 
 		// answer
 		$this->forge->addField([
@@ -266,6 +305,9 @@ class MeetingScript extends Migration
 			]
 		]);
 		$this->forge->addKey('ans_id', true);
+		$this->forge->addForeignKey('ans_question_id', 'question', 'qs_id');
+		$this->forge->addForeignKey('ans_user_id', 'user', 'user_id');
+		$this->forge->addForeignKey('ans_answer_type_id', 'answer_type', 'answer_type_id');
 		$this->forge->createTable('answer');
 	}
 
@@ -274,6 +316,7 @@ class MeetingScript extends Migration
 	public function down()
 	{
 		$this->forge->dropTable('answer');
+		$this->forge->dropTable('answer_type');
 		$this->forge->dropTable('project_document');
 		$this->forge->dropTable('question_document');
 		$this->forge->dropTable('docfile');
@@ -282,6 +325,7 @@ class MeetingScript extends Migration
 		$this->forge->dropTable('usertype');
 		$this->forge->dropTable('user');
 		$this->forge->dropTable('question');
-
+		$this->forge->dropTable('question_category');
+		$this->forge->dropTable('admin');
 	}
 }

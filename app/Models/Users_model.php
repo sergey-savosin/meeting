@@ -123,7 +123,8 @@ class Users_model extends Model {
 		if (!$row) {
 			return false;
 		} else {
-			return $row->total_sum;
+			//если нет пользователей, то лучше вернуть 1, чтобы на 0 не было деления
+			return $row->total_sum ?? 1;
 		}
 	}
 

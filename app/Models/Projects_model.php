@@ -48,7 +48,7 @@ class Projects_model extends Model {
 	}
 
 	function get_project_by_document_id($docId) {
-		$query = "SELECT pd.pd_project_id, p.project_code
+		$query = "SELECT p.project_id, p.project_name
 		FROM project_document pd
 		INNER JOIN project p ON p.project_id = pd_project_id
 		WHERE pd.pd_doc_id = ?";
@@ -146,10 +146,8 @@ class Projects_model extends Model {
 	*
 	* @return boolean
 	*/
-	function update_project($project_id,
-		$project_code, $project_name) {
+	function update_project($project_id, $project_name) {
 		$data = [
-			'project_code' => $project_code,
 			'project_name' => $project_name,
 		];
 

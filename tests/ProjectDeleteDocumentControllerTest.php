@@ -17,7 +17,6 @@ class ProjectDeleteDocumentControllerTest extends FeatureTestCase
 
 	protected $projects_model;
 	protected $defaultProjectId = 1;
-	protected $defaultProjectCode = 'ProjectCode-123';
 	protected $generalCategoryId = 1;
 	protected $additionalCategoryId = 2;
 	protected $acceptAdditionalCategoryId = 3;

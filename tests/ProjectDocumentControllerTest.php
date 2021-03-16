@@ -17,7 +17,6 @@ class ProjectDocumentControllerTest extends FeatureTestCase
 
 	protected $projects_model;
 	protected $defaultProjectId = 1;
-	protected $defaultProjectCode = 'ProjectCode-123';
 	protected $defaultProjectName = 'ProjectName-123';
 	protected $generalCategoryId = 1;
 	protected $additionalCategoryId = 2;
@@ -77,7 +76,7 @@ class ProjectDocumentControllerTest extends FeatureTestCase
 		// Act
 		$result = $this
 			->withSession()
-			->get('project/edit_document/'.$this->defaultProjectCode);
+			->get('project/edit_document/'.$this->defaultProjectId);
 		
 		// Assert
 		$this->assertNotNull($result);
@@ -111,7 +110,6 @@ class ProjectDocumentControllerTest extends FeatureTestCase
 		$type = 'image/png';
 		$size = 143262;
 		$data = [
-			'ProjectCode' => $this->defaultProjectCode,
 			'ProjectId' => $this->defaultProjectId,
 			'DocCaption' => $docCaption
 		];
@@ -120,7 +118,7 @@ class ProjectDocumentControllerTest extends FeatureTestCase
 		$config = new \Config\App;
 		$baseUrl = $_SERVER['app.baseURL'];
 		$uri = new \CodeIgniter\HTTP\URI(
-			$baseUrl.'/project/edit_document/'.$this->defaultProjectCode
+			$baseUrl.'/project/edit_document/'.$this->defaultProjectId
 		);
 
 		$incomingRequest = new MockIncomingRequest(
@@ -180,7 +178,6 @@ class ProjectDocumentControllerTest extends FeatureTestCase
 		// Arrange
 		$docCaption = 'Belka-caption11';
 		$data = [
-			'ProjectCode' => $this->defaultProjectCode,
 			'ProjectId' => $this->defaultProjectId,
 			'DocCaption' => $docCaption
 		];
@@ -189,7 +186,7 @@ class ProjectDocumentControllerTest extends FeatureTestCase
 		$config = new \Config\App;
 		$baseUrl = $_SERVER['app.baseURL'];
 		$uri = new \CodeIgniter\HTTP\URI(
-			$baseUrl.'/project/edit_document/'.$this->defaultProjectCode
+			$baseUrl.'/project/edit_document/'.$this->defaultProjectId
 		);
 
 		$incomingRequest = new MockIncomingRequest(

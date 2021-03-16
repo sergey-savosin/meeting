@@ -10,7 +10,7 @@ class MeetingSeeder extends Seeder
 		$row = [
 			'project_name' => 'ProjectName-123',
 			'project_code' => 'ProjectCode-123',
-			
+			'project_id' => 1,
 		];
 		$this->db->table('project')->insert($row);
 
@@ -32,6 +32,24 @@ class MeetingSeeder extends Seeder
 		];
 		$this->db->table('user')->insert($row);
 
+		// question_category
+		$row = [
+			'qscat_id' => 1,
+			'qscat_title' => 'General question'
+		];
+		$this->db->table('question_category')->insert($row);
+
+		$row = [
+			'qscat_id' => 2,
+			'qscat_title' => 'Additional question'
+		];
+		$this->db->table('question_category')->insert($row);
+		$row = [
+			'qscat_id' => 3,
+			'qscat_title' => 'Accept additional question'
+		];
+		$this->db->table('question_category')->insert($row);
+
 		// general question
 		$row = [
 			'qs_id' => 1,
@@ -41,6 +59,19 @@ class MeetingSeeder extends Seeder
 			'qs_user_id' => 1,
 		];
 		$this->db->table('question')->insert($row);
+
+		// answer_type
+		$row = [
+			'answer_type_id' => 1,
+			'answer_type_title' => 'Yes, No, Abstain'
+		];
+		$this->db->table('answer_type')->insert($row);
+
+		$row = [
+			'answer_type_id' => 2,
+			'answer_type_title' => 'Yes, No'
+		];
+		$this->db->table('answer_type')->insert($row);
 
 		// answer
 		$row = [

@@ -11,7 +11,21 @@ class VoteResult extends BaseController {
 			return redirect()->to(base_url('User/login'));
 		}
 
-		$project_id = $session->get('user_project_id');
+		// get request params
+		$uri = $this->request->uri;
+
+		// find ProjectCode in segment (Get) or in session
+		log_message('info', '[VotesResult::index] totalSegments: '.$uri->getTotalSegments());
+		log_message('info', '[VotesResult::index] segments: '
+			.json_encode($uri->getSegments()));
+
+		if ($uri->getTotalSegments()>=3)
+		{
+			$project_id = $uri->getSegment(3);
+		} else {
+			$project_id = $session->get('user_project_id');
+		}
+
 		if (!$project_id) {
 			//$this->log_debug('Votes/index', 'Empty project_id');
 			throw new \Exception('Empty project_id');
@@ -40,7 +54,10 @@ class VoteResult extends BaseController {
 		$additional_questions = $questions_model->fetch_questions_by_project_and_category($project_id, 2);
 
 		$total_voices_sum = $users_model->get_users_total_voices_sum_by_projectid($project_id);
-		if (!$total_voices_sum) {
+		log_message('info', '[Voteresult] total_voices_sum: '
+			.json_encode($total_voices_sum));
+
+		if ($total_voices_sum === false) {
 			throw new \Exception("Can't calculate total voices count for ProjectId: $project_id");
 		}
 

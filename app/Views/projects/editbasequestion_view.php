@@ -1,5 +1,6 @@
 <!-- Form - begin form section -->
-<p class="h4">Редактирование проекта - {project name}. Вопросы ОП.</p>
+<p class="h4">Проект "<?php
+	echo $project_query->project_name?>". Редактирование списка вопросов ОП.</p>
 
 <div class="panel panel-default panel-primary">
 	<div class="panel-heading">
@@ -40,7 +41,6 @@
 		<?php echo form_open('project/edit_basequestion', 'role="form", enctype="multipart/form-data"'); ?>
 			<div class="form-group">
 				<?php echo form_hidden('ProjectId', $project_query->project_id) ?>
-				<?php echo form_hidden('ProjectCode', $project_query->project_code) ?>
 
 				<label for="QsTitle">Текст вопроса
 				</label>
@@ -67,7 +67,7 @@
 	</div>
 </div>
 
-<div class="h4">
-	<?php echo anchor(base_url('/project/edit/'.$project_query->project_code), 'Вернуться к настройке проекта')?>
+<div class="btn btn-default">
+	<?php echo anchor(base_url('/project/edit/'.$project_query->project_id), '<= Вернуться к настройке проекта')?>
 </div>
 <hr>

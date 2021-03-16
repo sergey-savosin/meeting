@@ -160,15 +160,6 @@ class Project extends BaseController {
 		$top_nav_data['uri'] = $this->request->uri;
 
 		// setup form validation
-		// ToDo: проверка projectCode на уникальность
-		$val_rules['projectCode'] = [
-			'label' => 'Код проекта',
-			'rules' => 'required|is_unique[project.project_code]',
-			'errors' => [
-				'required' => 'Укажите Код проекта',
-				'is_unique' => 'Параметр "{field}" должен быть уникальным'
-			]
-		];
 		$val_rules['projectName'] = [
 			'label' => 'Название проекта',
 			'rules' => 'required|is_unique[project.project_name]',
@@ -194,17 +185,17 @@ class Project extends BaseController {
 				view('common/footer');
 		} else {
 			// save data to db
+			$newProjectCode = random_string('alnum', 16);
 			$projects_model->new_project($newProjectName, $newProjectCode,
 				null, null, null, null);
 		}
-		return redirect()->to(base_url("Project/edit/$newProjectCode"));
+		return redirect()->to(base_url("Project"));
 
 	}
 
-	/********************************
-	 V4
-	 Настройка одного проекта - Web-UI
-	*********************************/
+	/**
+	* Настройка одного проекта - Web-UI
+	*/
 	public function edit() {
 		// get session data
 		$session = session();
@@ -224,28 +215,23 @@ class Project extends BaseController {
 		// get request params
 		$uri = $this->request->uri;
 
-		// find ProjectCode in segment (Get) or in request (Post)
-		log_message('info', '[project::edit] request='.json_encode($this->request));
-		$project_code = $uri->getSegment(3);
-		// if (!$project_code) {
-		// 	$project_code = $this->request->getPost('ProjectCode');
-		// }
+		//log_message('info', '[project::edit] request='.json_encode($this->request));
 
-		if (!$project_code) {
-			throw new \Exception('Empty project_code segment');
+		// find ProjectId in segment (Get)
+		$project_id = $uri->getSegment(3);
+
+		if (!$project_id) {
+			throw new \Exception('Empty project_id segment');
 		}
 
-		$project_code = urldecode($project_code);
+		$project_id = urldecode($project_id);
 
-		$project = $projects_model->get_project_by_code($project_code);
+		$project = $projects_model->get_project_by_id($project_id);
 		if (!$project) {
-			throw new \Exception("Empty project row for project_code: $project_code");
+			throw new \Exception("Empty project row for project_id: $project_id");
 		}
-
-		$project_id = $project->project_id;
 
 		// Form data
-		$newProjectCode = trim($this->request->getPost('project_code'));
 		$newProjectName = trim($this->request->getPost('project_name'));
 
 		// Подготовка массива вопросов и вложенных документов
@@ -277,19 +263,11 @@ class Project extends BaseController {
 		$top_nav_data['uri'] = $this->request->uri;
 
 		// setup form validation
-		// ToDo: проверка projectCode на уникальность
-		$val_rules['project_code'] = [
-			'label' => 'project_code',
-			'rules' => 'required',
-			'errors' => [
-				'required' => 'Укажите Код проекта'
-			]
-		];
 		$val_rules['project_name'] = [
 			'label' => 'project_name',
 			'rules' => 'required',
 			'errors' => [
-				'required' => 'Укажите Название проекта'
+				'required' => 'Укажите Наименование собрания'
 			]
 		];
 
@@ -309,9 +287,9 @@ class Project extends BaseController {
 				view('common/footer');
 		} else {
 			// save data to db
-			$projects_model->update_project($project_id, $newProjectCode, $newProjectName);
+			$projects_model->update_project($project_id, $newProjectName);
 		}
-		return redirect()->to(base_url("Project/edit/$newProjectCode"));
+		return redirect()->to(base_url("Project/edit/$project_id"));
 	}
 
 	/**
@@ -335,7 +313,7 @@ class Project extends BaseController {
 			return "Error: Access denied. Usercode: $userLoginCode";
 		}
 
-		helper('url');
+		helper(['url', 'form']);
 
 		$uri = $this->request->uri;
 
@@ -347,7 +325,6 @@ class Project extends BaseController {
 			return 'Error: Empty projectId param.';
 		}
 
-		//$document_model = model('Documents_model');
 		$project_model = model('Projects_model');
 		
 		// 4. validate document and project
@@ -355,15 +332,28 @@ class Project extends BaseController {
 		if (!$project) {
 			return "Can't find project by projectId: $projectId";
 		}
-		$projectCode = $project->project_code;
 
-		// 5. delete document from tables
-		$project_model->delete_project($projectCode);
-		log_message('info', "[project::delete_project] Project deleted: $projectId".
-			" for ProjectCode: $projectCode");
+		// data for view
+		$page_data['project_query'] = $project;
+		$top_nav_data['uri'] = $this->request->uri;
 
-		// 6. go to project edit page
-		return redirect()->to(base_url("/Project"));
+		// 5. show view
+		if ($this->request->getMethod() === 'get') {
+			return view('common/header').
+				view('nav/top_nav', $top_nav_data).
+				view('projects/deleteproject_view', $page_data).
+				view('common/footer');
+		} else {
+			// save data to db
+			$projectCode = $project->project_code;
+			$project_model->delete_project($projectCode);
+			log_message('info', "[project::delete_project] Project deleted: $projectId".
+				" for ProjectCode: $projectCode");
+
+			// go to project edit page
+			return redirect()->to(base_url("Project"));
+		}
+
 	}
 
 	/***********************
@@ -486,15 +476,16 @@ class Project extends BaseController {
 		if (!$project) {
 			return "Can't find project by doc_id: $doc_id";
 		}
-		$project_code = $project->project_code;
+		$project_id = $project->project_id;
+		$project_name = $project->project_name;
 
 		// 5. delete document from tables
 		$project_model->delete_project_document_with_tran($doc_id);
 		log_message('info', "[project::delete_document] Document deleted: $doc_id".
-			" for ProjectCode: $project_code");
+			" for ProjectName: $project_name");
 
 		// 6. go to project edit page
-		return redirect()->to(base_url("/Project/edit_document/$project_code"));
+		return redirect()->to(base_url("/Project/edit_document/$project_id"));
 	}
 
 	/**
@@ -520,15 +511,15 @@ class Project extends BaseController {
 		log_message('info', '[project::edit_document] uri:'.$uri);
 
 		// find ProjectCode in segment (Get) or in request (Post)
-		$project_code = $uri->getSegment(3);
-		if (!$project_code) {
-			$project_code = $this->request->getPost('ProjectCode');
+		$project_id = $uri->getSegment(3);
+		if (!$project_id) {
+			$project_id = $this->request->getPost('ProjectCode');
 		}
 
-		if (!$project_code) {
-			throw new \Exception('Empty project_code segment');
+		if (!$project_id) {
+			throw new \Exception('Empty project_id segment');
 		}
-		$project_code = urldecode($project_code);
+		$project_id = urldecode($project_id);
 
 		// Form data
 		$docCaption = trim($this->request->getPost('DocCaption'));
@@ -538,11 +529,10 @@ class Project extends BaseController {
 		$documents_model = model('Documents_model');
 
 
-		$project = $projects_model->get_project_by_code($project_code);
+		$project = $projects_model->get_project_by_id($project_id);
 		if (!$project) {
-			throw new \Exception("Empty project row for project_code: $project_code");
+			throw new \Exception("Empty project row for project_id: $project_id");
 		}
-		$project_id = $project->project_id;
 
 		$page_data['project_query'] = $project;
 		$page_data['documents_query'] =
@@ -603,7 +593,7 @@ class Project extends BaseController {
 				}
 			}
 		}
-		return redirect()->to(base_url("Project/edit_document/$project_code"));
+		return redirect()->to(base_url("Project/edit_document/$project_id"));
 	}
 
 	/**
@@ -646,13 +636,13 @@ class Project extends BaseController {
 		if (!$project) {
 			throw new \Exception("Can't find project by qs_id: $qs_id");
 		}
-		$projectCode = $project->project_code;
+		$projectId = $project->project_id;
 
 		// 5. delete question from tables
 		$question_model->delete_general_question($qs_id);
 
 		// 6. go to project edit page
-		return redirect()->to(base_url("/Project/edit_basequestion/$projectCode"));
+		return redirect()->to(base_url("/Project/edit_basequestion/$projectId"));
 	}
 
 	/**
@@ -669,7 +659,7 @@ class Project extends BaseController {
 			log_message('info', '[Project::edit_basequestion] User should be logged');
 			// store uri to return here after login
 			$session->set('redirect_from', uri_string());
-			return redirect()->to(base_url('user/login'));
+			return redirect()->to(base_url('User/login'));
 		}
 
 		// 1. Get request params
@@ -678,15 +668,15 @@ class Project extends BaseController {
 		log_message('info', '[project::edit_basequestion] uri:'.$uri);
 
 		// find ProjectCode in segment (Get) or in request (Post)
-		$project_code = $uri->getSegment(3);
-		if (!$project_code) {
-			$project_code = $this->request->getPost('ProjectCode');
+		$project_id = $uri->getSegment(3);
+		if (!$project_id) {
+			$project_id = $this->request->getPost('ProjectId');
 		}
 
-		if (!$project_code) {
-			throw new \Exception('Empty project_code segment');
+		if (!$project_id) {
+			throw new \Exception('Empty project_id segment');
 		}
-		$project_code = urldecode($project_code);
+		$project_id = urldecode($project_id);
 
 		// Form data
 		$qsTitle = trim($this->request->getPost('QsTitle'));
@@ -698,11 +688,10 @@ class Project extends BaseController {
 		$documents_model = model('Documents_model');
 	
 
-		$project = $projects_model->get_project_by_code($project_code);
+		$project = $projects_model->get_project_by_id($project_id);
 		if (!$project) {
-			throw new \Exception("Empty project row for project_code: $project_code");
+			throw new \Exception("Empty project row for project_id: $project_id");
 		}
-		$project_id = $project->project_id;
 
 		// Подготовка массива вопросов и вложенных документов
 		$base_questions = 
@@ -796,7 +785,7 @@ class Project extends BaseController {
 
 			if ($qs_id && $doc_id) {
 				// go to project edit page
-				return redirect()->to(base_url("Project/edit_basequestion/$project_code"));
+				return redirect()->to(base_url("Project/edit_basequestion/$project_id"));
 			} else {
 				$msg = $res['message'];
 				log_message('info', '[Project::edit_basequestion] Save data error: '.$msg);
@@ -817,7 +806,7 @@ class Project extends BaseController {
 		$session = session();
 		$userLoginCode = $session->get('user_login_code');
 		if (!$userLoginCode) {
-			throw new \Exception("User not logged in.");
+			return "Error: User not logged in.";
 		}
 
 		// 2. Check user access
@@ -825,7 +814,7 @@ class Project extends BaseController {
 		$user = $users_model->get_user_by_logincode($userLoginCode);
 		if (!$user)
 		{
-			throw new \Exception("Access denied. Usercode: $userlogin");
+			return "Error: Access denied. Usercode: $userLoginCode";
 		}
 
 		helper('url');
@@ -847,7 +836,7 @@ class Project extends BaseController {
 		if (!$project) {
 			throw new \Exception("Can't find project by user_id: $user_id");
 		}
-		$projectCode = $project->project_code;
+		$projectId = $project->project_id;
 
 		// log_message('info', "[delete_user] user_id: $user_id, projectName: "
 		// 	.$project->project_name);
@@ -856,7 +845,7 @@ class Project extends BaseController {
 		$users_model->delete_user($user_id);
 
 		// 6. go to project edit page
-		return redirect()->to(base_url("/Project/edit_user/$projectCode"));
+		return redirect()->to(base_url("/Project/edit_user/$projectId"));
 	}
 
 	/**
@@ -873,7 +862,7 @@ class Project extends BaseController {
 			log_message('info', '[Project::edit_user] User should be logged');
 			// store uri to return here after login
 			$session->set('redirect_from', uri_string());
-			return redirect()->to(base_url('user/login'));
+			return redirect()->to(base_url('User/login'));
 		}
 
 		// 1. Get request params
@@ -882,33 +871,36 @@ class Project extends BaseController {
 		log_message('info', '[project::edit_user] uri:'.$uri);
 
 		// find ProjectCode in segment (Get) or in request (Post)
-		$project_code = $uri->getSegment(3);
-		if (!$project_code) {
-			$project_code = $this->request->getPost('ProjectCode');
+		$project_id = $uri->getSegment(3);
+		if (!$project_id) {
+			$project_id = $this->request->getPost('ProjectCode');
 		}
 
-		if (!$project_code) {
-			throw new \Exception('Empty project_code segment');
+		if (!$project_id) {
+			throw new \Exception('Empty project_id segment');
 		}
-		$project_code = urldecode($project_code);
+		$project_id = urldecode($project_id);
 
 		// Form data
-		$userLoginCode = trim($this->request->getPost('UserLoginCode'));
 		$userTypeId = trim($this->request->getPost('UserTypeId'));
 		$userCanVote = trim($this->request->getPost('UserCanVote')) === 'canVote'
 			? True : False;
 		$userVotesNumber = trim($this->request->getPost('UserVotesNumber'));
 		$userMemberName = trim($this->request->getPost('UserMemberName'));
 
+		//log_message('info', '[project::edit_user] userTypeId: '.$userTypeId);
+		//log_message('info', '[project::edit_user] userCanVote: '.$userCanVote);
+		//log_message('info', '[project::edit_user] userVotesNumber: '.$userVotesNumber);
+		//log_message('info', '[project::edit_user] userMemberName: '.$userMemberName);
+		
 		// prepare data for view
 		$projects_model = model('Projects_model');
 		$users_model = model('Users_model');
 
-		$project = $projects_model->get_project_by_code($project_code);
+		$project = $projects_model->get_project_by_id($project_id);
 		if (!$project) {
-			throw new \Exception("Empty project row for project_code: $project_code");
+			throw new \Exception("Empty project row for project_id: $project_id");
 		}
-		$project_id = $project->project_id;
 
 		// Подготовка массива вопросов и вложенных документов
 		$users = 
@@ -918,14 +910,6 @@ class Project extends BaseController {
 		$page_data['users_query'] = $users;
 
 		// setup form validation
-		$val_rules['UserLoginCode'] = [
-			'label' => 'UserLoginCode',
-			'rules' => 'required|is_unique[user.user_login_code]',
-			'errors' => [
-				'required' => 'Укажите Login',
-				'is_unique' => 'Параметр "{field}" должен быть уникальным'
-			]
-		];
 		$val_rules['UserTypeId'] =[
 			'label' => 'UserTypeId',
 			'rules' => 'required|in_list[1,2,3]',
@@ -964,6 +948,7 @@ class Project extends BaseController {
 		} else {
 			// save data to DB
 
+			$userLoginCode = $this->getUniqueUserLoginCode($users_model);
 			// save user
 			$user_id = $this->saveUser($users_model,
 				$project_id, $userLoginCode, $userTypeId, $userCanVote, $userVotesNumber, $userMemberName
@@ -976,8 +961,35 @@ class Project extends BaseController {
 			}
 
 			// go to project edit page
-			return redirect()->to(base_url("Project/edit_user/$project_code"));
+			return redirect()->to(base_url("Project/edit_user/$project_id"));
 		}
+	}
+
+	/**
+	* Получить уникальный код нового участника
+	*/
+	private function getUniqueUserLoginCode($users_model) {
+		$iter = 1;
+		$codeLen = 5;
+
+		while(1==1) {
+			// генерация кода
+			$code = random_string('numeric', $codeLen);
+
+			// проверка уникальности
+			$user = $users_model->get_user_by_logincode($code);
+			if (!$user) {
+				break;
+			}
+
+			$iter +=1;
+			if ($iter > 30) {
+				log_message('info', '[getUniqueUserLoginCode] Не удалось получить уникальный код для Участника.');
+				break;
+			}
+		}
+
+		return $code;
 	}
 
 	/**
