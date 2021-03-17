@@ -202,7 +202,10 @@ class CIDatabaseTestCase extends CIUnitTestCase
 
 		if (! empty($this->insertCache))
 		{
-			foreach ($this->insertCache as $row)
+			$reverseChange = array_reverse($this->insertCache);
+
+			//foreach ($this->insertCache as $row)
+			foreach ($reverseChange as $row)
 			{
 				$this->db->table($row[0])
 						->where($row[1])

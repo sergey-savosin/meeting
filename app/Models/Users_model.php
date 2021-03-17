@@ -132,9 +132,129 @@ class Users_model extends Model {
 	* delete user
 	*/
 	function delete_user($userId) {
-		$this->db
-			->table('user')
+		$db = \Config\Database::connect();
+
+		$db->transBegin();
+
+		// delete answers
+		$this->delete_answer_for_user($db, $userId);
+
+		// delete accept additional questions
+		$this->delete_acceptAdditionalQuestion_for_user($db, $userId);
+
+		// delete additional question questionDocuments
+		$this->delete_additionalQuestion_questionDocument_for_user($db, $userId);
+		// delete additional question docfiles
+		$this->delete_additionalQuestion_docfile_for_user($db, $userId);
+		// delete additional question documents
+		$this->delete_additionalQuestion_document_for_user($db, $userId);
+		// delete additional questions
+		$this->delete_additionalQuestion_question_for_user($db, $userId);
+
+
+		// delete user
+		$db->table('user')
 			->where('user_id', $userId)
 			->delete();
+
+		$db->transCommit();
+
+		return true;
 	}
+
+	/**
+	* delete answers for userId
+	*/
+	private function delete_answer_for_user($db, $userId) {
+		$db->table('answer')
+			->where('ans_user_id', $userId)
+			->delete();
+	}
+
+	/**
+	* delete accept additional question for userId
+	*/
+	private function delete_acceptAdditionalQuestion_for_user($db, $userId) {
+		$db->table('question')
+			->where('qs_category_id', 3) //accept_additional_question
+			->where('qs_user_id', $userId)
+			->delete();
+	}
+
+	/**
+	* delete additional-questions docfile for userId
+	*/
+	private function delete_additionalQuestion_docfile_for_user($db, $userId) {
+		$builder = $db
+			->table('docfile')
+			->whereIn('docfile_doc_id', function($builder) use ($userId) {
+				return $builder
+					->select('d.doc_id')
+					->from('question q')
+					->join('question_document qd', 'qd.qd_question_id = q.qs_id')
+					->join('document d', 'd.doc_id = qd.qd_doc_id')
+					->where('q.qs_category_id', 2) //additional question
+					->where('q.qs_user_id', $userId)
+				;
+			});
+		$this->build_delete($db, $builder);
+	}
+
+	/**
+	* delete additional-questions document for userId
+	*/
+	private function delete_additionalQuestion_document_for_user($db, $userId) {
+		$builder = $db
+			->table('document')
+			->whereIn('doc_id', function($builder) use ($userId) {
+				return $builder
+					->select('qd.qd_doc_id')
+					->from('question q')
+					->join('question_document qd', 'qd.qd_question_id = q.qs_id')
+					->where('q.qs_category_id', 2) // additional question
+					->where('q.qs_user_id', $userId)
+				;
+			});
+		$this->build_delete($db, $builder);
+	}
+
+	/**
+	* delete additional-questions questions_document for user
+	*/
+	private function delete_additionalQuestion_questionDocument_for_user($db, $userId) {
+		$builder = $db
+			->table('question_document')
+			->whereIn('qd_question_id', function($builder) use ($userId) {
+				return $builder
+					->select('q.qs_id')
+					->from('question q')
+					->where('q.qs_category_id', 2) // additional question
+					->where('q.qs_user_id', $userId)
+				;
+			});
+		$this->build_delete($db, $builder);
+	}
+
+	/**
+	* delete additional-question question for user
+	*/
+	private function delete_additionalQuestion_question_for_user($db, $userId) {
+		$db->table('question')
+			->where('qs_category_id', 2) //additional question
+			->where('qs_user_id', $userId)
+			->delete();
+	}
+
+	/**
+	* Make delete query from select query. And run it.
+	*/
+	private function build_delete($db, $builder) {
+		$sql = $builder->getCompiledSelect();
+		$len = strlen("SELECT *");
+		$sql = substr_replace($sql, 'DELETE', 0, $len);
+
+		//log_message('info', "[build_delete] sql: $sql");
+		$db->query($sql);
+	}
+
 }

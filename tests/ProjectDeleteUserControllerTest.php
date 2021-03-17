@@ -141,8 +141,7 @@ class ProjectDeleteUserControllerTest extends FeatureTestCase
 		$this->addTestAdditionQuestion($init->projectId, $init->addQsId, null);
 
 		// add accept additional question
-		$this->addTestAcceptAdditionQuestion($init->projectId,
-			$init->acptAddQsId, null, $init->addQsId);
+		$this->addTestAcceptAdditionQuestion($init->projectId, $init->acptAddQsId, null, $init->addQsId);
 
 		// add users
 		$this->addTestUser($init->projectId, $init->userId1);
@@ -197,14 +196,17 @@ class ProjectDeleteUserControllerTest extends FeatureTestCase
 	}
 
 	private function addTestGeneralQuestion($projectId, $qsId, $docId) {
+		
 		$this->addTestQuestion($projectId, $qsId, $docId, $this->generalCategoryId, null);
 	}
 
 	private function addTestAdditionQuestion($projectId, $qsId, $docId) {
+		
 		$this->addTestQuestion($projectId, $qsId, $docId, $this->additionalCategoryId, null);
 	}
 
 	private function addTestAcceptAdditionQuestion($projectId, $qsId, $docId, $baseQsId) {
+		
 		$this->addTestQuestion($projectId, $qsId, $docId, $this->acceptAdditionalCategoryId,
 			$baseQsId);
 	}
