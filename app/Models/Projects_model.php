@@ -17,16 +17,19 @@ class Projects_model extends Model {
 	 mainAgendaStartDate
 	 additionalAgendaStartDate
 	 meetingFinishData
+	 admin_id
 	*/
-	function new_project($projectName, $projectCode, $acquaintanceStartDate, $mainAgendaStartDate, $additionalAgendaStartDate,
-		$meetingFinishDate) {
+	function new_project($projectName, $projectCode, $acquaintanceStartDate,
+		$mainAgendaStartDate, $additionalAgendaStartDate,
+		$meetingFinishDate, $admin_id) {
 
 		$project_data = array ('project_name' => $projectName,
 				'project_code' => $projectCode,
 				'project_acquaintance_start_date' => $acquaintanceStartDate,
 				'project_main_agenda_start_date' => $mainAgendaStartDate,
 				'project_additional_agenda_start_date' => $additionalAgendaStartDate,
-				'project_meeting_finish_date' => $meetingFinishDate);
+				'project_meeting_finish_date' => $meetingFinishDate,
+				'project_admin_id' => $admin_id);
 		$db = \Config\Database::connect();
 		if ($db->table('project')->insert($project_data)) {
 			return $db->insertID();
@@ -418,6 +421,26 @@ class Projects_model extends Model {
 		}
 	}
 
+	function is_project_exists_by_name_and_adminId($projectName, $adminId) {
+		$query = $this->db
+			->table('project')
+			->where('project_name', $projectName)
+			->where('project_admin_id', $adminId)
+			->selectCount('project_id', 'cnt')
+			->get();
+		
+		if (!$query) {
+			return false;
+		}
+
+		$row = $query->getRow();
+		if (!$row) {
+			return false;
+		}
+
+		return $row->cnt == 1 ? true : false;
+	}
+
 	function get_project_by_code($project_code) {
 		$query = "SELECT * FROM project p WHERE p.project_code = ?";
 		$result = $this->db->query($query, array($project_code));
@@ -556,5 +579,20 @@ class Projects_model extends Model {
 		} else {
 			return $result;
 		}
+	}
+
+	/*
+	* Список проектов администратора
+	* returns query.
+	*
+	* Use $query->getResult()
+	*/
+	function getProjectListByAdminId($admin_id) {
+		$db = $this->db;
+		$query = $db->table('project')
+				->where('project_admin_id', $admin_id)
+				->get();
+
+		return $query;
 	}
 }

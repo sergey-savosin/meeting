@@ -30,9 +30,7 @@ class ProjectDeleteUserControllerTest extends FeatureTestCase
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 
-		$_SESSION['user_login_code'] = $this->defaultUserCode;
-		$_SESSION['user_project_id'] = $this->defaultProjectId;
-		$_SESSION['user_id'] = $this->defaultUserId;
+		$_SESSION['admin_login_name'] = 'admin';
 
 		$validation = \Config\Services::validation();
 		$validation->reset();
@@ -57,10 +55,10 @@ class ProjectDeleteUserControllerTest extends FeatureTestCase
 
 		$result = $this->get('project/delete_user');
 		$this->assertNotNull($result);
-		$this->assertEquals(0, $result->isRedirect());
+		$this->assertEquals(1, $result->isRedirect());
 		$result->assertOK();
-
-		$result->assertSee('Error: User not logged in.');
+		$redirectUrl = $result->getRedirectUrl();
+		$this->assertRegExp('/\/Admin\/login/', $redirectUrl);
 	}
 
 	/**
@@ -72,9 +70,9 @@ class ProjectDeleteUserControllerTest extends FeatureTestCase
 	public function test_GetDeleteUserWrongUserSession_ShowErrorText()
 	{
 		// Arrange
-		$userLoginCode = 'noUser';
+		$adminName = 'noAdmin';
 		$userId = $this->defaultUserId;
-		$_SESSION['user_login_code'] = $userLoginCode;
+		$_SESSION['admin_login_name'] = $adminName;
 
 		// Act
 		$result = $this
@@ -86,7 +84,7 @@ class ProjectDeleteUserControllerTest extends FeatureTestCase
 		$this->assertEquals(0, $result->isRedirect());
 		$result->assertOK();
 
-		$result->assertSee("Error: Access denied. Usercode: $userLoginCode");
+		$result->assertSee("Error: Access denied. Admin: $adminName");
 	}
 
 	/**

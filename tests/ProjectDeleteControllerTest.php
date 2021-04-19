@@ -34,9 +34,7 @@ class ProjectDeleteControllerTest extends FeatureTestCase
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 
-		$_SESSION['user_login_code'] = $this->defaultUserCode;
-		$_SESSION['user_project_id'] = $this->defaultProjectId;
-		$_SESSION['user_id'] = $this->defaultUserId;
+		$_SESSION['admin_login_name'] = 'admin';
 
 		$validation = \Config\Services::validation();
 		$validation->reset();
@@ -61,12 +59,12 @@ class ProjectDeleteControllerTest extends FeatureTestCase
 
 		$result = $this->get('project/delete_project');
 		$this->assertNotNull($result);
-		$this->assertEquals(0, $result->isRedirect());
+		$this->assertEquals(1, $result->isRedirect());
 		$result->assertOK();
+		$redirectUrl = $result->getRedirectUrl();
+		$this->assertRegExp('/\/Admin\/login/', $redirectUrl);
 
-		$result->assertSessionMissing('redirect_from', '/project');
-
-		$result->assertSee('Error: User not logged in.');
+		$result->assertSessionHas('redirect_from', '/project/delete_project');
 	}
 
 	/**
@@ -81,12 +79,12 @@ class ProjectDeleteControllerTest extends FeatureTestCase
 
 		// Assert
 		$this->assertNotNull($result);
-		$this->assertEquals(0, $result->isRedirect());
+		$this->assertEquals(1, $result->isRedirect());
 		$result->assertOK();
+		$redirectUrl = $result->getRedirectUrl();
+		$this->assertRegExp('/\/Admin\/login/', $redirectUrl);
 
-		$result->assertSessionMissing('redirect_from', '/project');
-
-		$result->assertSee('Error: User not logged in.');
+		$result->assertSessionHas('redirect_from', '/project/delete_project');
 	}
 
 	/**
@@ -120,6 +118,12 @@ class ProjectDeleteControllerTest extends FeatureTestCase
 		$this->seeInDatabase('project', $data);
 
 	}
+
+	/**
+	* ToDo: Access denied: admin
+	* Удаление проекта приводит к ошибке Error: Access denied. Admin: admin
+	*/
+
 
 	/**
 	* POST project/delete_project приводит к удалению проекта

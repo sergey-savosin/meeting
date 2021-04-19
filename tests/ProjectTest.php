@@ -11,6 +11,7 @@ class ProjectTest extends FeatureTestCase
 
 	protected $projects_model;
 	protected $defaultProjectId = 1;
+	protected $defaultAdminId = 1;
 
 	public function setUp(): void
 	{
@@ -34,7 +35,9 @@ class ProjectTest extends FeatureTestCase
 	*/
 	public function test_ProjectModelNewProjectAdded()
 	{
-		$this->projects_model->new_project('test1', 'test1', null, null, null, null);
+		$adminId = $this->defaultAdminId;
+		$this->projects_model->new_project('test1', 'test1', null, null,
+			null, null, $adminId);
 
 		$this->seeInDatabase('project', ['project_name' => 'test1']);
 		$this->dontSeeInDatabase('project', ['project_name' => 'test21']);
@@ -48,7 +51,9 @@ class ProjectTest extends FeatureTestCase
 		// Arrange
 		$projectName = 'test1';
 		$projectCode = 'testCode1';
-		$this->projects_model->new_project($projectName, $projectCode, null, null, null, null);
+		$adminId = $this->defaultAdminId;
+		$this->projects_model->new_project($projectName, $projectCode, null, null, 
+			null, null, $adminId);
 
 		// Act
 		$p_list = $this->projects_model->getProjectList();
@@ -72,9 +77,14 @@ class ProjectTest extends FeatureTestCase
 		$expected->project_additional_agenda_start_date = null;
 		$expected->project_meeting_finish_date = null;
 		$expected->project_created_at = 'current_timestamp()';
-		$expected->project_admin_id = null;
+		$expected->project_admin_id = $adminId;
 		$this->assertEquals($expected, $res);
 	}
+
+	/**
+	* Тест модели - список проектов отфильтрован по admin_id
+	* ToDo
+	*/
 
 	/**
 	* POST project/insert (WebApi) - валидация параметров приводит к ошибке

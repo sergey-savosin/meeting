@@ -55,6 +55,11 @@
 	</div>
 	<div class="panel-body">
 		<?php if (isset($validation)) {echo $validation->listErrors('my_list');} ?>
+		<?php if (isset($my_validation_error)): ?>
+			<div class="alert alert-danger">
+				<?= esc($my_validation_error) ?>
+			</div>
+		<?php endif; ?>
 
 		<?php echo form_open('project/index', 'role="form", enctype="multipart/form-data"'); ?>
 			<div class="form-group">
@@ -71,4 +76,8 @@
 			</div>
 		<?php echo form_close(); ?>
 	</div>
+</div>
+
+<div class="btn btn-default">
+	<?php echo anchor(base_url('admin/logout'), 'Выйти из учётной записи') ?>
 </div>

@@ -29,11 +29,30 @@ class Admins_model extends Model {
 	/**
 	* Find admin by login
 	* returns object
+	* ToDo: check the password
 	*/
-	function get_admin_by_logincode($login) {
+	function get_admin_by_name_password($name, $password) {
 		$db = $this->db;
 		$query = $db->table('admin')
-				->where('admin_login', $login)
+				->where('admin_login', $name)
+				->get();
+
+		if (!$query) {
+			return false;
+		}
+
+		$row = $query->getRow();
+		if (!isset($row)) {
+			return false;
+		} else {
+			return $row;
+		}
+	}
+
+	function get_admin_by_name($name) {
+		$db = $this->db;
+		$query = $db->table('admin')
+				->where('admin_login', $name)
 				->get();
 
 		if (!$query) {

@@ -113,7 +113,10 @@ class Project extends BaseController {
 		$ma_dt = $mainAgendaStartDate ? $mainAgendaStartDateTime->format($mysql_format) : null;
 		$aa_dt = $additionalAgendaStartDate ? $additionalAgendaStartDateTime->format($mysql_format) : null;
 		$mf_dt = $meetingFinishDate ? $meetingFinishDateTime->format($mysql_format) : null;
-		$new_id = $projectsModel->new_project($projectName, $projectCode, $ac_dt, $ma_dt, $aa_dt, $mf_dt);
+		$admin_id = null;
+		$new_id = $projectsModel->new_project($projectName, $projectCode, 
+			$ac_dt, $ma_dt, $aa_dt, $mf_dt,
+			$admin_id);
 
 		// Result
 		$resource = $this->request->uri->getSegment(1);
@@ -138,11 +141,11 @@ class Project extends BaseController {
 	public function index() {
 		// get session data
 		$session = session();
-		$user = $session->get('user_login_code');
-		if ($user == FALSE) {
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
 			// store uri to return here after login
 			$session->set('redirect_from', uri_string());
-			return redirect()->to(base_url('User/login'));
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		// Form data
@@ -150,10 +153,15 @@ class Project extends BaseController {
 		$newProjectName = trim($this->request->getPost('projectName'));
 
 		$projects_model = model('Projects_model');
+		$admins_model = model('Admins_model');
+		$admin = $admins_model->get_admin_by_name($admin_name);
+		if (!$admin) {
+			return 'admin not found by login';
+		}
 
 		// data for view
 		$page_data['projects_query'] = 
-			$projects_model->getProjectList();
+			$projects_model->getProjectListByAdminId($admin->admin_id);
 
 		helper(['form', 'url']);
 
@@ -162,15 +170,23 @@ class Project extends BaseController {
 		// setup form validation
 		$val_rules['projectName'] = [
 			'label' => 'Название проекта',
-			'rules' => 'required|is_unique[project.project_name]',
+			'rules' => 'required',
 			'errors' => [
 				'required' => 'Укажите Название проекта',
-				'is_unique' => 'Параметр "{field}" должен быть уникальным'
 			]
 		];
 
+		$my_validation_error = null;
+		if (!$this->is_project_name_unique($projects_model,
+									$newProjectName, $admin->admin_id)) {
+			$my_validation_error = 'Имя проекта должно быть уникальным';
+		}
+
 		// show view
-		if ($this->request->getMethod() === 'get' || !$this->validate($val_rules) ) {
+		if ($this->request->getMethod() === 'get'
+				|| !$this->validate($val_rules)
+				|| !empty($my_validation_error)
+			) {
 			if ($this->request->getMethod() === 'get') {
 				$validation = null;
 			} else {
@@ -178,6 +194,7 @@ class Project extends BaseController {
 			}
 
 			$page_data['validation'] = $validation;
+			$page_data['my_validation_error'] = $my_validation_error;
 
 			return view('common/header').
 				view('nav/top_nav', $top_nav_data).
@@ -186,11 +203,28 @@ class Project extends BaseController {
 		} else {
 			// save data to db
 			$newProjectCode = random_string('alnum', 16);
+			$admin_id = $admin->admin_id;
 			$projects_model->new_project($newProjectName, $newProjectCode,
-				null, null, null, null);
+				null, null, null, null, $admin_id);
 		}
 		return redirect()->to(base_url("Project"));
 
+	}
+
+	/**
+	* Проверка уникальности project_name
+	*/
+	private function is_project_name_unique($projects_model, $projectName, $adminId) {
+		$projectExists = 
+			$projects_model->is_project_exists_by_name_and_adminId($projectName, $adminId);
+		
+		if ($projectExists) {
+			log_message('info', 
+				'[is_project_name_unique] dublicate is found for: '.$projectName.' and '.$adminId);
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -199,11 +233,11 @@ class Project extends BaseController {
 	public function edit() {
 		// get session data
 		$session = session();
-		$user = $session->get('user_login_code');
-		if ($user == FALSE) {
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
 			// store uri to return here after login
 			$session->set('redirect_from', uri_string());
-			return redirect()->to(base_url('User/login'));
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		helper(['url', 'form']);
@@ -300,17 +334,19 @@ class Project extends BaseController {
 	public function delete_project() {
 		// 1. get session data
 		$session = session();
-		$userLoginCode = $session->get('user_login_code');
-		if (!$userLoginCode) {
-			return "Error: User not logged in.";
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		// 2. Check user access
-		$users_model = model('Users_model');
-		$user = $users_model->get_user_by_logincode($userLoginCode);
-		if (!$user)
+		$admins_model = model('Admins_model');
+		$admin = $admins_model->get_admin_by_name($admin_name);
+		if (!$admin)
 		{
-			return "Error: Access denied. Usercode: $userLoginCode";
+			return "Error: Access denied. Admin: $admin_name";
 		}
 
 		helper(['url', 'form']);
@@ -443,17 +479,19 @@ class Project extends BaseController {
 	public function delete_document() {
 		// 1. get session data
 		$session = session();
-		$userLoginCode = $session->get('user_login_code');
-		if (!$userLoginCode) {
-			return "Error: User not logged in.";
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		// 2. Check user access
-		$users_model = model('Users_model');
-		$user = $users_model->get_user_by_logincode($userLoginCode);
-		if (!$user)
+		$admins_model = model('Admins_model');
+		$admin = $admins_model->get_admin_by_name($admin_name);
+		if (!$admin)
 		{
-			return "Error: Access denied. Usercode: $userLoginCode";
+			return "Error: Access denied. Admin: $admin_name";
 		}
 
 		helper('url');
@@ -497,12 +535,11 @@ class Project extends BaseController {
 
 		// get session data
 		$session = session();
-		$user = $session->get('user_login_code');
-		if ($user == FALSE) {
-			log_message('info', '[Project::edit_document] User should be logged');
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
 			// store uri to return here after login
 			$session->set('redirect_from', uri_string());
-			return redirect()->to(base_url('User/login'));
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		// 1. Get request params
@@ -604,17 +641,19 @@ class Project extends BaseController {
 	public function delete_basequestion() {
 		// 1. get session data
 		$session = session();
-		$userLoginCode = $session->get('user_login_code');
-		if (!$userLoginCode) {
-			throw new \Exception("User not logged in.");
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		// 2. Check user access
-		$users_model = model('Users_model');
-		$user = $users_model->get_user_by_logincode($userLoginCode);
-		if (!$user)
+		$admins_model = model('Admins_model');
+		$admin = $admins_model->get_admin_by_name($admin_name);
+		if (!$admin)
 		{
-			throw new \Exception("Access denied. Usercode: $userlogin");
+			return "Error: Access denied. Admin: $admin_name";
 		}
 
 		helper('url');
@@ -654,12 +693,11 @@ class Project extends BaseController {
 
 		// get session data
 		$session = session();
-		$user = $session->get('user_login_code');
-		if ($user == FALSE) {
-			log_message('info', '[Project::edit_basequestion] User should be logged');
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
 			// store uri to return here after login
 			$session->set('redirect_from', uri_string());
-			return redirect()->to(base_url('User/login'));
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		// 1. Get request params
@@ -804,17 +842,21 @@ class Project extends BaseController {
 	public function delete_user() {
 		// 1. get session data
 		$session = session();
-		$userLoginCode = $session->get('user_login_code');
-		if (!$userLoginCode) {
-			return "Error: User not logged in.";
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
+			// store uri to return here after login
+			$session->set('redirect_from', uri_string());
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		// 2. Check user access
+		$admins_model = model('Admins_model');
 		$users_model = model('Users_model');
-		$user = $users_model->get_user_by_logincode($userLoginCode);
-		if (!$user)
+
+		$admin = $admins_model->get_admin_by_name($admin_name);
+		if (!$admin)
 		{
-			return "Error: Access denied. Usercode: $userLoginCode";
+			return "Error: Access denied. Admin: $admin_name";
 		}
 
 		helper('url');
@@ -857,12 +899,11 @@ class Project extends BaseController {
 
 		// get session data
 		$session = session();
-		$user = $session->get('user_login_code');
-		if ($user == FALSE) {
-			log_message('info', '[Project::edit_user] User should be logged');
+		$admin_name = $session->get('admin_login_name');
+		if ($admin_name == FALSE) {
 			// store uri to return here after login
 			$session->set('redirect_from', uri_string());
-			return redirect()->to(base_url('User/login'));
+			return redirect()->to(base_url('Admin/login'));
 		}
 
 		// 1. Get request params

@@ -30,10 +30,7 @@ class ProjectDocumentControllerTest extends FeatureTestCase
 		parent::setUp();
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
-
-		$_SESSION['user_login_code'] = $this->defaultUserCode;
-		$_SESSION['user_project_id'] = $this->defaultProjectId;
-		$_SESSION['user_id'] = $this->defaultUserId;
+		$_SESSION['admin_login_name'] = 'admin';
 
 		$validation = \Config\Services::validation();
 		$validation->reset();
@@ -60,7 +57,7 @@ class ProjectDocumentControllerTest extends FeatureTestCase
 		$this->assertNotNull($result);
 		$this->assertEquals(1, $result->isRedirect());
 		$redirectUrl = $result->getRedirectUrl();
-		$this->assertRegExp('/\/User\/login/', $redirectUrl);
+		$this->assertRegExp('/\/Admin\/login/', $redirectUrl);
 		$result->assertOK();
 
 		$result->assertSessionHas('redirect_from', '/project/edit_document');

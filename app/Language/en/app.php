@@ -30,13 +30,16 @@ return [
 	'documents_general_questions_list_title' => "Вопросы основной повестки",
 
 	// Admin - login
-	'admin_login_header' => 'Please sign in',
+	'admin_login_header' => 'Введите данные учётной записи',
 	'admin_login_email' => 'Email',
-	'admin_login_password' => 'Password',
-	'admin_login_signin' => 'Signin...',
-	'admin_login_error' => 'Error: something went wrong',
+	'admin_login_signin' => 'Войти',
+	'admin_login_error' => 'admin_login_error',
 	'admin_dash_allow' => 'Allow',
 	'admin_dash_disallow' => 'Disallow',
+	'admin_login_name' => 'Имя пользователя',
+	'admin_login_password' => 'Пароль',
+	'admin_login_error' => 'Имя пользователя указано неверно',
+	'admin_password_error' => 'Пароль указан неверно',
 
 	// User - login
 	'user_login_header' => 'Пожалуйста, войдите в систему',

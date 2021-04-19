@@ -33,9 +33,7 @@ class ProjectEditControllerTest extends FeatureTestCase
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 
-		$_SESSION['user_login_code'] = $this->defaultUserCode;
-		$_SESSION['user_project_id'] = $this->defaultProjectId;
-		$_SESSION['user_id'] = $this->defaultUserId;
+		$_SESSION['admin_login_name'] = 'admin';
 
 		$validation = \Config\Services::validation();
 		$validation->reset();
@@ -62,10 +60,42 @@ class ProjectEditControllerTest extends FeatureTestCase
 		$this->assertNotNull($result);
 		$this->assertEquals(1, $result->isRedirect());
 		$redirectUrl = $result->getRedirectUrl();
-		$this->assertRegExp('/\/User\/login/', $redirectUrl);
+		$this->assertRegExp('/\/Admin\/login/', $redirectUrl);
 		$result->assertOK();
 
 		$result->assertSessionHas('redirect_from', '/project/edit');
+	}
+
+	/**
+	* GET project/edit после логина участника голосования 
+	* переход на страницу Project/edit приводит к автопереходу на авторизации Admin
+	* - POST user/login
+	* - GET project/edit/<project_id>
+	*/
+	public function test_GetEditProjectAuthorizedUserRedirectsAdminLogin()
+	{
+		// Arrange
+		$userResult = $this->post('user/login', [
+			'usr_code' => '123'
+		]);
+		$this->assertNotNull($userResult);
+		$userResult->assertSessionHas('user_login_code', '123');
+		$userResult->assertSessionHas('user_project_id', '1');
+
+		// Act
+		$projectEditUrl = '/project/edit/'.$this->defaultProjectId;
+		$result = $this
+			->withSession()
+			->get($projectEditUrl);
+		
+		// Assert
+		$this->assertNotNull($result);
+		$this->assertEquals(1, $result->isRedirect());
+		$redirectUrl = $result->getRedirectUrl();
+		$this->assertRegExp('/\/Admin\/login/', $redirectUrl);
+		$result->assertOK();
+
+		$result->assertSessionHas('redirect_from', $projectEditUrl);
 	}
 
 	/**
@@ -76,12 +106,6 @@ class ProjectEditControllerTest extends FeatureTestCase
 	public function test_GetEditProjectAuthorizedSessionShowProjectEditPage()
 	{
 		// Arrange
-		$userResult = $this->post('user/login', [
-			'usr_code' => '123'
-		]);
-		$this->assertNotNull($userResult);
- 		$userResult->assertSessionHas('user_login_code', '123');
-		$userResult->assertSessionHas('user_project_id', '1');
 
 		// Act
 		$result = $this
@@ -152,14 +176,6 @@ class ProjectEditControllerTest extends FeatureTestCase
 	{
 		// Arrange
 		$projectId = $this->defaultProjectId;
-		$userResult = $this->post('user/login', [
-			'usr_code' => '123'
-		]);
-		$this->assertNotNull($userResult);
-
-		$userResult->assertSessionHas('user_login_code', '123');
-		$userResult->assertSessionHas('user_project_id', '1');
-
 		$projectName = empty($projectName) ? null : $projectName;
 
 		$data = [
@@ -175,8 +191,10 @@ class ProjectEditControllerTest extends FeatureTestCase
 		$result->assertOK();
 		$this->assertFalse($result->isRedirect());
 
-		// Сообщение валидации отсутствует
+		// Сообщение валидации на экране
+		//echo $result->response->getBody();
 		$result->assertSee('alert-danger');
+		$result->assertSee('Укажите Наименование собрания');
 
 		$criteria = [
 			'project_id' => $projectId,

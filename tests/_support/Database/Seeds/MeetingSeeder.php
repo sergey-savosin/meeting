@@ -6,11 +6,20 @@ class MeetingSeeder extends Seeder
 {
 	public function run()
 	{
+		// admin
+		$row = [
+			'admin_id' => 1,
+			'admin_login' => 'admin',
+			'admin_password' => 'pass',
+		];
+		$this->db->table('admin')->insert($row);
+
 		// project
 		$row = [
 			'project_name' => 'ProjectName-123',
 			'project_code' => 'ProjectCode-123',
 			'project_id' => 1,
+			'project_admin_id' => 1,
 		];
 		$this->db->table('project')->insert($row);
 

@@ -21,9 +21,7 @@ class ProjectListControllerTest extends FeatureTestCase
 
 		\Config\Services::request()->config->baseURL = $_SERVER['app.baseURL'];
 
-		$_SESSION['user_login_code'] = $this->defaultUserCode;
-		$_SESSION['user_project_id'] = $this->defaultProjectId;
-		$_SESSION['user_id'] = $this->defaultUserId;
+		$_SESSION['admin_login_name'] = 'admin';
 
 		$validation = \Config\Services::validation();
 		$validation->reset();
@@ -49,7 +47,7 @@ class ProjectListControllerTest extends FeatureTestCase
 		$this->assertNotNull($result);
 		$this->assertEquals(1, $result->isRedirect());
 		$redirectUrl = $result->getRedirectUrl();
-		$this->assertRegExp('/\/User\/login/', $redirectUrl);
+		$this->assertRegExp('/\/Admin\/login/', $redirectUrl);
 		$result->assertOK();
 
 		$result->assertSessionHas('redirect_from', '/project/index');
@@ -68,8 +66,7 @@ class ProjectListControllerTest extends FeatureTestCase
 		// Assert
 		$response->assertStatus(200);
 		$response->assertOK();
-		// $content = $response->getJSON();
-		// print($content);
+
 		$response->assertSee('Начало голосования');
 		$response->assertSee('ProjectName-123');
 		$response->assertDontSee('ProjectCode-123');
@@ -152,7 +149,7 @@ class ProjectListControllerTest extends FeatureTestCase
 	* POST project/index - валидация параметров
 	*
 	* - POST project/index
-	* @testWith ["ProjectName-123", "Название проекта"]
+	* @testWith ["ProjectName-123", "Имя проекта"]
 	*/
 	public function test_PostProjectIndex_ShowValidationProjectNameUniqueError(
 		$newProjectName, $validationField)
@@ -171,7 +168,7 @@ class ProjectListControllerTest extends FeatureTestCase
 		$this->assertFalse($result->isRedirect());
 		$result->assertOK();
 
-		$result->assertSee('Параметр "'.$validationField.'" должен быть уникальным');
+		$result->assertSee($validationField.' должно быть уникальным');
 
 	}
 
