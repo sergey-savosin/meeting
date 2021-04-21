@@ -149,9 +149,15 @@ class Projects_model extends Model {
 	*
 	* @return boolean
 	*/
-	function update_project($project_id, $project_name) {
+	function update_project($project_id, $project_name,
+		$acquaintance_start_date, $main_agenda_start_date,
+		$additional_agenda_start_date, $meeting_finish_date) {
 		$data = [
 			'project_name' => $project_name,
+			'project_acquaintance_start_date' => $acquaintance_start_date,
+			'project_main_agenda_start_date' => $main_agenda_start_date,
+			'project_additional_agenda_start_date' => $additional_agenda_start_date,
+			'project_meeting_finish_date' => $meeting_finish_date
 		];
 
 		$db = \Config\Database::connect();

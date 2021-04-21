@@ -21,7 +21,7 @@ return [
 	'top_nav_view_votes' => "Голосование по ОП",
 	'top_nav_view_additionalagendavotes' => 'Голосование по доп повестке',
 	'top_nav_view_voteresult' => 'Результаты голосования',
-	'top_nav_view_project' => 'Администрирование',
+	'top_nav_view_project' => 'Админ',
 
 	// Meeting
 	'documents_title' => "Документы для ознакомления",

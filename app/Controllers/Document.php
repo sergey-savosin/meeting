@@ -152,16 +152,19 @@ class Document extends BaseController {
 		// 1. get session data
 		$session = session();
 		$userLoginCode = $session->get('user_login_code');
-		if (!$userLoginCode) {
-			throw new \Exception("User not logged in.");
+		$adminLoginName = $session->get('admin_login_name');
+		if (!$userLoginCode && !$adminLoginName) {
+			return "User not logged in.";
 		}
 
 		// 2. Check user access
 		$users_model = model('Users_model');
+		$admins_model = model('Admins_model');
 		$user = $users_model->get_user_by_logincode($userLoginCode);
-		if (!$user)
+		$admin = $admins_model->get_admin_by_name($adminLoginName);
+		if (!$user && !$admin)
 		{
-			throw new \Exception("Access denied. Usercode: $userlogin");
+			return "Access denied. User: $userLoginCode, Admin: $adminLoginName";
 		}
 
 		helper('url');

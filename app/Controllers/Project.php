@@ -267,6 +267,11 @@ class Project extends BaseController {
 
 		// Form data
 		$newProjectName = trim($this->request->getPost('project_name'));
+		$newAcqDate = $this->request->getPost('acquaintance_start_date');
+		$newMainDate = $this->request->getPost('main_agenda_start_date');
+		$newAdditionalDate = $this->request->getPost('additional_agenda_start_date');
+		$newFinishDate = $this->request->getPost('meeting_finish_date');
+		log_message('info', '[project::edit] newAcqDate: '.$newAcqDate);
 
 		// Подготовка массива вопросов и вложенных документов
 		$base_questions = 
@@ -321,7 +326,9 @@ class Project extends BaseController {
 				view('common/footer');
 		} else {
 			// save data to db
-			$projects_model->update_project($project_id, $newProjectName);
+			$projects_model->update_project($project_id, 
+				$newProjectName, $newAcqDate, $newMainDate, 
+				$newAdditionalDate, $newFinishDate);
 		}
 		return redirect()->to(base_url("Project/edit/$project_id"));
 	}
