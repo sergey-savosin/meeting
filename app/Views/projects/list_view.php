@@ -23,19 +23,29 @@
 				<?php echo anchor(base_url('project/edit/' . $result->project_id), $result->project_name) ;?>
 			</td>
 			<td>
-				<?php echo $result->project_created_at; ?>
+				<?php $sqldt = $result->project_created_at;
+				$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+				echo $dt;?>
 			</td>
 			<td>
-				<?php echo $result->project_acquaintance_start_date; ?>
+				<?php $sqldt = $result->project_acquaintance_start_date;
+				$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+				echo $dt;?>
 			</td>
 			<td>
-				<?php echo $result->project_main_agenda_start_date; ?>
+				<?php $sqldt = $result->project_main_agenda_start_date;
+				$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+				echo $dt;?>
 			</td>
 			<td>
-				<?php echo $result->project_additional_agenda_start_date; ?>
+				<?php $sqldt = $result->project_additional_agenda_start_date;
+				$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+				echo $dt;?>
 			</td>
 			<td>
-				<?php echo $result->project_meeting_finish_date; ?>
+				<?php $sqldt = $result->project_meeting_finish_date;
+				$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+				echo $dt;?>
 			</td>
 			<td>
 				<?php echo anchor(base_url('voteresult/index/' . $result->project_id), "Итоги") ;?>

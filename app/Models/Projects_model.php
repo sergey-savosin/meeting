@@ -152,6 +152,16 @@ class Projects_model extends Model {
 	function update_project($project_id, $project_name,
 		$acquaintance_start_date, $main_agenda_start_date,
 		$additional_agenda_start_date, $meeting_finish_date) {
+		
+		$acquaintance_start_date = empty($acquaintance_start_date)
+			? null : $acquaintance_start_date;
+		$main_agenda_start_date = empty($main_agenda_start_date)
+			? null : $main_agenda_start_date;
+		$additional_agenda_start_date = empty($additional_agenda_start_date)
+			? null : $additional_agenda_start_date;
+		$meeting_finish_date = empty($meeting_finish_date)
+			? null : $meeting_finish_date;
+
 		$data = [
 			'project_name' => $project_name,
 			'project_acquaintance_start_date' => $acquaintance_start_date,

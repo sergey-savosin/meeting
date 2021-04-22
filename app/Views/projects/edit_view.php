@@ -9,52 +9,63 @@
 		</label>
 		<textarea class="form-control" rows="1" name="project_name" id="project_name"><?php
 			echo set_value('project_name', $project_query->project_name); ?></textarea>
-		<label for="project_name">Дата начала ознакомления
-		</label>
-		<input class="form-control"
-			name="acquaintance_start_date" id="acquaintance_start_date" 
-			value="<?php
-			echo set_value('acquaintance_start_date', 
-				date("Y-m-d", 
-					strtotime($project_query->project_acquaintance_start_date??''
-					)
-				)
-			); ?>" />
-		<label for="project_name">Дата начала голосования по ОП
-		</label>
-		<input class="form-control"
-			name="main_agenda_start_date" id="main_agenda_start_date" 
-			value="<?php
-			echo set_value('main_agenda_start_date',
-				date("Y-m-d", 
-					strtotime($project_query->project_main_agenda_start_date??''
-					)
-				)
-			); ?>" />
+		<div class="row">
+			<div class="col-sm-4">
+				<label for="project_name">Дата начала ознакомления
+				</label>
+			</div>
+			<div class="col-sm-4">
+				<label for="project_name">Дата начала голосования по ОП
+				</label>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-4">
+			<input class="form-control" type="date"
+				name="acquaintance_start_date" id="acquaintance_start_date" 
+				value="<?php
+					$sqldt = $project_query->project_acquaintance_start_date;
+					$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+					echo set_value('acquaintance_start_date', $dt); ?>" />
+			</div>
+			<div class="col-sm-4">
+			<input class="form-control" type="date"
+				name="main_agenda_start_date" id="main_agenda_start_date" 
+				value="<?php
+					$sqldt = $project_query->project_main_agenda_start_date;
+					$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+					echo set_value('main_agenda_start_date', $dt); ?>" />
+			</div>
+		</div>
 
-		<label for="project_name">Дата начала голосования по ДП
-		</label>
-		<input class="form-control"
-			name="additional_agenda_start_date" id="additional_agenda_start_date" 
-			value="<?php
-			echo set_value('additional_agenda_start_date',
-				date("Y-m-d", 
-					strtotime($project_query->project_additional_agenda_start_date??''
-					)
-				)
-			); ?>" />
-
-		<label for="project_name">Дата окончания голосования
-		</label>
-		<input class="form-control"
-			name="meeting_finish_date" id="meeting_finish_date" 
-			value="<?php
-			echo set_value('meeting_finish_date',
-				date("Y-m-d", 
-					strtotime($project_query->project_meeting_finish_date??''
-					)
-				)
-			); ?>" />
+		<div class="row">
+			<div class="col-sm-4">
+				<label for="project_name">Дата начала голосования по ДП
+				</label>
+			</div>
+			<div class="col-sm-4">
+				<label for="project_name">Дата окончания голосования
+				</label>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-4">
+			<input class="form-control" type="date"
+				name="additional_agenda_start_date" id="additional_agenda_start_date" 
+				value="<?php
+					$sqldt = $project_query->project_additional_agenda_start_date;
+					$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+					echo set_value('additional_agenda_start_date', $dt); ?>" />
+			</div>
+			<div class="col-sm-4">
+			<input class="form-control" type="date"
+				name="meeting_finish_date" id="meeting_finish_date" 
+				value="<?php
+					$sqldt = $project_query->project_meeting_finish_date;
+					$dt = empty($sqldt) ? '' : date('Y-m-d', strtotime($sqldt));
+					echo set_value('meeting_finish_date', $dt); ?>" />
+			</div>
+		</div>
 
 	</div>
 	<div class="form-group">
