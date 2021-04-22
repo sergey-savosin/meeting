@@ -965,15 +965,20 @@ class Project extends BaseController {
 				'required' => 'Укажите тип участника'
 			]
 		];
-		$val_rules['UserVotesNumber'] =[
-			'label' => 'UserVotesNumber',
-			'rules' => 'required|integer|is_natural_no_zero',
-			'errors' => [
-				'required' => 'Укажите количество голосов',
-				'integer' => 'Количество голосов должно быть целым числом',
-				'is_natural_no_zero' => 'Количество голосов должно быть положительным числом'
-			]
-		];
+		if ($userCanVote == true) {
+			$val_rules['UserVotesNumber'] =[
+				'label' => 'UserVotesNumber',
+				'rules' => 'required|integer|is_natural_no_zero',
+				'errors' => [
+					'required' => 'Укажите количество голосов',
+					'integer' => 'Количество голосов должно быть целым числом',
+					'is_natural_no_zero' => 'Количество голосов должно быть положительным числом'
+				]
+			];
+		} else {
+			$val_rules['UserVotesNumber'] = [];
+		}
+
 		$val_rules['UserCanVote'] = [];
 
 		helper(['form', 'url']);
